@@ -1,0 +1,119 @@
+@use '@angular/material' as mat;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: space-between;
+    @include mat.table-overrides((row-item-container-height: 3em,
+            row-item-label-text-size: 1em,
+            header-container-height: 2.2em,
+            header-headline-size: 1.4em,
+            row-item-outline-color: var(--faded-border-color),
+            row-item-label-text-color: var(--text-color),
+            row-item-outline-width: 1px,
+        ));
+}
+
+.table-scroll-wrapper {
+    width: 100%;
+    max-width: 100%;
+    max-height: 50%;
+    overflow-x: auto;
+    overflow-y: auto;
+    box-sizing: border-box;
+    margin: 1em 0;
+    border: 1px solid var(--faded-border-color);
+    border-radius: 1em;
+    background-color: var(--background-color);
+}
+
+table {
+    min-width: max-content;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+td {
+    z-index: 2;
+}
+
+table th:first-child,
+table th:nth-child(2),
+table th:nth-child(3) {
+    z-index: 20;
+}
+
+td:first-child,
+td:nth-child(2),
+td:nth-child(3) {
+    text-align: center;
+    z-index: 2;
+}
+
+th:first-child,
+td:first-child,
+th:nth-child(2),
+td:nth-child(2),
+th:nth-child(3),
+td:nth-child(3) {
+    position: sticky;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    background: var(--background-color);
+}
+
+th:first-child,
+td:first-child {
+    width: 3rem;
+    min-width: 3rem;
+    max-width: 3rem;
+    left: 0;
+    color: var(--faded-border-color);
+}
+
+td:nth-child(2),
+th:nth-child(2) {
+    width: 13rem;
+    min-width: 13rem;
+    max-width: 13rem;
+    left: 3rem;
+}
+
+td:nth-child(3),
+th:nth-child(3) {
+    width: 10rem;
+    min-width: 10rem;
+    max-width: 10rem;
+    left: 16rem;
+    border-right: 1px solid var(--faded-border-color);
+}
+
+td,
+th {
+    color: var(--font-color);
+    user-select: none;
+    box-sizing: border-box;
+}
+
+table th {
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--background-color);
+}
+
+table td {
+    background-color: var(--background-color);
+}
+
+.negative-cell {
+    color: #e53935 !important;
+}
+
+sub {
+  font-size: 0.5em;
+}

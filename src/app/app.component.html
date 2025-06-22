@@ -1,4 +1,17 @@
-<!-- <app-map></app-map> -->
-<div class="container">
-    <app-map></app-map>
-</div>
+<mat-toolbar>
+    <button mat-icon-button aria-label="Menu" (click)="drawer.toggle()">
+        <mat-icon>menu</mat-icon>
+    </button>
+    <span>PDX</span>
+</mat-toolbar>
+
+<mat-drawer-container class="container" autosize>
+  <mat-drawer #drawer class="sidenav" mode="side">
+    <ng-container *ngFor="let action of sideNavContentProvider.getActions()">
+      <button matButton (click)="action.action()">{{ action.label }}</button>
+    </ng-container>
+  </mat-drawer>
+
+  <app-save-view-splash></app-save-view-splash>
+
+</mat-drawer-container>

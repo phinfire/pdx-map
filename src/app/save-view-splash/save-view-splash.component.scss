@@ -1,0 +1,32 @@
+:host {
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow-y: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.chute {
+    margin-top: 20vh;
+    height: 50%;
+    width: 50%;
+    font-family: var(--font-family);
+    font-size: 2em;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    border-radius: 10px;
+    box-shadow: 0 0 10px var(--faded-border-color) inset, 0 0 10px var(--faded-border-color);
+}
+
+.chute-active {
+    background-color: var(--background-color);
+    box-shadow: 0 0 10px var(--text-color) inset, 0 0 10px var(--text-color);
+}

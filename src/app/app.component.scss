@@ -1,7 +1,33 @@
+@use '@angular/material' as mat;
+
 :host {
     width: 100%;
-    height: 100vh;
+    height: 100%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    background-color: var(--background-color);
+    @include mat.toolbar-overrides((container-background-color: var(--background-color),
+            container-text-color: var(--text-color),
+            title-text-size: 2em,
+            title-text-tracking: 0.2em,
+            title-text-font: var(--hacker-font)));
+    @include mat.icon-overrides((color: var(--text-color)));
+    @include mat.sidenav-overrides((container-text-color: var(--text-color)));
+
+}
+
+span {
+    margin-left: 0.5em;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+}
+
+.sidenav {
+    padding: 1em;
+    padding-top: 5em;
 }

@@ -35,7 +35,8 @@
               "src/styles.scss",
               "node_modules/leaflet/dist/leaflet.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "baseHref": "/pdx/"
           },
           "configurations": {
             "production": {

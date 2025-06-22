@@ -32,23 +32,24 @@ export class MapComponent {
     @ViewChild('mapcontainer') mapContainer!: ElementRef<HTMLDivElement>;
 
     constructor(private hostElement: ElementRef, private mapService: MapService, private fileService: PdxFileService, private http: HttpClient) {
-        
-        this.http.get('http://127.0.0.1:5500/public/test.json').subscribe((data) => {
+        /*this.http.get('http://127.0.0.1:5500/public/test.json').subscribe((data) => {
             this.dataProvider.setActiveSave(new Eu4Save(data));
-            this.showPerCountyValue(this.dataProvider.getAvailableValueModes()[0].iconUrl, this.dataProvider.getAvailableValueModes()[0].valueGetter);
-        });
+            this.showPerProvinceValue(this.dataProvider.getAvailableValueModes()[0].iconUrl, this.dataProvider.getAvailableValueModes()[0].valueGetter);
+        });*/
     }
 
-    ngOnInit() {
-        this.mapService.fetchGeoJson().subscribe((data) => {
+    ngOnInit() {/*
+        this.mapService.fetchEU4GeoJson().subscribe((data) => {
             this.geoJson = data;
-            //this.showPerCountyValue(this.mapService.getAvailableValueModes()[0].iconUrl, this.mapService.getAvailableValueModes()[0].valueGetter);
         });
+        */
         this.hostElement.nativeElement.addEventListener('drop', (event: DragEvent) => {
             event.preventDefault();
             if (event.dataTransfer && event.dataTransfer.files.length > 0) {
-                const file = event.dataTransfer.files[0];
-                this.fileService.importFile(file,() => {});
+                const files = Array.from(event.dataTransfer.files);
+                this.fileService.importFile(files, (name, json) => {
+                    this.fileService.downloadJson(json, "imported.json");
+                });
             }
         });
         this.hostElement.nativeElement.addEventListener('dragover', (event: DragEvent) => {
@@ -62,9 +63,7 @@ export class MapComponent {
             const type = feature.properties.type;
             const key = feature.properties.key + "";
             let typeRGB = MapComponent.wasteLandColorHex;
-            if (type === "sea" || type === "river") {
-                return { color: "#000000", fillOpacity: 0, weight: 1 };
-            } else if (key2color.has(key)) {
+            if (key2color.has(key)) {
                 typeRGB = key2color.get(key)!;
             }
             return { color: "#000000", fillColor: typeRGB, fillOpacity: 1, weight: 1 };
@@ -108,7 +107,7 @@ export class MapComponent {
         }, 0);
     }
 
-    protected showPerCountyCategory(iconUrl: string, valueGetter: (county: IHasKey) => string, colorGetter: (county: IHasKey) => string) {
+    protected showPerProvinceCategory(iconUrl: string, valueGetter: (county: IHasKey) => string, colorGetter: (county: IHasKey) => string) {
         const country2Color = new Map<string, string>();
         for (let county of this.dataProvider.getAllElements()) {
             const color = colorGetter(county);
@@ -127,7 +126,7 @@ export class MapComponent {
         });
     }
 
-    protected showPerCountyValue(iconUrl: string, valueGetter: (county: IHasKey) => number) {
+    protected showPerProvinceValue(iconUrl: string, valueGetter: (county: IHasKey) => number) {
         const color = d3.scaleSequential(d3.interpolateInferno);
         const counties = this.dataProvider.getAllElements();
         const max = counties.map(county => valueGetter(county)).reduce((a, b) => Math.max(a, b), 0);
@@ -143,8 +142,7 @@ export class MapComponent {
             row1.appendChild(document.createTextNode(valueGetter(county).toString()));
             const image = document.createElement('img');
             image.src = iconUrl;
-            image.style.height = "1.5em";
-            image.style.width = "auto";
+            image.classList.add('tooltip-image');
             row1.appendChild(image);
             return [row1];
         });
@@ -152,49 +150,15 @@ export class MapComponent {
 
     private addCustomControls(map: L.Map) {
         const ctx = this;
-        const customControl = L.Control.extend({
-            options: {
-                position: 'topright'
-            },
-            onAdd: function () {
-                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-                container.style.backgroundColor = "none";
-                container.style.border = 'none';
-                container.style.padding = '5px';
-                container.style.display = 'flex';
-                container.style.flexDirection = 'column';
-
-                const makeButton = (iconUrl: string, tooltip: string, onClick: () => void) => {
-                    const button = L.DomUtil.create('button', '', container);
-                    button.innerHTML = '<img src="' + iconUrl + '" style="height: 1.5em; width: auto;">';
-                    button.style.margin = '2px';
-                    button.title = tooltip;
-                    button.onclick = onClick;
-                }
-                for (let mode of ctx.dataProvider.getAvailableValueModes()) {
-                    makeButton(mode.iconUrl, mode.tooltip, () => ctx.showPerCountyValue(mode.iconUrl, mode.valueGetter));
-                }
-                for (let mode of ctx.dataProvider.getAvailableCategoryModes()) {
-                    makeButton(mode.iconUrl, mode.tooltip, () => ctx.showPerCountyCategory(mode.iconUrl, mode.valueGetter, mode.colorGetter));
-                }
-                return container;
-            }
-        });
         const tooltipToggleControl = L.Control.extend({
             options: {
                 position: 'bottomleft'
             },
             onAdd: function () {
-                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-                container.style.backgroundColor = "none";
-                container.style.border = 'none';
-                container.style.padding = '5px';
+                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom tooltip-toggle-control');
                 const button = L.DomUtil.create('button', '', container);
                 button.innerHTML = ctx.showHoverTooltip ? "Click to disable hover tooltip" : "Click to enable hover tooltip";
-                button.style.margin = '2px';
                 button.title = "Toggle hover tooltip";
-                button.style.color = "black";
-                button.style.fontSize = "0.75em";
                 button.onclick = () => {
                     ctx.showHoverTooltip = !ctx.showHoverTooltip;
                     button.innerHTML = ctx.showHoverTooltip ? "Click to disable hover tooltip" : "Click to enable hover tooltip";
@@ -202,22 +166,37 @@ export class MapComponent {
                 return container;
             }
         });
-        const histogramPanelControl = L.Control.extend({
+        
+        const customControl = L.Control.extend({
             options: {
-            position: 'bottomright'
+                position: 'topright'
             },
             onAdd: function () {
-            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-            container.style.backgroundColor = "white";
-            container.style.border = '1px solid black';
-            container.style.borderRadius = '5px';
-            container.style.padding = '10px';
-            container.style.width = '200px';
-            container.style.height = '150px';
-            container.style.overflow = 'hidden';
-            container.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-            container.innerHTML = '<div id="histogram-container" style="width: 100%; height: 100%;"></div>';
-            return container;
+                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom custom-control');
+                const makeButton = (iconUrl: string, tooltip: string, onClick: () => void) => {
+                    const button = L.DomUtil.create('button', '', container);
+                    button.innerHTML = `<img src="${iconUrl}">`;
+                    button.title = tooltip;
+                    button.onclick = onClick;
+                };
+                for (let mode of ctx.dataProvider.getAvailableValueModes()) {
+                    makeButton(mode.iconUrl, mode.tooltip, () => ctx.showPerProvinceValue(mode.iconUrl, mode.valueGetter));
+                }
+                for (let mode of ctx.dataProvider.getAvailableCategoryModes()) {
+                    makeButton(mode.iconUrl, mode.tooltip, () => ctx.showPerProvinceCategory(mode.iconUrl, mode.valueGetter, mode.colorGetter));
+                }
+                return container;
+            }
+        });
+        
+        const histogramPanelControl = L.Control.extend({
+            options: {
+                position: 'bottomright'
+            },
+            onAdd: function () {
+                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom histogram-panel');
+                container.innerHTML = '<div id="histogram-container"></div>';
+                return container;
             }
         });
         map.addControl(new histogramPanelControl());
@@ -244,12 +223,8 @@ export class MapComponent {
         })
             .setLatLng(event.latlng)
             .addTo(this.geoJsonLayer!);
-        tooltip.getElement()!.style.backgroundColor = "white";
-        tooltip.getElement()!.style.border = "1px solid black";
-        tooltip.getElement()!.style.borderRadius = "5px";
-
+    
         const div = document.createElement('div');
-        div.classList.add("saveana-mapview-tooltip");
         const row0 = document.createElement('div');
         row0.style.marginBottom = "0.5em";
         div.appendChild(row0);

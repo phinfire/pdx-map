@@ -1,0 +1,10 @@
+
+<div #chute *ngIf="!hasBeenInitialized" class="chute" (drop)="onDrop($event)" (dragover)="onDragOver($event)"
+(dragleave)="onDragLeave($event)" >
+    <span>Drag and drop a (plain text) Victoria 3 save file here to start</span>
+</div>
+<app-save-view
+  *ngIf="hasBeenInitialized"
+  class="container"
+  [activeSave]="activeSave">
+</app-save-view>
