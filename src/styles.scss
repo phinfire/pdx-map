@@ -20,18 +20,21 @@
     --hacker-font: 'Inconsolata', monospace;
     /*--font-family: "Delius", cursive;*/
     --font-family: "Manrope", sans-serif;
-    --void-color: rgb(20, 20, 20);
+    --void-color: rgb(20, 20, 25);
+
+    --dark-theme-text-color: rgb(255, 255, 255);
+    --dark-theme-background-color: rgb(32, 32, 32);
+    --light-theme-text-color: rgb(0, 0, 0);
+    --light-theme-background-color: rgb(255, 255, 255);
 }
 
-.light-mode {
-    --background-color: rgb(255, 255, 255);
+.light-theme {
+    --background-color: var(--light-theme-background-color);
     --lighter-background-color: rgb(240, 240, 240);
-    --text-color: rgb(0, 0, 0);
+    --text-color: var(--light-them-text-color);
     --border-color: var(--text-color);
     --faded-border-color: rgba(0, 0, 0, 0.2);
     --faded-text-color: rgba(0, 0, 0, 0.5);
-    --hacker-font: 'Inconsolata', monospace;
-    --font-family: 'Titillium Web', sans-serif;
     --void-color: rgb(240, 240, 240);
 }
 
@@ -46,7 +49,7 @@ body {
 }
 
 .tooltip {
-    background: #222 !important;
+    background: var(--lighter-background-color) !important;
     color: #fff !important;
     font-size: 1.1em !important;
     border-radius: 6px !important;
@@ -65,4 +68,8 @@ body {
     white-space: pre !important;
     word-break: normal !important;
     font-family: Inconsolata, monospace !important;
+}
+
+* {
+  box-sizing: border-box;
 }

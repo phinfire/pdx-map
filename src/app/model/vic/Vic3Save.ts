@@ -1,12 +1,17 @@
-import { Building } from "./vic/Building";
-import { Country } from "./vic/Country";
-import { CountryBudget } from "./vic/CountryBudget";
-import { Pop } from "./vic/Pop";
-import { PowerBloc } from "./vic/PowerBloc";
+import { Building } from "./Building";
+import { Country } from "./Country";
+import { CountryBudget } from "./CountryBudget";
+import { Pop } from "./Pop";
+import { PowerBloc } from "./PowerBloc";
 
 export class Vic3Save {
 
     public static makeSaveFromRawData(saveData: any) {
+        const state2ownerIndex = new Map<number, number>();
+        for (const stateEntryIndex in saveData.states.database) {
+            state2ownerIndex.set(parseInt(stateEntryIndex), saveData.states.database[stateEntryIndex]["country"]);
+        }
+
         const countries: Country[] = [];
         const country2buildingEntries = new Map<string, any[]>();
         const country2pops = new Map<string, Pop[]>();
@@ -22,7 +27,8 @@ export class Vic3Save {
             if (!country2buildingEntries.has(country)) {
                 country2buildingEntries.set(country, []);
             }
-            country2buildingEntries.get(country)!.push(Building.fromRawData(buildingEntry));
+            const buildingsFromEntry = Building.fromRawData(buildingEntry, saveData.building_manager.database, saveData.building_ownership_manager.database, state2ownerIndex);
+            country2buildingEntries.get(country)!.push(...buildingsFromEntry);
         }
         for (const popIndex in saveData.pops.database) {
             const popEntry = saveData.pops.database[popIndex];
@@ -58,7 +64,7 @@ export class Vic3Save {
             const countryEntry = saveData.country_manager.database[countryKey];
             const countryBudget = countryEntry["budget"] ? CountryBudget.fromRawData(countryEntry["budget"]) : CountryBudget.NONE;
             //if (true || countryEntry["country_type"] && countryEntry["country_type"] == "recognized") {
-            if (countryEntry["country_type"] != undefined && countryEntry["country_type"] != "decentralized") {
+            if (countryEntry["country_type"] != undefined) {
                 const techEntry = countryIndex2TechEntry.get(countryKey) || {};
                 const playerName = country2playerName.get(countryKey) || null;
                 const taxLevel = countryEntry["tax_level"] || "medium";

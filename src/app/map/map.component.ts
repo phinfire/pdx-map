@@ -4,8 +4,8 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ElementRef } from '@angular/core';
 import { MapService } from '../map.service';
 import { HttpClient } from '@angular/common/http';
-import { PdxFileService } from '../pdx-file.service';
-import { Eu4Save } from '../model/Eu4Save';
+import { PdxFileService } from '../services/pdx-file.service';
+import { Eu4Save } from '../model/eu4/Eu4Save';
 import { IHasKey, MapDataProvider } from './MapDataProvider';
 
 @Component({

@@ -1,6 +1,8 @@
+import { Ownership } from "./Ownership";
+
 export class Building {
 
-    public static fromRawData(rawData: any): Building {
+    public static fromRawData(rawData: any, allBuildingsData: any[], allOwnershipsData: any[], state2OwnerCountry: Map<number, number>): Building[] {
         const goodsIn = new Map<number, number>();
         const goodsOut = new Map<number, number>();
         if (rawData["input_goods"]) {
@@ -17,35 +19,90 @@ export class Building {
                 goodsOut.set(goodId, amount);
             }
         }
-        return new Building(
-            rawData["building"].replace("building_", ""),
-            rawData["state"],
-            rawData["levels"] || 0,
-            rawData["goods_cost"] || 0,
-            rawData["goods_sales"] || 0,
-            rawData["cash_reserves"] || 0,
-            rawData["dividends"] || 0,
-            goodsIn,
-            goodsOut
-        );
+        const location = rawData["state"];
+        const locationCountryIndex = state2OwnerCountry.get(location);
+        const buildings = [];
+        const totalLevels = rawData["levels"] || 0;
+        let remainingLevels = rawData["levels"] || 0
+        if (rawData["owners"]) {
+            for (const ownerEntryIndex in rawData["owners"]) {
+                const i = parseInt(ownerEntryIndex);
+                const ownershipEntry = allOwnershipsData[i];
+                let ownershipType = Ownership.WORKERS;
+                let levels = ownershipEntry ? ownershipEntry["levels"] || 0 : 0;
+                if (ownershipEntry != undefined && ownershipEntry["identity"]) {
+                    if (ownershipEntry["identity"]["building"]) {
+                        const buildingEntry = allBuildingsData[ownershipEntry["identity"]["building"]];
+                        const ownerBuildingLocation = buildingEntry["state"];
+                        const ownerBuildingCountryIndex = state2OwnerCountry.get(ownerBuildingLocation);
+                        if (locationCountryIndex == ownerBuildingCountryIndex) {
+                            ownershipType = Ownership.LOCAL_CAPITALISTS;
+                        } else {
+                            ownershipType = Ownership.FOREIGN_CAPITALISTS;
+                        }
+                    } else if (ownershipEntry["identity"]["country"]) {
+                        const ownerCountryIndex = ownershipEntry["identity"]["country"];
+                        if (locationCountryIndex == ownerCountryIndex) {
+                            ownershipType = Ownership.LOCAL_GOVERNMENT;
+                        } else {
+                            ownershipType = Ownership.FOREIGN_GOVERNMENT;
+                        }
+                    } else {
+                        console.log("Unknown ownership identity for building " + rawData["building"] + " in state " + location + ": " + JSON.stringify(ownershipEntry["identity"]));
+                    }
+                }
+                const fraction = levels / totalLevels;
+                if (levels > 0) {
+                    remainingLevels -= levels;
+                    buildings.push(new Building(
+                        rawData["building"].replace("building_", ""),
+                        location,
+                        levels,
+                        (rawData["goods_cost"] || 0) * fraction,
+                        (rawData["goods_sales"] || 0) * fraction,
+                        (rawData["cash_reserves"] || 0) * fraction,
+                        (rawData["dividends"] || 0) * fraction,
+                        ownershipType,
+                        goodsIn,
+                        goodsOut
+                    ));
+                }
+            }
+        }
+        if (remainingLevels > 0) {
+            buildings.push(new Building(
+                rawData["building"].replace("building_", ""),
+                location,
+                remainingLevels,
+                rawData["goods_cost"] || 0,
+                rawData["goods_sales"] || 0,
+                rawData["cash_reserves"] || 0,
+                rawData["dividends"] || 0,
+                Ownership.WORKERS,
+                goodsIn,
+                goodsOut
+            ));
+        }
+        return buildings;
     }
 
     public static fromJson(json: any): Building {
-    return new Building(
-        json.name,
-        json.state,
-        json.levels,
-        json.valueGoodsBought,
-        json.valueGoodsSold,
-        json.cashReserves,
-        json.dividends,
-        new Map(Object.entries(json.goodsIn).map(([key, value]) => [parseInt(key), value as number])),
-        new Map(Object.entries(json.goodsOut).map(([key, value]) => [parseInt(key), value as number]))
-    );
-}
+        return new Building(
+            json.name,
+            json.state,
+            json.levels,
+            json.valueGoodsBought,
+            json.valueGoodsSold,
+            json.cashReserves,
+            json.dividends,
+            json.ownership,
+            new Map(Object.entries(json.goodsIn).map(([key, value]) => [parseInt(key), value as number])),
+            new Map(Object.entries(json.goodsOut).map(([key, value]) => [parseInt(key), value as number])),
+        );
+    }
 
     constructor(private name: string, private state: number, private levels: number, private valueGoodsBought: number,
-        private valueGoodsSold: number, private cashReserves: number, private dividends: number, private goodsIn: Map<number, number>, private goodsOut: Map<number, number>) {
+        private valueGoodsSold: number, private cashReserves: number, private dividends: number, private ownership: Ownership, private goodsIn: Map<number, number>, private goodsOut: Map<number, number>) {
 
     }
 
@@ -79,6 +136,10 @@ export class Building {
 
     getCashReserves(): number {
         return this.cashReserves;
+    }
+
+    getOwnership(): Ownership {
+        return this.ownership;
     }
 
     isSubsistence(): boolean {
@@ -133,9 +194,9 @@ export class Building {
             valueGoodsSold: this.valueGoodsSold,
             cashReserves: this.cashReserves,
             dividends: this.dividends,
+            ownership: this.ownership,
             goodsIn: Array.from(this.goodsIn.entries()).reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {}),
             goodsOut: Array.from(this.goodsOut.entries()).reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
         };
     }
-
 }

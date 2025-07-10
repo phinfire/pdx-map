@@ -1,21 +1,25 @@
 import { Component, Input, SimpleChanges } from '@angular/core';
-import { PdxFileService } from '../pdx-file.service';
+import { PdxFileService } from '../services/pdx-file.service';
 import { HttpClient } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
-import { Vic3Save } from '../model/Vic3Save';
 import { Country } from '../model/vic/Country';
 import { TableComponent } from '../vic3-country-table/vic3-country-table.component';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TableColumn } from '../util/TableColumn';
-import { BuildingAggregatingTableColumn } from '../util/BuildingAggregatingTableColumn';
+import { TableColumn } from '../util/table/TableColumn';
 import { MatRadioModule } from '@angular/material/radio';
 import { FormsModule } from '@angular/forms';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { PowerBloc } from '../model/vic/PowerBloc';
-import { SimpleTableColumn } from '../util/SimpleTableColumn';
 import { Pop } from '../model/vic/Pop';
 import { ModelElementList } from '../model/vic/ModelElementList';
+import { SimpleTableColumn } from '../util/table/SimpleTableColumn';
+import { BuildingAggregatingTableColumn } from '../util/table/BuildingAggregatingTableColumn';
+import { Ownership } from '../model/vic/Ownership';
+import { PlotViewComponent } from '../plot-view/plot-view.component';
+import { Vic3GameFiles } from '../model/vic/Vic3GameFiles';
+import { Vic3Save } from '../model/vic/Vic3Save';
+import { GoodCategory } from '../model/vic/enum/GoodCategory';
 
 enum GoodsViewMode {
     INPUT = "input",
@@ -25,15 +29,15 @@ enum GoodsViewMode {
 
 @Component({
     selector: 'app-save-view',
-    imports: [MatTabsModule, TableComponent, MatProgressSpinnerModule, CommonModule, MatRadioModule, FormsModule, MatButtonToggleModule],
+    imports: [MatTabsModule, TableComponent, MatProgressSpinnerModule, CommonModule, MatRadioModule, FormsModule, MatButtonToggleModule, PlotViewComponent],
     templateUrl: './save-view.component.html',
-    styleUrl: './save-view.component.scss'
+    styleUrl: './save-view.component.scss',
 })
 export class SaveViewComponent {
 
     @Input() activeSave?: Vic3Save;
 
-    includeAi = false;
+    includeAi = true;
     selectedTabIndex = 0;
     locLookup = new Map<string, string>();
     index2GoodKey = new Map<number, string>();
@@ -292,22 +296,53 @@ export class SaveViewComponent {
         )
     ];
 
+    ecoConnectionsColumns: TableColumn<Country>[] = this.sharedColumns.concat([
+        new BuildingAggregatingTableColumn(
+            "localOwnedBuildings",
+            "Public",
+            "",
+            true,
+            b => b.getOwnership() == Ownership.LOCAL_GOVERNMENT,
+            b => b.getLevels(),
+            b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence()
+        ),
+        new BuildingAggregatingTableColumn(
+            "localPrivateBuildingsFraction",
+            "Private",
+            "",
+            true,
+            b => b.getOwnership() == Ownership.LOCAL_CAPITALISTS,
+            b => b.getLevels(),
+            b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence()
+        ),
+        new BuildingAggregatingTableColumn(
+            "foreignOwnedBuildings",
+            "Foreign Owned",
+            "",
+            true,
+            b => b.getOwnership() == Ownership.FOREIGN_CAPITALISTS || b.getOwnership() == Ownership.FOREIGN_GOVERNMENT,
+            b => b.getLevels(),
+            b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence()
+        )
+    ])
+
     potentialGoodColumns: TableColumn<Country>[] = [];
     goodColumns: TableColumn<Country>[] = [];
 
     goodsViewMode = GoodsViewMode.BALANCE;
 
-    availableGoodsCategories: string[] = ["staple", "industrial", "luxury", "military"];
-    selectedGoodsCategory: string = "industrial"
+    availableGoodsCategories: GoodCategory[] = Object.values(GoodCategory);
+    selectedGoodsCategory: GoodCategory = GoodCategory.INDUSTRIAL;
 
-    constructor(fileService: PdxFileService, private http: HttpClient) {
+    constructor(fileService: PdxFileService, private http: HttpClient, private vic3GameFiles: Vic3GameFiles) {
         const dataUrl = "https://codingafterdark.de/pdx/vic3gamedata/"
         this.http.get(dataUrl + 'converted_countries_l_english.yml', { responseType: 'text' }).subscribe((data) => {
             for (const line of data.split('\n')) {
-                if (line.trim() === '' || line.startsWith('#')) continue;
-                const [key, value] = line.split(':').map(part => part.trim());
-                if (key && value) {
-                    this.locLookup.set(key, value.substring(1, value.length - 1));
+                if (line.trim().length > 0 && !line.startsWith('#')) {
+                    const [key, value] = line.split(':').map(part => part.trim());
+                    if (key && value) {
+                        this.locLookup.set(key, value.substring(1, value.length - 1));
+                    }
                 }
             }
         });
@@ -352,7 +387,7 @@ export class SaveViewComponent {
         }
     }
 
-    onGoodsCategoryChange(category: string) {
+    onGoodsCategoryChange(category: GoodCategory) {
         this.selectedGoodsCategory = category;
         this.refreshGoodColumnList();
     }
@@ -378,12 +413,11 @@ export class SaveViewComponent {
                     return "+ " + outVal;
                 }
                 return "+" + outPadding + outVal + "\n-" + inPadding + inVal;
-
             }
         }
         const cols = Array.from(this.index2GoodKey.keys()).map((index) => {
             const goodKey = this.index2GoodKey.get(index)!;
-            const total = this.activeSave == null ? 0 : this.activeSave.getCountries(true).map((country: Country) => {
+            const total = this.activeSave == null ? 0 : this.activeSave.getCountries(this.includeAi).map((country: Country) => {
                 if (this.goodsViewMode == GoodsViewMode.INPUT) {
                     return country.getGoodIn(index);
                 } else if (this.goodsViewMode == GoodsViewMode.OUTPUT) {
@@ -416,22 +450,12 @@ export class SaveViewComponent {
         }).filter(col => col !== null);
         this.potentialGoodColumns = cols;
         this.goodColumns = this.sharedColumns.concat(this.potentialGoodColumns.filter(col => {
-            return this.goodKey2Category.get(col.def) === this.selectedGoodsCategory;
+            return this.goodKey2Category.get(col.def) === this.selectedGoodsCategory.key; // TODO ???
         }));
     }
 
     getCountryName(tag: string) {
         return this.locLookup.get(tag) || tag;
-    }
-
-    format(value: number): string {
-        if (value < 1000) {
-            return value.toString();
-        } else if (value < 1000000) {
-            return (value / 1000).toFixed(1) + 'K';
-        } else {
-            return (value / 1000000).toFixed(1) + 'M';
-        }
     }
 
     getCountries() {
@@ -440,7 +464,6 @@ export class SaveViewComponent {
         }
         return this.cachedCountries;
     }
-
 
     public static tableColumnfromModelElementList<T, R>(def: string, header: string, tooltip: string | null, listAccessor: (element: T) => ModelElementList<R>, predicate: (e: R) => boolean, accessor: (e: R) => number, keyFunction: (e: R) => string): TableColumn<T> {
         return new TableColumn<T>(

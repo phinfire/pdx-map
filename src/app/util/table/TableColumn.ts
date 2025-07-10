@@ -1,4 +1,4 @@
-import { ModelElementList } from "../model/vic/ModelElementList";
+import { ModelElementList } from "../../model/vic/ModelElementList";
 import { ITableColumn } from "./ITableColumn";
 
 export class TableColumn<T> implements ITableColumn<T> {
@@ -22,6 +22,12 @@ export class TableColumn<T> implements ITableColumn<T> {
     public static formatNumber(value: number): string {
         if (value < 0) {
             return '-' + TableColumn.formatNumber(-value);
+        }
+        if (value === 0) {
+            return '0';
+        }
+        if (value < 1) {
+            return value.toFixed(2);
         }
         if (value < 1000) {
             return Math.floor(value) == value ? value.toString() : value.toFixed(1);

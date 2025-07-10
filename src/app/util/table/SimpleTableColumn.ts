@@ -1,4 +1,3 @@
-import { ITableColumn } from "./ITableColumn";
 import { TableColumn } from "./TableColumn";
 
 export class SimpleTableColumn<T> extends TableColumn<T> {

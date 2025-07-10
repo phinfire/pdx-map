@@ -1,0 +1,30 @@
+<mat-toolbar>
+    <button mat-icon-button class="menu-button" aria-label="Menu" (click)="drawer.toggle()">
+        <mat-icon>menu</mat-icon>
+    </button>
+    <span>PDX</span>
+</mat-toolbar>
+
+<mat-drawer-container class="container" autosize>
+    <mat-drawer #drawer class="sidenav" mode="side">
+        <div class="sidenav-top">
+            <div class="panorama">
+                <button mat-icon-button (click)="setTheme(false); toggleAnimation('day')"
+                    class="theme-button day-button" [class.sink]="currentTheme === 'day'" [class.hover-effect]="true">
+                    <mat-icon>wb_sunny</mat-icon>
+                </button>
+                <button mat-icon-button (click)="setTheme(true); toggleAnimation('night')"
+                    class="theme-button night-button" [class.sink]="currentTheme === 'night'" [class.hover-effect]="true">
+                    <mat-icon>nightlight</mat-icon>
+                </button>
+            </div>
+        </div>
+        <ng-container *ngFor="let action of sideNavContentProvider.getActions()">
+            <button mat-button (click)="action.action()">{{ action.label }}</button>
+            <mat-divider></mat-divider>
+        </ng-container>
+    </mat-drawer>
+
+    <app-save-view-splash></app-save-view-splash>
+
+</mat-drawer-container>

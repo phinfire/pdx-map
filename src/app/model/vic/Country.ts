@@ -1,5 +1,4 @@
 import { Building } from "./Building";
-import { BuildingList } from "./BuildingList";
 import { CountryBudget } from "./CountryBudget";
 import { ModelElementList } from "./ModelElementList";
 import { Pop } from "./Pop";
@@ -26,7 +25,7 @@ export class Country {
     private cachedGoodOut: Map<number, number> = new Map();
 
     constructor(private playerName: string | null, private tag: string, private popStatistics: any, buildings: any[], pops: Pop[], private techEntry: any, private budget: CountryBudget, private taxLevel: string) {
-        this.buildings = new BuildingList(buildings);
+        this.buildings = new ModelElementList<Building>(buildings);
         this.pops = new ModelElementList<Pop>(pops);
     }
 
@@ -64,7 +63,7 @@ export class Country {
             + this.popStatistics["population_upper_strata"];
     }
 
-    getBuildings(): BuildingList {
+    getBuildings(): ModelElementList<Building> {
         return this.buildings;
     }
 

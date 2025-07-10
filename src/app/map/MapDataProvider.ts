@@ -1,4 +1,4 @@
-import { Eu4Save } from "../model/Eu4Save";
+import { Eu4Save } from "../model/eu4/Eu4Save";
 
 export interface IHasKey {
     getKey(): string;

@@ -3,7 +3,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule, MAT_TOOLTIP_DEFAULT_OPTIONS, MatTooltipDefaultOptions } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
-import { TableColumn } from '../util/TableColumn';
+import { TableColumn } from '../util/table/TableColumn';
 import { FormsModule } from '@angular/forms';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 
@@ -38,12 +38,10 @@ export class TableComponent<T> {
     }
 
     ngAfterViewInit() {
-        this.dataSource.sort = this.sort; // redundant, but necessary for sort
+        this.dataSource.sort = this.sort; //necessary for sort to work
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        // TODO: eager compute everything and store for better UX
-        console.log("Changes detected in TableComponent:", changes);
         if (changes['rowElements'] && this.rowElements) {
             this.dataSource = new MatTableDataSource<any>(this.rowElements);
         }

@@ -14,7 +14,8 @@ export class SideNavContentProvider {
     }
     
     getActions(): { label: string, action: () => void }[] {
-        return Array.from(this.actions.entries()).map(([label, action]) => ({ label, action }));
+        //return Array.from(this.actions.entries()).map(([label, action]) => ({ label, action }));
+        return [];
     }
 
 }

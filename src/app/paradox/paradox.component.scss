@@ -1,0 +1,120 @@
+@use '@angular/material' as mat;
+
+:host {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--void-color);
+    @include mat.toolbar-overrides((container-background-color: var(--background-color),
+            container-text-color: var(--text-color),
+            title-text-size: 2em,
+            title-text-tracking: 0.2em,
+            title-text-font: var(--hacker-font)));
+    @include mat.icon-overrides((color: var(--text-color)));
+    @include mat.sidenav-overrides((container-text-color: var(--text-color)));
+}
+
+span {
+    margin-left: 0.5em;
+}
+
+.container {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidenav {
+    padding: 1em;
+    padding-top: 2em;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border-right: 1px solid var(--faded-border-color);
+    border-top: 1px solid var(--faded-border-color);
+}
+
+.menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2em;
+    height: 2em;
+
+    mat-icon {
+        font-size: 36px;
+        width: 36px;
+        height: 36px;
+        line-height: 36px;
+    }
+
+    &:hover {
+        background-color: var(--faded-border-color);
+    }
+}
+
+.sidenav-top {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.panorama {
+    width: 6em;
+    height: 2em;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    background: linear-gradient(to right,
+            var(--light-theme-background-color) 0%,
+            var(--light-theme-background-color) 40%,
+            var(--light-theme-background-color) 35%,
+            var(--dark-theme-background-color) 65%,
+            var(--dark-theme-background-color) 60%,
+            var(--dark-theme-background-color) 100%);
+    border: 1px solid var(--faded-border-color);
+}
+
+.theme-button {
+    transition: transform 0.5s ease, opacity 0.5s ease;
+
+    mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+    }
+}
+
+.theme-button.day-button mat-icon {
+    color: var(--light-theme-text-color);
+}
+
+.theme-button.night-button mat-icon {
+    color: var(--dark-theme-text-color);
+}
+
+.sink {
+    transform: translateY(50px);
+    opacity: 0;
+}
+
+.rise {
+    transform: translateY(-50px);
+    opacity: 1;
+}
+
+::ng-deep .mat-drawer-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100%;
+    overflow: hidden;
+}

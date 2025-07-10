@@ -1,39 +1,44 @@
-<mat-tab-group *ngIf="activeSave != null"
-               [selectedIndex]="selectedTabIndex"
-               (selectedIndexChange)="onTabChange($event)">
+<mat-tab-group *ngIf="activeSave != null" [selectedIndex]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)" style="width: 100%;">
     <mat-tab label="Countries">
-        <app-table [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="countryColumns"></app-table>
+        <app-table *ngIf="selectedTabIndex === 0" [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="countryColumns"></app-table>
     </mat-tab>
     <mat-tab label="Country Budgets">
-        <app-table [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="countryFinancialColumns"></app-table>
+        <app-table *ngIf="selectedTabIndex === 1" [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="countryFinancialColumns"></app-table>
     </mat-tab>
     <mat-tab label="Blocs">
-        <app-table [rowElements]="activeSave.getPowerBlocs()" [locLookup]="locLookup" [columns]="powerBlocColumns"></app-table>
+        <app-table *ngIf="selectedTabIndex === 2" [rowElements]="activeSave.getPowerBlocs()" [locLookup]="locLookup" [columns]="powerBlocColumns"></app-table>
     </mat-tab>
     <mat-tab label="Building Financials">
-        <app-table [rowElements]="getCountries()" [locLookup]="locLookup"
-            [columns]="buildingFinancialsColumns"></app-table>
+        <app-table *ngIf="selectedTabIndex === 3" [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="buildingFinancialsColumns"></app-table>
     </mat-tab>
     <mat-tab label="Buildings">
-        <app-table [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="buildingTableColumns"></app-table>
+        <app-table *ngIf="selectedTabIndex === 4" [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="buildingTableColumns"></app-table>
     </mat-tab>
+    <mat-tab label="Links">
+        <app-table *ngIf="selectedTabIndex === 5" [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="ecoConnectionsColumns"></app-table>
+    </mat-tab>y 
     <mat-tab label="Goods">
-        <div class="table-controls">
+        <div class="table-controls" *ngIf="selectedTabIndex === 6">
             <label class="radio-group-label">Goods View Mode</label>
-            <mat-radio-group [(ngModel)]="goodsViewMode" (ngModelChange)="onGoodsViewModeChange($event)"
-                aria-label="Goods view mode" style="margin-bottom: 8px;">
+            <mat-radio-group [(ngModel)]="goodsViewMode" (ngModelChange)="onGoodsViewModeChange($event)" aria-label="Goods view mode" style="margin-bottom: 8px;">
                 <mat-radio-button value="input" style="margin-right: 16px;">Input</mat-radio-button>
                 <mat-radio-button value="balance" style="margin-right: 16px;">Balance</mat-radio-button>
                 <mat-radio-button value="output" style="margin-right: 16px;">Output</mat-radio-button>
             </mat-radio-group>
             <label class="radio-group-label">Category</label>
             <mat-radio-group [ngModel]="selectedGoodsCategory" (ngModelChange)="onGoodsCategoryChange($event)">
-                <mat-radio-button *ngFor="let category of availableGoodsCategories" [value]="category"
-                    style="margin-right: 16px;">
-                    {{ category }}
+                <mat-radio-button *ngFor="let category of availableGoodsCategories" [value]="category" style="margin-right: 16px;">
+                    {{ category.name }}
                 </mat-radio-button>
             </mat-radio-group>
         </div>
-        <app-table [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="goodColumns"></app-table>
+        <app-table *ngIf="selectedTabIndex === 6" [rowElements]="getCountries()" [locLookup]="locLookup" [columns]="goodColumns"></app-table>
+    </mat-tab>
+    <mat-tab label="Plot">
+        <app-plot-view *ngIf="selectedTabIndex === 7"></app-plot-view>
+        <app-plot-view *ngIf="selectedTabIndex === 7"></app-plot-view>
+        <app-plot-view *ngIf="selectedTabIndex === 7"></app-plot-view>
+        <app-plot-view *ngIf="selectedTabIndex === 7"></app-plot-view>
+        <app-plot-view *ngIf="selectedTabIndex === 7"></app-plot-view>
     </mat-tab>
 </mat-tab-group>
