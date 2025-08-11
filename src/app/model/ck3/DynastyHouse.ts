@@ -1,9 +1,11 @@
-import { Save } from "../Save";
+
 import { Character } from "./Character";
+import { LegacyCk3Save } from "./LegacyCk3Save";
+import { ICk3Save } from "./save/ICk3Save";
 
 export class DynastyHouse {
 
-    constructor(private id: number, private data: any, private save: Save) {
+    constructor(private id: number, private data: any, private save: ICk3Save) {
 
     }
 

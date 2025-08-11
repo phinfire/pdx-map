@@ -1,14 +1,18 @@
-import { CK3 } from "../CK3";
 import { Building } from "./Building";
+import { CK3 } from "./CK3";
 
 export class Holding {
+
+    public static fromRawData(data: any, ck3: CK3): Holding {
+        return new Holding(data, ck3);
+    }
 
     public static readonly TYPE_CASTLE = "castle_holding";
     public static readonly TYPE_CHURCH = "church_holding";
     public static readonly TYPE_CITY = "city_holding";
     public static readonly TYPE_TRIBAL = "tribal_holding";
 
-    constructor(private data: any, private ck3: CK3) {
+    private constructor(private data: any, private ck3: CK3) {
         
     }
 
@@ -21,9 +25,6 @@ export class Holding {
     }
 
     getLevy() {
-        if (this.data.levy> 10000) {
-            console.log("levy: ", this.data.levy);
-        }
         return this.data.levy || 0;
     }
 

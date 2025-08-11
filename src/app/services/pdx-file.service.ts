@@ -46,7 +46,11 @@ export class PdxFileService {
         }
     }
 
-    importFilePromise(files: File[]): Promise<{ name: string, json: any }[]> {
+    importFilePromise(file: File) {
+        return this.importFilesPromise([file]).then(results => results[0]);
+    }
+
+    importFilesPromise(files: File[]): Promise<{ name: string, json: any }[]> {
         const promises = files.map(file => {
             return new Promise<{ name: string, json: any }>((resolve, reject) => {
                 const reader = new FileReader();

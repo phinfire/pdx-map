@@ -1,3 +1,5 @@
+import { OwnershipChange } from "../common/OwnershipChange";
+
 export class Eu4SaveProvince {
  
     constructor(private id: string, private data: any, private save: Eu4Save) {
@@ -30,6 +32,25 @@ export class Eu4SaveProvince {
             return null
         }
         return this.save.getCountry(this.data.owner);
+    }
+
+    getOwnershipChanges(): OwnershipChange<Date,Eu4SaveProvince,Eu4SaveCountry>[] {
+        const changes = [];
+        let previousOwner = null;
+        for (const date of Object.keys(this.data.history)) {
+            const entry = this.data.history[date];
+            if (entry.owner) {
+                const newOwner = this.save.getCountry(entry.owner);
+                changes.push({
+                    date: new Date(entry.date),
+                    province: this,
+                    oldOwner: previousOwner,
+                    newOwner: newOwner
+                });
+                previousOwner = newOwner;
+            }
+        }
+        return changes;
     }
 }
 

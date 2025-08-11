@@ -1,11 +1,8 @@
-import { Component, OnInit, ElementRef } from '@angular/core';
+import { Component, OnInit, ElementRef, Inject } from '@angular/core';
 import * as d3 from 'd3';
-
-interface Slice {
-    label: string;
-    value: number;
-    color: string;
-}
+import { TableColumn } from '../util/table/TableColumn';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Plotable } from './plot/Plotable';
 
 @Component({
     selector: 'app-plot-view',
@@ -15,20 +12,29 @@ interface Slice {
 })
 export class PlotViewComponent implements OnInit {
 
-    constructor(private elementRef: ElementRef) { }
+    private static readonly OTHER_LABEL = 'Other';
 
-    ngOnInit() {
-        this.copied([
-            { label: "A", value: 30, color: "#e63946" },
-            { label: "B", value: 20, color: "#457b9d" },
-            { label: "C", value: 25, color: "#2a9d8f" },
-            { label: "D", value: 15, color: "#f4a261" },
-            { label: "E", value: 10, color: "#e9c46a" }
-        ]);
+    plotables: Plotable[] = [];
+
+    constructor(
+        @Inject(MAT_DIALOG_DATA) private data: { plotables: Plotable[] }, private elementRef: ElementRef
+    ) {
+        this.plotables = data.plotables;
     }
 
-    copied(slices: Slice[]) {
+    ngOnInit() {
+        console.log(this.plotables);
+        this.copied(this.plotables);
+    }
 
+    copied(plotables: Plotable[]) {
+        const offtoOtherYouGoThreshold = 0.025;
+        const totalValue = plotables.reduce((sum, p) => sum + p.value, 0);
+        const tooSmallSlices = plotables.filter(p => p.value / totalValue < offtoOtherYouGoThreshold);
+        const okSlices = plotables.filter(p => p.value / totalValue >= offtoOtherYouGoThreshold);
+        const slices = okSlices.concat(
+            tooSmallSlices.length > 0 ? [new Plotable(PlotViewComponent.OTHER_LABEL, tooSmallSlices.reduce((sum, p) => sum + p.value, 0), tooSmallSlices[0].color)] : []
+        );
         const width = 500;
         const height = 500;
         const radius = Math.min(width, height) / 2;
@@ -58,9 +64,9 @@ export class PlotViewComponent implements OnInit {
         const svg = svgRoot.append("g")
             .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-        const pie = d3.pie<Slice>().value(d => d.value).padAngle(0.03);
+        const pie = d3.pie<Plotable>().value(d => d.value).padAngle(0.03);
 
-        const arc = d3.arc<d3.PieArcDatum<Slice>>()
+        const arc = d3.arc<d3.PieArcDatum<Plotable>>()
             .innerRadius(16)
             .outerRadius(radius)
             .cornerRadius(4);
@@ -78,15 +84,35 @@ export class PlotViewComponent implements OnInit {
             .attr("filter", "url(#drop-shadow)");
 
         arcs.append("text")
-            .attr("transform", d => `translate(${arc.centroid(d)})`)
-            .attr("text-anchor", "middle")
+            .attr("transform", d => {
+                const [x, y] = arc.centroid(d);
+                const angle = (d.startAngle + d.endAngle) / 2;
+                let rotation = (angle * 180 / Math.PI) - 90;
+                if (rotation > 90) rotation -= 180;
+                return `translate(${x}, ${y}) rotate(${rotation})`;
+            })
+            .attr("text-anchor", "central")
             .attr("class", "slice-label")
             .text(d => d.data.label);
+        /*
+    arcs.append("text")
+        .attr("transform", d => {
+            const [x, y] = arc.centroid(d);
+            const angle = (d.startAngle + d.endAngle) / 2;
+            let rotation = (angle * 180 / Math.PI) - 90;
+            if (rotation > 90) rotation -= 180;
+            return `translate(${x}, ${y}) rotate(${rotation})`;
+        })
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .attr("class", "slice-label")
+        .text(d => d.data.label);
+        */
 
         const styleElement = hostElement.append("style");
         styleElement.text(`
             .slice {
-                transition: opacity 0.2s ease-in-out;
+                transition: opacity 0.1s ease-in-out;
             }
             .slice:hover {
                 opacity: 0.7;

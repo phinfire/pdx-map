@@ -5,7 +5,9 @@ import { MatTooltipModule, MAT_TOOLTIP_DEFAULT_OPTIONS, MatTooltipDefaultOptions
 import { CommonModule } from '@angular/common';
 import { TableColumn } from '../util/table/TableColumn';
 import { FormsModule } from '@angular/forms';
-import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { CdkContextMenuTrigger, CdkMenu, CdkMenuItem, CdkMenuModule } from '@angular/cdk/menu';
+import { MatDialog } from '@angular/material/dialog';
+import { PlotViewComponent } from '../plot-view/plot-view.component';
 
 export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     showDelay: 0,
@@ -15,7 +17,7 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
 
 @Component({
     selector: 'app-table',
-    imports: [CommonModule, MatTableModule, MatSortModule, MatTooltipModule, FormsModule, MatMenuModule],
+    imports: [CommonModule, MatTableModule, MatSortModule, MatTooltipModule, FormsModule, CdkContextMenuTrigger, CdkMenu, CdkMenuItem, CdkMenuModule],
     templateUrl: './vic3-country-table.component.html',
     styleUrl: './vic3-country-table.component.scss',
     providers: [
@@ -26,14 +28,15 @@ export class TableComponent<T> {
 
     @Input() columns: TableColumn<T>[] = [];
     @Input() rowElements: T[] = [];
-    @Input() locLookup = new Map<string, string>();
 
     @ViewChild(MatSort) sort!: MatSort;
     displayedColumns: string[] = [];
     dataSource = new MatTableDataSource<T>([]);
     showTooltips = true;
 
-    constructor() {
+    selectedColumn: TableColumn<T> | null = null;
+
+    constructor(private dialog: MatDialog) {
 
     }
 
@@ -58,13 +61,19 @@ export class TableComponent<T> {
         };
     }
 
-    getCountryName(tag: string) {
-        return this.locLookup.get(tag) || tag;
-    }
-
-    openMenu(event: MouseEvent, tooltip: string, menuTrigger: MatMenuTrigger) {
-        event.preventDefault();
-        menuTrigger.menuData = { tooltip };
-        menuTrigger.openMenu();
+    openPlot() {
+        if (this.selectedColumn) {
+            const hackyNameColumn = this.columns.find(c => c.def === 'name');
+            const plotables = this.rowElements.map(row => {
+                const value = this.selectedColumn!.cellValue(row, 0);
+                const label = hackyNameColumn!.cellValue(row, 0);
+                const color = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+                return { value, label, color };
+            });
+            this.dialog.open(PlotViewComponent, {
+                data: {plotables: Array.from(plotables)},
+                panelClass: "popup"
+            });
+        }
     }
 }

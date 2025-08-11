@@ -1,4 +1,4 @@
-import { CK3 } from "../CK3";
+import { CK3 } from "./CK3";
 import { Skill } from "./enum/Skill";
 import { TraitType } from "./enum/TraitType";
 

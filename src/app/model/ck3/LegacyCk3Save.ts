@@ -5,56 +5,65 @@ import { Faith } from "./Faith";
 import { Culture } from "./Culture";
 import { DynastyHouse } from "./DynastyHouse";
 import { Holding } from "./Holding";
-import { LandedTitle } from "./LandedTitle";
 import { County } from "./County";
+import { SimplifiedDate } from "../common/SimplifiedDate";
+import { OwnershipChange } from "../common/OwnershipChange";
+import { AbstractLandedTitle } from "./title/AbstractLandedTitle";
+import { ICk3Save } from "./save/ICk3Save";
 
-export class Save {
+export class LegacyCk3Save {
+    /*
+    static fromRawData(data: any, ck3: CK3) {
+        return new LegacyCk3Save(ck3);
+    }
 
     private playerName2PlayerData: Map<string,any> = new Map<string,any>();
-
-    private data: any;
-
     private vassal2Liege: Map<number, number> = new Map<number, number>();
+    private cachedCountyKey2LandedTitle = new Map<string, AbstractLandedTitle>();
+    private playerName2Character = new Map<string, Character>();
+    private cachedLandedTitles = new Map<string, AbstractLandedTitle>();
+    private data: any = null;
 
-    private cachedCountyKey2LandedTitle: Map<string, LandedTitle> = new Map<string, LandedTitle>();
-
-    private playerName2Character: Map<string, Character> = new Map<string, Character>();
-
-    constructor(private ck3: CK3) {
-
-    }
-    
-    pruneData() {
-        const blacklist = ["opinion", "character_memory_manager", "coat_of_arms" , "triggered_event", "armies", "relations", "ai", "council_task_manager",
-             "secrets", "wars"]
-        for (let key of Object.keys(this.data)) {
-            if (blacklist.indexOf(key) != -1) {
-                delete this.data[key];
-            }
-        }
+    private constructor(private ck3: CK3) {
+        //this.populateLookups();
     }
 
     public getCurrentDate() : Date {
+        if (!this.data?.meta_data?.meta_date) {
+            throw new Error("Invalid save data: missing meta_data.meta_date");
+        }
         const [year,month,day] = this.data.meta_data.meta_date.split(".");
+        if (!year || !month || !day) {
+            throw new Error("Invalid date format in save data");
+        }
         return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     }
 
     public setData(data: any) {
         this.data = data;
         this.populateLookups();
-        //this.pruneData();
     }
 
     async fromSavefileContent(content: string) {
-        await Jomini.initialize().then((parser) => {
-            const out = parser.parseText(content, {}, (q) => q.json());
-            this.data = JSON.parse(out);
-            this.populateLookups();
-            //this.pruneData();
-        });
+        try {
+            await Jomini.initialize().then((parser) => {
+                const out = parser.parseText(content, {}, (q) => q.json());
+                this.data = JSON.parse(out);
+                this.populateLookups();
+            });
+        } catch (error) {
+            throw new Error(`Failed to parse save file content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     }
 
     private populateLookups() {
+        console.log("Populating lookups for CK3 save data...");
+        // Safely handle played_character data
+        if (!this.data.played_character) {
+            console.warn("No played_character data found in save");
+            return;
+        }
+
         let playedCharacters = [];
         if ((!Array.isArray(this.data.played_character))) {
             playedCharacters = [this.data.played_character];
@@ -62,26 +71,36 @@ export class Save {
             playedCharacters = this.data.played_character;
         }
         for (let playerData of playedCharacters) {
+            if (!playerData?.name) {
+                console.warn("Player data missing name field:", playerData);
+                continue;
+            }
             this.playerName2PlayerData.set(playerData.name, playerData);
         }
 
         Array.from(this.playerName2PlayerData.keys()).forEach(playerName => {
-            const playerData = this.getPlayerDataBlock(playerName);
-            const character = this.getCharacter(playerData.character);
-            if (character != null) {
-                this.playerName2Character.set(playerName, character);
-            } else {
-                const sortedLegacy = playerData.legacy.sort(((a: any, b: any) => b.date.localeCompare(a.date)));
-                if (sortedLegacy.length > 0) {
-                    const character = this.getCharacter(sortedLegacy[0].character);
-                    if (character != null) {
-                        this.playerName2Character.set(playerName, character);
+            try {
+                const playerData = this.playerName2PlayerData.get(playerName);
+                if (!playerData) return;
+                
+                const character = this.getCharacter(playerData.character);
+                if (character != null) {
+                    this.playerName2Character.set(playerName, character);
+                } else if (playerData.legacy && Array.isArray(playerData.legacy)) {
+                    const sortedLegacy = playerData.legacy.sort(((a: any, b: any) => b.date.localeCompare(a.date)));
+                    if (sortedLegacy.length > 0) {
+                        const character = this.getCharacter(sortedLegacy[0].character);
+                        if (character != null) {
+                            this.playerName2Character.set(playerName, character);
+                        }
                     }
                 }
+            } catch (error) {
+                console.error(`Error processing player ${playerName}:`, error);
             }
         });
 
-        if (this.data.landed_titles) {
+        if (this.data.landed_titles?.landed_titles) {
             const distinctHolders = new Set<number>();
             for (let i of Object.keys(this.data.landed_titles.landed_titles)) {
                 const element = this.data.landed_titles.landed_titles[i];
@@ -97,22 +116,31 @@ export class Save {
 
             for (let i of Object.keys(this.data.landed_titles.landed_titles)) {
                 if (this.data.landed_titles.landed_titles[i].key && this.data.landed_titles.landed_titles[i].key.startsWith("c_")) {
-                    this.cachedCountyKey2LandedTitle.set(this.data.landed_titles.landed_titles[i].key, new LandedTitle(this.data.landed_titles.landed_titles[i], this, this.ck3));
+                    this.cachedCountyKey2LandedTitle.set(this.data.landed_titles.landed_titles[i].key, AbstractLandedTitle.fromRawData(this.data.landed_titles.landed_titles[i], this, this.ck3));
                 }
             }
         }
     }
     
     public getPlayerCharacters(onlyActive: boolean) : Character[] {
-        const result = this.playerName2PlayerData.keys().map(player => {
+        const result = Array.from(this.playerName2PlayerData.keys()).map(player => {
             const playerData = this.getPlayerDataBlock(player);
+            if (!playerData) {
+                console.warn(`Player data not found for: ${player}`);
+                return null;
+            }
             const character = this.getCharacter(playerData.character);
             if (character != null) {
                 return character;
             } else {
-                return playerData.legacy.map((legacyCharacter: any) => {
+                if (!playerData.legacy || !Array.isArray(playerData.legacy)) {
+                    console.warn(`No legacy data found for player: ${player}`);
+                    return null;
+                }
+                const legacyCharacters = playerData.legacy.map((legacyCharacter: any) => {
                     return this.getCharacter(legacyCharacter.character);
-                }).filter((character: any) => character != null)[0];
+                }).filter((character: any) => character != null);
+                return legacyCharacters.length > 0 ? legacyCharacters[0] : null;
             }
         }).filter((character: any) => character != null); // TODO: onlyActive
         return Array.from(result);
@@ -126,7 +154,11 @@ export class Save {
     }
 
     public getPlayerDataBlock(player: string) {
-        return this.playerName2PlayerData.get(player);
+        const playerData = this.playerName2PlayerData.get(player);
+        if (!playerData) {
+            throw new Error(`Player data not found for: ${player}`);
+        }
+        return playerData;
     }
 
     public characterExists(id: string) {
@@ -137,15 +169,20 @@ export class Save {
     }
 
     public getLivingCharactersFiltered(filter: (charData: any) => boolean) {
-        return Object.keys(this.data.living).map(id => this.data.living[id]).filter(filter).map(charData => new Character(charData.id, charData, this, this.ck3));
+        return Object.keys(this.data.living).map(id => this.data.living[id]).filter(filter).map(charData => Character.fromRawData(charData.id, charData, this, this.ck3));
     }
 
-    public getCharacter(id: string) {
-        if (this.data.living[id]) {
-            return new Character(id, this.data.living[id], this, this.ck3);
+    public getCharacter(id: number) {
+        if (!id || typeof id !== 'string') {
+            console.warn('Invalid character ID provided:', id);
+            return null;
         }
-        if (this.data.dead_unprunable[id]) {
-            return new Character(id, this.data.dead_unprunable[id], this, this.ck3);
+        
+        if (this.data.living?.[id]) {
+            return Character.fromRawData(id, this.data.living[id], this, this.ck3);
+        }
+        if (this.data.dead_unprunable?.[id]) {
+            return Character.fromRawData(id, this.data.dead_unprunable[id], this, this.ck3);
         }
         return null;
     }
@@ -159,7 +196,10 @@ export class Save {
     }
     
     public getCulture(cultureId: number) {
-        return this.data.culture_manager.cultures[cultureId] ? new Culture(cultureId, this.data.culture_manager.cultures[cultureId]) : null;
+        if (this.data.culture_manager.cultures[cultureId]) {
+            return new Culture(cultureId, this.data.culture_manager.cultures[cultureId])
+        }
+        throw new Error("Culture not found: " + cultureId);
     }
 
     public getJsonString() {
@@ -169,9 +209,9 @@ export class Save {
     public getHeldTitles(character: Character) {
         const titleDatas = [];
         for (let key of Object.keys(this.data.landed_titles.landed_titles)) {
-            if (this.data.landed_titles.landed_titles[key].holder && this.data.landed_titles.landed_titles[key].holder == character.getId()) {
+            if (this.data.landed_titles.landed_titles[key].holder && this.data.landed_titles.landed_titles[key].holder == character.getCharacterId()) {
                 const titleData = this.data.landed_titles.landed_titles[key];
-                titleDatas.push(new LandedTitle(titleData, this, this.ck3)); 
+                titleDatas.push(AbstractLandedTitle.fromRawData(titleData, this, this.ck3)); 
             }
         }
         return titleDatas;
@@ -183,10 +223,20 @@ export class Save {
         }
         for (let i of Object.keys(this.data.landed_titles.landed_titles)) {
             if (this.data.landed_titles.landed_titles[i].key == key) {
-                return new LandedTitle(this.data.landed_titles.landed_titles[i], this, this.ck3);
+                return AbstractLandedTitle.fromRawData(this.data.landed_titles.landed_titles[i], this, this.ck3);
             }
         }
         throw new Error("Title not found: " + key);
+    }
+
+    public getAllLandedTitles() {
+        if (this.cachedLandedTitles.size == 0) {
+            for (let i of Object.keys(this.data.landed_titles.landed_titles)) {
+                const titleData = this.data.landed_titles.landed_titles[i];
+                this.cachedLandedTitles.set(titleData.key, AbstractLandedTitle.fromRawData(titleData, this, this.ck3));
+            }
+        }
+        return Array.from(this.cachedLandedTitles.values());
     }
 
     public getDynastyHouseAndDynastyData(houseId: number) {
@@ -221,7 +271,7 @@ export class Save {
         if (this.data.county_manager && this.data.county_manager.counties) {
             for (let countyName of Object.keys(this.data.county_manager.counties)) {
                 const county = this.data.county_manager.counties[countyName];
-                counties.push(new County(countyName, county, this, this.ck3));
+                counties.push(County.fromRawData(countyName, county, this, this.ck3));
             }
         }
         return counties;
@@ -230,7 +280,7 @@ export class Save {
     public getAllHoldings() {
         this.data.provinces.map((province: any) => {
             if (province.holding) {
-                return new Holding(province.holding, this.ck3);
+                return Holding.fromRawData(province.holding, this.ck3);
             }
             return null;
         }).filter((holding: any) => holding != null);
@@ -238,21 +288,32 @@ export class Save {
 
     public getHolding(provinceIndex: number) {
         if (this.data.provinces[provinceIndex] && this.data.provinces[provinceIndex].holding) {
-            return new Holding(this.data.provinces[provinceIndex].holding, this.ck3);
+            return Holding.fromRawData(this.data.provinces[provinceIndex].holding, this.ck3);
         }
         return null;
     }
 
     public getTitleByIndex(index: number) {
-        return new LandedTitle(this.data.landed_titles.landed_titles[index], this, this.ck3);
+        return AbstractLandedTitle.fromRawData(this.data.landed_titles.landed_titles[index], this, this.ck3);
     }
 
     public getPlayerNameByCharId(charId: number) {
         for (let playerName of this.playerName2Character.keys()) {
-            if (this.playerName2Character.get(playerName)!.getId() == charId) {
+            if (this.playerName2Character.get(playerName)!.getCharacterId() == charId) {
                 return playerName;
             }
         }
         return null;
     }
+
+    public getCountyOwnershipChanges() {
+        const change = new Map<SimplifiedDate, OwnershipChange<SimplifiedDate,AbstractLandedTitle,Character>>();
+        for (let key of this.cachedCountyKey2LandedTitle.keys()) {
+            if (!key.endsWith("moravia")) {
+                continue
+            }
+            
+        }
+    }
+    */
 }

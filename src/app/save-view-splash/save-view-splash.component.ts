@@ -36,7 +36,7 @@ export class SaveViewSplashComponent {
     }
 
     private processFiles(files: File[]) {
-        this.fileService.importFilePromise(files).then(namesAndJsons => {
+        this.fileService.importFilesPromise(files).then(namesAndJsons => {
             const first = namesAndJsons[0];
             this.activeSave = Vic3Save.makeSaveFromRawData(first.json);
             this.hasBeenInitialized = true;

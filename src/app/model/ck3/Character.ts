@@ -1,15 +1,18 @@
 import { AccumulatableCurrenty as AccumulatableCurrency } from "./AccumulatableCurrency";
 import { CK3 } from "./CK3";
-import { Save } from "./Ck3Save";
-import { LandedTitle } from "./LandedTitle";
 import { RulerTier } from "./RulerTier";
 import { Skill } from "./enum/Skill";
 import { Trait } from "./Trait";
+import { AbstractLandedTitle } from "./title/AbstractLandedTitle";
+import { ICk3Save } from "./save/ICk3Save";
 
 export class Character {
-    
-    constructor(private id: string, private data: any, private save: Save, private ck3: CK3) {
-        
+
+    static fromRawData(id: string, data: any, save: ICk3Save, ck3: CK3): Character {
+        return new Character(id, data, save, ck3);
+    }
+
+    constructor(private id: string, private data: any, private save: ICk3Save, private ck3: CK3) {
     }
 
     public getDynastyHouse() {
@@ -23,8 +26,8 @@ export class Character {
         return false;
     }
 
-    public getId() {
-        return parseInt(this.id);
+    public getCharacterId() {
+        return this.id;
     }
 
     public isAlive(): boolean {
@@ -59,7 +62,7 @@ export class Character {
         if (this.data.culture) {
             return this.save.getCulture(this.data.culture);
         }
-        throw new Error("Character " + this.getId() + " has no culture set");
+        throw new Error("Character " + this.getCharacterId() + " has no culture set");
     }
 
     public getCash() {
@@ -75,9 +78,7 @@ export class Character {
     }
 
     public getTraits() : Trait[] {
-        return (this.data.traits || []).map((traitIndex: any) => {
-            return this.ck3.getTraitByIndex(traitIndex);
-        });
+        return (this.data.traits || []).map((traitIndex: any) => this.ck3.getTraitByIndex(traitIndex));
     }
 
     public getChildren() {
@@ -105,21 +106,21 @@ export class Character {
         return this.data.skill || [];
     }
 
-    public getLandedValue(key: string, defaultValue: any) {
+    public getLandedValue<T>(key: string, defaultValue: T) {
         if (this.data.landed_data && this.data.landed_data[key]) {
             return this.data.landed_data[key];
         }
         return defaultValue;
     }
 
-    public getAliveValue(key: string, defaultValue: any) {
+    public getAliveValue<T>(key: string, defaultValue: T) {
         if (this.data.alive_data && this.data.alive_data[key]) {
             return this.data.alive_data[key];
         }
         return defaultValue;
     }
 
-    public getPlayableData(key: string, defaultValue: any) {
+    public getPlayableData<T>(key: string, defaultValue: T) {
         if (this.data.playable_data && this.data.playable_data[key]) {
             return this.data.playable_data[key];
         }
@@ -154,23 +155,20 @@ export class Character {
     }
 
     public getPlayerName() {
-        return this.save.getPlayerNameByCharId(this.getId());
+        return this.save.getPlayerNameByCharacterId(this.getCharacterId());
     }
 
     public getCharacterTier() : RulerTier {
-        if (this.isLanded()) {
-            return this.getHighestTitle().getTier();
-        }
-        return RulerTier.NONE;
+        return this.isLanded() ?  this.getHighestTitle().getTier() : RulerTier.NONE;
     }
 
     public getHighestTitle() {
         const titles = this.getTitles();
-        return titles.reduce((prev: LandedTitle, current: LandedTitle) => prev.getTier().compare(current.getTier()) > 0 ? prev : current);
+        return titles.reduce((prev: AbstractLandedTitle, current: AbstractLandedTitle) => prev.getTier().compare(current.getTier()) > 0 ? prev : current);
     }
 
     public getDomainBaronies() {
-        return this.getTitles().filter((title: LandedTitle) => title.getTier() == RulerTier.BARON);
+        return this.getTitles().filter((title: AbstractLandedTitle) => title.getTier() == RulerTier.BARON);
     }
 
     public getTitles() {
@@ -217,12 +215,12 @@ export class Character {
         return currentDate.getFullYear() - birthDate.getFullYear();
     }
 
-    public getVassals() {
+    public getVassals() { //TODO
         const vassalCharId2Title = new Map<string, number[]>();
         return [];
     }
 
     public equals(other: Character) {
-        return this.id == other.id;
+        return this.getCharacterId() === other.getCharacterId();
     }
 }

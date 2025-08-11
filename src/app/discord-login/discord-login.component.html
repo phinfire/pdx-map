@@ -1,0 +1,24 @@
+<div *ngIf="loading" class="loading-spinner">
+    <mat-spinner diameter="40"></mat-spinner>
+</div>
+<div *ngIf="!loading">
+    <div *ngIf="hasUserSet(); else userNotSet" class="discord">
+        <div class="avatar-container">
+            <img [src]="getAvatarUrl()" alt="Avatar" class="avatar-img">
+        </div>
+        <div class="name-container">
+            <span class="profile-name">{{ getUserName() }}</span>
+        </div>
+    </div>
+</div>
+
+<ng-template #userNotSet>
+    <div class="discord">
+        <div class="avatar-container"></div>
+        <div class="name-container">
+            <div class="login-button">
+                <button mat-raised-button color="primary" (click)="loginWithDiscord()">Login with Discord</button>
+            </div>
+        </div>
+    </div>
+</ng-template>

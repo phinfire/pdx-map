@@ -89,12 +89,21 @@ export class Vic3Save {
             }
         }
         const nonBlocCountries = existingCountries.filter(c => blocs.every(bloc => !bloc.getCountries().getInternalElements().includes(c)));
-        return new Vic3Save(nonBlocCountries, blocs);
+        //"1863.6.3.18"
+        const realDateString = saveData.meta_data.real_date;
+        const ingameDateString = saveData.meta_data.game_date;
+        const ingameDateStringDatePart = ingameDateString.substring(0, ingameDateString.lastIndexOf("."));
+        const ingameDateParts = ingameDateStringDatePart.split(".");
+        const ingameDate = new Date(parseInt(ingameDateParts[0]), parseInt(ingameDateParts[1]) - 1, parseInt(ingameDateParts[2]));
+        const realDateParts = realDateString.split(".");
+        const realDate = new Date(parseInt(realDateParts[0]), parseInt(realDateParts[1]) - 1, parseInt(realDateParts[2]));
+        realDate.setFullYear(realDate.getFullYear() + 1900);
+        return new Vic3Save(nonBlocCountries, blocs, ingameDate, realDate);
     }
 
     private cachedCountries: Country[];
 
-    private constructor(private nonBlocCountries: Country[], private blocs: PowerBloc[]) {
+    private constructor(private nonBlocCountries: Country[], private blocs: PowerBloc[], private ingameDate: Date, private realDate: Date) {
         this.cachedCountries = this.nonBlocCountries.concat(this.blocs.flatMap(bloc => bloc.getCountries().getInternalElements()));
     }
 
@@ -106,10 +115,20 @@ export class Vic3Save {
         return this.blocs;
     }
 
+    getIngameDate() {
+        return this.ingameDate;
+    }
+
+    getRealDate() {
+        return this.realDate;
+    }
+
     toJson() {
         return {
             "countries": this.nonBlocCountries.map(c => c.toJson()),
-            "blocs": this.blocs.map(b => b.toJson())
+            "blocs": this.blocs.map(b => b.toJson()),
+            "ingameDate": this.ingameDate.toISOString(),
+            "realDate": this.realDate.toISOString()
         };
     }
 }

@@ -1,4 +1,4 @@
-import { Eu4Save } from "../model/eu4/Eu4Save";
+import { Eu4Save } from "../../model/eu4/Eu4Save";
 
 export interface IHasKey {
     getKey(): string;
@@ -27,7 +27,7 @@ interface ICategoryMapMode {
     colorGetter: (county: IHasKey) => string;
 }
 
-export class MapDataProvider {
+export class MapEU4DataProvider {
 
     constructor(private activeSave: Eu4Save | null) {
 

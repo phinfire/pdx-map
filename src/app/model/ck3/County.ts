@@ -1,23 +1,10 @@
 import { CK3 } from "./CK3";
-import { Save } from "./Ck3Save";
+import { LegacyCk3Save } from "./LegacyCk3Save";
+import { ICk3Save } from "./save/ICk3Save";
 
 export class County {
 
-    private faithId: number;
-    private cultureId: number;
-    private countyControl: number;
-    private development: number;
-    private developmentProgress: number;
-
-    private constructor(private key: string, faithId: number, cultureId: number, countyControl: number, development: number, developmentProgress: number, private save: Save, private ck3: CK3) {
-        this.faithId = faithId;
-        this.cultureId = cultureId;
-        this.countyControl = countyControl;
-        this.development = development;
-        this.developmentProgress = developmentProgress;
-    }
-
-    static makeFromData(key: string, data: any, save: Save, ck3: CK3): County {
+    static fromRawData(key: string, data: any, save: ICk3Save, ck3: CK3): County {
         const faithId = parseInt(data.faith);
         const cultureId = parseInt(data.culture);
         const countyControl = data.county_control || 0;
@@ -25,6 +12,17 @@ export class County {
         const developmentProgress = data.development_progress || 0;
         return new County(key, faithId, cultureId, countyControl, development, developmentProgress, save, ck3);
     }
+
+    private constructor(
+        private key: string,
+        private faithId: number,
+        private cultureId: number,
+        private countyControl: number,
+        private development: number,
+        private developmentProgress: number,
+        private save: ICk3Save,
+        private ck3: CK3
+    ) { }
 
     getKey() {
         return this.key;

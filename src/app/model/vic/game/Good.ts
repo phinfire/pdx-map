@@ -1,6 +1,10 @@
+import { GoodCategory } from "../enum/GoodCategory";
+
 export class Good {
 
-    constructor(public name: string, public index: number, public category: string, public locKey: string) {
-        
+    public readonly name: string;
+
+    constructor(public readonly key: string, public readonly index: number, public readonly category: GoodCategory, public readonly locKey: string) {
+        this.name = key.charAt(0).toUpperCase() + key.slice(1);
     }
 }

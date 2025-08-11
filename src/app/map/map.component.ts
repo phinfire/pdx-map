@@ -6,7 +6,7 @@ import { MapService } from '../map.service';
 import { HttpClient } from '@angular/common/http';
 import { PdxFileService } from '../services/pdx-file.service';
 import { Eu4Save } from '../model/eu4/Eu4Save';
-import { IHasKey, MapDataProvider } from './MapDataProvider';
+import { IHasKey, MapEU4DataProvider } from './config/MapDataProvider';
 
 @Component({
     selector: 'app-map',
@@ -27,22 +27,22 @@ export class MapComponent {
 
     private geoJson: any = {};
 
-    private dataProvider: MapDataProvider = new MapDataProvider(null);
+    private dataProvider: MapEU4DataProvider = new MapEU4DataProvider(null);
 
     @ViewChild('mapcontainer') mapContainer!: ElementRef<HTMLDivElement>;
 
-    constructor(private hostElement: ElementRef, private mapService: MapService, private fileService: PdxFileService, private http: HttpClient) {
-        /*this.http.get('http://127.0.0.1:5500/public/test.json').subscribe((data) => {
+    constructor(private hostElement: ElementRef, private mapService: MapService, private fileService: PdxFileService, http: HttpClient) {
+        http.get('http://127.0.0.1:5500/public/test.json').subscribe((data) => {
             this.dataProvider.setActiveSave(new Eu4Save(data));
             this.showPerProvinceValue(this.dataProvider.getAvailableValueModes()[0].iconUrl, this.dataProvider.getAvailableValueModes()[0].valueGetter);
-        });*/
+        });
     }
 
-    ngOnInit() {/*
+    ngOnInit() {
         this.mapService.fetchEU4GeoJson().subscribe((data) => {
             this.geoJson = data;
         });
-        */
+        
         this.hostElement.nativeElement.addEventListener('drop', (event: DragEvent) => {
             event.preventDefault();
             if (event.dataTransfer && event.dataTransfer.files.length > 0) {

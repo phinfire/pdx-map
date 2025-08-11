@@ -3,6 +3,8 @@ import { Jomini } from "jomini";
 import { Trait } from "./Trait";
 import { Skill } from "./enum/Skill";
 import { RGB } from "../../util/RGB";
+import { I } from "@angular/cdk/keycodes";
+import { Building } from "./Building";
 export class CK3 {
 
     public static SKILLS_IN_ORDER = [Skill.DIPLOMACY, Skill.MARTIAL, Skill.STEWARDSHIP, Skill.INTRIGUE, Skill.LEARNING, Skill.PROWESS];
@@ -18,92 +20,52 @@ export class CK3 {
 
     private buildingKey2Data: Map<string, any> = new Map<string, any>();
 
-    constructor() {
-        this.fetchAndInsertLocalisationMapping("traits_l_english.yml");
-        this.fetchAndInsertLocalisationMapping("titles_l_english.yml");
-        const urls = [
-            "common/traits/00_traits.txt",
-            "common/landed_titles/00_landed_titles.txt",
-            "common/scripted_values/00_building_values.txt"
-        ].map(file => CK3.CK3_DATA_URL + "/" + file);
-
-        Promise.all(urls.map(url => fetch(url).then(response => response.text()))).then(datas => {
-            Jomini.initialize().then((parser) => {
-                const parsed = parser.parseText(datas[0]);
-                let i = 0;
-                for (let key of Object.keys(parsed)) {
-                    if (!key.startsWith("@")) {
-                        this.traits.set(key, new Trait(key, parsed[key], i));
-                        i++;
-                    }
-                }
-                const parsedlandedTitles = parser.parseText(datas[1]);
-                for (let key of Object.keys(parsedlandedTitles)) {
-                    this.recursivelyInsertBaronyIndices(parsedlandedTitles[key], key);
-                }
-                this.scriptedBuildingValues = parser.parseText(datas[2]);
-            });
+    constructor(localisation: Map<string, string>, traits: Trait[],
+        county2Baronies: Map<string, string[]>,
+        barony2provinceIndices: Map<string, number>,
+        titleKey2Color: Map<string, RGB>) {
+        this.localisation = localisation;
+        this.traits = new Map<string, Trait>();
+        traits.forEach(trait => {
+            this.traits.set(trait.getName(), trait);
         });
-        fetch(CK3.CK3_DATA_URL + "common/buildings.zip").then(response => response.blob())
-            .then((blob) => {
-                const zip = new JSZip();
-                return zip.loadAsync(blob).then((zip: any) => {
-                    const promises = Object.keys(zip.files).map((filename) => {
-                        Jomini.initialize().then((parser) => {
-                            return zip.file(filename).async("string").then((data: string) => {
-                                const parsedBuildingFile = parser.parseText(data);
-                                for (let key of Object.keys(parsedBuildingFile)) {
-                                    if (!key.startsWith("@")) {
-                                        this.buildingKey2Data.set(key, parsedBuildingFile[key]);
-                                    }
-                                }
-                            });
-                        });
-                    });
-                    Promise.all(promises);
-                });
-            });
-        /*
-        fetch(CK3.CK3_DATA_URL + "map_data/definition.csv").then(response => response.text()).then((data) => {
-            data.split("\n").filter(line => line.trim().length != 0).forEach(line => {
-                const parts = line.split(";");
-                const id = Number.parseInt(parts[0]);
-                const r = Number.parseInt(parts[1]);
-                const g = Number.parseInt(parts[2]);
-                const b = Number.parseInt(parts[3]);
-                
-            });
-            */
+        this.county2Baronies = county2Baronies;
+        this.barony2provinceIndices = barony2provinceIndices;
+        this.titleKey2Color = titleKey2Color;
     }
-
-    private recursivelyInsertBaronyIndices(parsed: any, previousKey: string) {
-        const okKeys = Object.keys(parsed).filter(key => ["e","k","d","c","b"].some(prefix => key.startsWith(prefix + "_")));
+    
+    static recursivelyInsertBaronyIndices(parsed: any, previousKey: string,
+        titleKey2Color: Map<string, RGB>,
+        county2Baronies: Map<string, string[]>,
+        barony2provinceIndices: Map<string, number>
+    ) {
         if (parsed.color) {
             if (parsed.color.hsv) {
                 const hsv = parsed.color.hsv;
-                this.titleKey2Color.set(previousKey, RGB.fromHSV(hsv[0], hsv[1], hsv[2]));
+                titleKey2Color.set(previousKey, RGB.fromHSV(hsv[0], hsv[1], hsv[2]));
             } else {
-                this.titleKey2Color.set(previousKey, new RGB(parsed.color[0], parsed.color[1], parsed.color[2]));
+                titleKey2Color.set(previousKey, new RGB(parsed.color[0], parsed.color[1], parsed.color[2]));
             }
         }
 
+        const okKeys = Object.keys(parsed).filter(key => ["e", "k", "d", "c", "b"].some(prefix => key.startsWith(prefix + "_")));
         for (let key of okKeys) {
             if (key.startsWith("b_")) {
                 const baronyData = parsed[key];
                 const baronyName = key;
-                if (!this.county2Baronies.has(previousKey)) {
-                    this.county2Baronies.set(previousKey, []);
+                if (!county2Baronies.has(previousKey)) {
+                    county2Baronies.set(previousKey, []);
                 }
-                this.county2Baronies.get(previousKey)!.push(baronyName);
-                this.barony2provinceIndices.set(baronyName, baronyData.province);
+                county2Baronies.get(previousKey)!.push(baronyName);
+                barony2provinceIndices.set(baronyName, baronyData.province);
             } else {
-                this.recursivelyInsertBaronyIndices(parsed[key], key);
+                this.recursivelyInsertBaronyIndices(parsed[key], key, titleKey2Color, county2Baronies, barony2provinceIndices);
             }
         }
     }
 
-    private fetchAndInsertLocalisationMapping(fileName: string) {
-        fetch(CK3.CK3_DATA_URL + "localisation/english/" + fileName.substring(0, fileName.indexOf("."))  + ".zip")
+    static fetchAndInsertLocalisationMapping(fileName: string) {
+        return fetch(CK3.CK3_DATA_URL + "localisation/english/" + fileName.substring(0, fileName.indexOf(".")) + ".zip")
             .then(response => {
                 return response.blob();
             }).then((blob) => {
@@ -112,10 +74,12 @@ export class CK3 {
                     return zip.file(fileName)!.async("string");
                 });
             }).then((data: string) => {
+                const locMap = new Map<string, string>();
                 data.split("\n").map(line => line.trim()).filter(line => line.indexOf(":") != -1 && !line.startsWith("#")).forEach(line => {
                     const parts = line.split(":");
-                    this.localisation.set(parts[0].trim(), parts[1].substring(3, parts[1].length - 1));
+                    locMap.set(parts[0].trim(), parts[1].substring(3, parts[1].length - 1));
                 });
+                return locMap;
             });
     }
 
@@ -129,7 +93,7 @@ export class CK3 {
         }
         throw new Error("Trait not found: " + name);
     }
-    
+
     public hasLocalisation(trait: string) {
         return this.localisation.has(trait);
     }
@@ -137,7 +101,7 @@ export class CK3 {
     public localise(trait: string) {
         return this.localisation.get(trait)!
     }
-    
+
     public getCountyBaronies(countyName: string) {
         return this.county2Baronies.get(countyName);
     }
