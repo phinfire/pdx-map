@@ -1,0 +1,31 @@
+<div class="main">
+    <div class="top">
+        <div class="discord-container">
+            @if (!discordAuthService.isLoggedIn()) {
+            <app-discord-login></app-discord-login>
+            }
+            @if (discordAuthService.isLoggedIn()) {
+            <app-discord-field></app-discord-field>
+            }
+        </div>
+    </div>
+    <h2>Registered Users</h2>
+    <div class="table-container">
+        <table mat-table [dataSource]="tableData" matSort class="mat-elevation-z8">
+            <ng-container matColumnDef="avatar">
+                <th mat-header-cell *matHeaderCellDef></th>
+                <td mat-cell *matCellDef="let user">
+                    <img [src]="user.getAvatarImageUrl()" alt="Avatar" width="40" height="40"
+                        style="border-radius:50%" />
+                </td>
+            </ng-container>
+            <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header></th>
+                <td mat-cell *matCellDef="let user"> {{user.global_name}} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="['avatar', 'name']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['avatar', 'name'];"></tr>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,55 @@
+@use '@angular/material' as mat;
+
+:host {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    @include mat.table-overrides((row-item-container-height: 3em,
+            row-item-label-text-size: 1em,
+            header-container-height: 2.2em,
+            header-headline-size: 1.4em,
+            row-item-outline-color: var(--faded-border-color),
+            row-item-label-text-color: var(--text-color),
+            row-item-outline-width: 1px,
+            header-headline-color: var(--text-color),
+            header-headline-font: var(--font-family) var(--font-weight-bold),
+            row-item-label-text-font: var(--font-family) var(--font-weight-regular)));
+}
+
+
+.main {
+    width: 95%;
+    height: 95%;
+    background-color: var(--background-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: var(--box-shadow);
+
+    .table-container {
+        width: 50%;
+        box-shadow: var(--box-shadow);
+    }
+    
+    h2 {
+        text-decoration: underline;
+        margin-bottom: 0;
+    }
+}
+
+.top {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1em 0em;
+}
+
+.discord-container {
+    width: 20%;
+    border-radius: 0.5em;
+    border: 1px solid var(--faded-border-color);
+}

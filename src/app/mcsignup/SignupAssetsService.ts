@@ -26,7 +26,8 @@ export interface SignupAssetsData {
 })
 export class SignupAssetsService {
 
-    private readonly baseUrl="http://127.0.0.1:5500/public"
+    //private readonly baseUrl="http://127.0.0.1:5500/public"
+    private readonly baseUrl="https://codingafterdark.de/pdx/"
 
     private mapService = inject(MapService);
     private ck3Service = inject(CK3Service);

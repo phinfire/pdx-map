@@ -39,6 +39,11 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
     aggregatedSignupsCount: number = 0;
     perRegionSignups: Map<string, number> = new Map();
 
+    endDate = new Date('2025-09-12T23:59:59');
+    timeLeft: {days: string, hours: string, minutes: string, seconds: string} = {days: "00", hours: "00", minutes: "00", seconds: "00"};
+    private timeIntervalId: any;
+
+
     get tableDataSource(): TableItem[] {
         const emptyRowsCount = this.MAX_SELECTIONS - this.dataSource.length;
         const emptyRows: TableItem[] = Array(emptyRowsCount).fill(null).map(() => ({
@@ -64,14 +69,6 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
         }
         return data.clusterManager.getBuddies(key);
     };
-    /*
-     const tooltipProvider = (key: string) => {
-                    if (!clusterManager) {
-                        return key;
-                    }
-                    ck3.localise(key);
-                    return "<i>" + ck3.localise(key) + "</i><br><strong>" + clusterManager.getClusterKey(key)! + "</strong>";
-                };*/
     tooltipProvider: (key: string) => string = (key: string) => {
         const data = this.signupAssetsService.getCurrentData();
         const ck3 = data!.ck3;
@@ -133,6 +130,36 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
                 console.error('Failed to load registration:', err);
             }
         });
+
+        this.updateTimeLeft();
+        this.timeIntervalId = setInterval(() => {
+            this.updateTimeLeft();
+        }, 100);
+    }
+    ngOnDestroy() {
+        if (this.timeIntervalId) {
+            clearInterval(this.timeIntervalId);
+        }
+        if (this.userPicksSub) {
+            this.userPicksSub.unsubscribe();
+        }
+    }
+
+    private updateTimeLeft() {
+        const now = new Date();
+        let diff = Math.max(0, this.endDate.getTime() - now.getTime());
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        diff -= days * (1000 * 60 * 60 * 24);
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        diff -= hours * (1000 * 60 * 60);
+        const minutes = Math.floor(diff / (1000 * 60));
+        diff -= minutes * (1000 * 60);
+        const seconds = Math.floor(diff / 1000);
+        this.timeLeft = { days: this.padZero(days), hours: this.padZero(hours), minutes: this.padZero(minutes), seconds: this.padZero(seconds) };
+    }
+
+    private padZero(num: number): string {
+        return num.toString().padStart(2, '0');
     }
 
     ngAfterViewInit() {

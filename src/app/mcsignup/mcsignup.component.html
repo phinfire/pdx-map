@@ -1,8 +1,25 @@
 <div class="main">
     <div class="top">
-        <h1>Sign Up for the 2nd Mega Campaign or Else! <span>({{ aggregatedSignupsCount }} already signed up)</span>
-        </h1>
+        <div class="header-container">
+            <h1>Sign Up for the 2nd Mega Campaign! <span>({{ aggregatedSignupsCount }} already signed up)</span>
+            </h1>
+            Wählt 5 Regionen in der Reihenfolge eurer Präferenz aus. Die finale Zuordnung wird am 14. September bekannt
+            gegeben. <br> Bitte beachtet, dass nicht garantiert werden kann, dass ihr eine der von euch ausgewählten
+            Wunschregionen erhaltet.
+        </div>
+        <div class="timer-container">
+            <span class="label">Sign-up Deadline:</span>
+            <span class="time">{{ timeLeft.days }}</span>
+            <span class="label">Days</span>
+            <span class="time">{{ timeLeft.hours }}</span>
+            <span class="label">Hours</span>
+            <span class="time">{{ timeLeft.minutes }}</span>
+            <span class="label">Minutes</span>
+            <span class="time">{{ timeLeft.seconds }}</span>
+            <span class="label">Seconds</span>
+        </div>
     </div>
+
     <div class="middle">
         <div class="render-wrapper">
             @if (isDataReady()) {

@@ -3,7 +3,8 @@ import { Injectable } from "@angular/core";
 import { DiscordAuthenticationService } from "./discord-auth.service";
 import { BaseHttpService } from "./base-http.service";
 import { Observable, throwError, from, of, EMPTY, BehaviorSubject, Subject, merge } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError, map } from 'rxjs/operators';
+import { DiscordUser } from "../util/DiscordUser";
 
 @Injectable({
     providedIn: "root"
@@ -15,6 +16,8 @@ export class MCSignupService {
     private registrationUrl = DiscordAuthenticationService.API_URL + '/signup';
     private getRegistrationUrl = DiscordAuthenticationService.API_URL + "/getsignup";
     private getAggregatedRegistrationsUrl = DiscordAuthenticationService.API_URL + "/signups";
+    private getAllRegisteredUserUrl = DiscordAuthenticationService.API_URL + "/signedupusernames";
+    private getRegistrationsAsAdminUrl = DiscordAuthenticationService.API_URL + "/admin/signups";
 
     private refreshAggregated$ = new Subject<void>();
 
@@ -91,6 +94,17 @@ export class MCSignupService {
                     catchError(() => of(new Map<string, number>()))
                 )
             )
+        );
+    }
+
+    getAllRegisteredUser$(): Observable<DiscordUser[]> {
+        return this.httpService.makeRequest$(this.getAllRegisteredUserUrl, 'GET').pipe(
+            map((result: any) => {
+                return Array.isArray(result?.users)
+                    ? result.users.map((u: any) => DiscordUser.fromApiJson(u))
+                    : [];
+            }),
+            catchError(() => of([]))
         );
     }
 }

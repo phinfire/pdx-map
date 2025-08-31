@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
 
 :host {
@@ -39,15 +40,58 @@
 }
 
 .top {
-    padding: calc(0.5*var(--gap)) 0 calc(0.5 * var(--gap)) var(--gap);
-    h1 {
-        font-family: 'Permanent Marker', cursive;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        span {
-            font-family: var(--font-family);
-            font-size: 1.2rem;
-            vertical-align: middle;
-            margin-left: 1em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: calc(0.5*var(--gap)) calc(1 * var(--gap)) calc(0.5 * var(--gap)) var(--gap);
+    width: 100%;
+
+    .header-container {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: left;
+        justify-content: left;
+        min-width: 0;
+
+        h1 {
+            font-family: 'Permanent Marker', cursive;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+            span {
+                font-family: var(--font-family);
+                font-size: 1.2rem;
+                vertical-align: middle;
+                margin-left: 1em;
+            }
+        }
+    }
+
+    .timer-container {
+        padding: 0.5em 1em;
+        border-radius: 0.5em;
+        box-shadow: inset 0 0 10px 2px rgba(0, 0, 0, 0.25);
+
+        .label:first-child {
+            margin-right: 1em;
+            font-size: 1em;
+        }
+
+        .label {
+            margin-right: 0.75em;
+            margin-left: 0.25em;
+            font-size: 0.75em;
+        }
+
+        .time {
+            flex: 0 0 auto;
+            font-size: 2.5rem;
+            text-align: right;
+            min-width: 180px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-family: 'Inconsolata', monospace;
+            font-variant-numeric: tabular-nums;
         }
     }
 }
@@ -117,7 +161,7 @@
 
     .table-wrapper {
         width: 100%;
-        
+
         .mat-mdc-header-cell {
             font-weight: bold;
             position: sticky;
@@ -138,7 +182,7 @@
         min-height: 48px;
         align-items: center;
         border-bottom: 1px solid var(--faded-border-color);
-        
+
         .rank-cell {
             flex: 0 0 auto;
             width: 60px;
@@ -147,7 +191,7 @@
             font-size: 1.2em !important;
             background-color: var(--background-color);
         }
-        
+
         .item-cell {
             flex: 1;
             padding: 0.5em;
@@ -177,8 +221,9 @@
         &.empty-row {
             cursor: default;
             opacity: 0.5;
-            
-            .rank-cell, .item-cell {
+
+            .rank-cell,
+            .item-cell {
                 color: var(--faded-border-color);
                 font-style: italic;
             }

@@ -16,7 +16,7 @@ export interface ApiHealth {
 })
 export class DiscordAuthenticationService {
 
-    public static readonly API_URL = "http://localhost:3000/api";
+    public static readonly API_URL = "https://codingafterdark.de/mc-signup";
     private readonly JWT_STORAGE_KEY = "discordToken";
     private clientId = "1403891748371038462";
     private backendHealthUrl = DiscordAuthenticationService.API_URL + "/health";

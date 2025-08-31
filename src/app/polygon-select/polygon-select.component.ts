@@ -60,7 +60,7 @@ export class PolygonSelectComponent implements AfterViewInit {
     private readonly LIFT_SPEED = 0.5;
 
     constructor(private ngZone: NgZone) {
-        this.tooltipEnabled = localStorage.getItem(PolygonSelectComponent.TOOLTIP_MODE_LOCAL_STORAGE_KEY) === 'true';
+        this.tooltipEnabled = !(localStorage.getItem(PolygonSelectComponent.TOOLTIP_MODE_LOCAL_STORAGE_KEY) == 'false');
     }
 
     public forceResize() {

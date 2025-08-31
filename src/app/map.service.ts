@@ -11,9 +11,9 @@ export class MapService {
 
     private readonly eu4GeoJsonUrl = "https://codingafterdark.de/pdx/provinces_contours.geojson";
 
-    //private readonly ck3GeoJsonUrl = "https://codingafterdark.de/ck3/counties.geojson"
+    private readonly ck3GeoJsonUrl = "https://codingafterdark.de/pdx/counties.geojson"
 
-    private readonly ck3GeoJsonUrl = "http://127.0.0.1:5500/public/counties.geojson"
+    //private readonly ck3GeoJsonUrl = "http://127.0.0.1:5500/public/counties.geojson"
 
 
     constructor(private http: HttpClient) {
