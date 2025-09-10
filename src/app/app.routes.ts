@@ -4,11 +4,12 @@ import { LabComponent } from './lab/lab.component';
 import { MapComponent } from './map/map.component';
 import { MCAdminComponent } from './mc/mcadmin/mcadmin.component';
 import { MCSignupComponent } from './mc/mcsignup/mcsignup.component';
+import { MegaCampaignComponent } from './mc/mega-campaign/mega-campaign.component';
 
 export const routes: Routes = [
     { path: '', component: ParadoxComponent },
     { path: 'map', component: MapComponent },
     { path: 'lab', component: LabComponent },
-    { path: 'mc/signup', component: MCSignupComponent },
-    { path: 'mc/signup/admin', component: MCAdminComponent }
+    { path: 'mc', component: MegaCampaignComponent},
+    { path: 'mc/admin', component: MCAdminComponent }
 ];

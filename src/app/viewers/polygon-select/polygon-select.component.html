@@ -1,4 +1,11 @@
 <div #rendererContainer class="map-container">
+    @if (!isReady()) {
+        <div class="loading-indicator">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Loading map...</p>
+        </div>
+    }
+    
     <div class="button-group">
         <button class="corner-button" (click)="fitCameraToPolygons(0); $event.stopPropagation()" title="Fit camera to view all polygons">
             <mat-icon>home</mat-icon>
@@ -23,19 +30,18 @@
             <mat-icon>camera_alt</mat-icon>
         </button>
         <button class="corner-button" 
-                [class.active]="tooltipEnabled"
+                [class.active]="tooltipManager.isTooltipEnabled()"
                 (click)="toggleTooltips(); $event.stopPropagation()" 
-                [title]="tooltipEnabled ? 'Disable tooltips' : 'Enable tooltips'">
-            <mat-icon>{{ tooltipEnabled ? 'chat_bubble' : 'chat_bubble_outline' }}</mat-icon>
+                [title]="tooltipManager.isTooltipEnabled() ? 'Disable tooltips' : 'Enable tooltips'">
+            <mat-icon>{{ tooltipManager.isTooltipEnabled() ? 'chat_bubble' : 'chat_bubble_outline' }}</mat-icon>
         </button>
     </div>
     
-    <!-- Hover Tooltip -->
     <div class="mesh-tooltip" 
-         [class.visible]="tooltipVisible"
-         [class.above]="tooltipAbove"
-         [style.left.px]="tooltipX" 
-         [style.top.px]="tooltipY"
-         [innerHTML]="tooltipText">
+         [class.visible]="tooltipManager.isTooltipVisible()"
+         [class.above]="tooltipManager.getTooltipPosition().above"
+         [style.left.px]="tooltipManager.getTooltipPosition().x" 
+         [style.top.px]="tooltipManager.getTooltipPosition().y"
+         [innerHTML]="tooltipManager.getTooltipContent()">
     </div>
 </div>

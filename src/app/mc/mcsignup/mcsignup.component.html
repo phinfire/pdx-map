@@ -1,71 +1,63 @@
-<div class="main">
-    <div class="top">
-        <div class="header-container">
-            <h1>Sign Up for the 2nd Mega Campaign! <span>({{ aggregatedSignupsCount }} already signed up)</span>
-            </h1>
-            Wählt 5 Regionen in der Reihenfolge eurer Präferenz aus. Die finale Zuordnung wird am 14. September bekannt
-            gegeben. <br> Bitte beachtet, dass nicht garantiert werden kann, dass ihr eine der von euch ausgewählten
-            Wunschregionen erhaltet.
-        </div>
-        <div class="timer-container">
-            <app-timer [label]="'Sign-up Deadline'" [endDate]="deadline"></app-timer>
-        </div>
+<div class="top">
+    <div class="header-container">
+        <h1>Sign Up for the 2nd Mega Campaign! <span>({{ aggregatedSignupsCount }} already signed up)</span>
+        </h1>
+        Wählt 5 Regionen in der Reihenfolge eurer Präferenz aus. Die finale Zuordnung wird am 14. September bekannt
+        gegeben. <br> Bitte beachtet, dass nicht garantiert werden kann, dass ihr eine der von euch ausgewählten
+        Wunschregionen erhaltet.
     </div>
+    <div class="timer-container">
+        <app-timer [label]="'Sign-up Deadline'" [endDate]="campaign.getRegionDeadlineDate()"></app-timer>
+    </div>
+</div>
 
-    <div class="middle">
-        <div class="render-wrapper">
-            @if (isDataReady()) {
-            <app-polygon-select [colorConfigProviders]="colorConfigProviders" [selectionCallback]="selectionCallback"
-                [tooltipProvider]="tooltipProvider" [meshBuddiesProvider]="meshBuddiesProvider"></app-polygon-select>
-            }
-            @if (!isDataReady()) {
-            <mat-spinner></mat-spinner>
-            <span class="loading-text">Loading...</span>
-            }
+<div class="middle">
+    <div class="render-wrapper">
+        <app-polygon-select [colorConfigProviders]="colorConfigProviders" [selectionCallback]="selectionCallback"
+            [tooltipProvider]="tooltipProvider" [meshBuddiesProvider]="meshBuddiesProvider"></app-polygon-select>
+    </div>
+    <div class="table-container">
+        <div class="discord-container">
+            <app-discord-field></app-discord-field>
         </div>
-        <div class="table-container">
-            <div class="discord-container">
-                <app-discord-field></app-discord-field>
-            </div>
-            <h2>Your Picks:</h2>
-            <div class="table-wrapper">
-                <table mat-table class="mat-elevation-z8">
-                    <ng-container matColumnDef="index">
-                        <th mat-header-cell *matHeaderCellDef>Rank</th>
-                    </ng-container>
-                    <ng-container matColumnDef="value">
-                        <th mat-header-cell *matHeaderCellDef>Item</th>
-                    </ng-container>
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                </table>
+        <h2>Your Picks:</h2>
+        <div class="table-wrapper">
+            <table mat-table class="mat-elevation-z8">
+                <ng-container matColumnDef="index">
+                    <th mat-header-cell *matHeaderCellDef>Rank</th>
+                </ng-container>
+                <ng-container matColumnDef="value">
+                    <th mat-header-cell *matHeaderCellDef>Item</th>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            </table>
 
-                <div cdkDropList (cdkDropListDropped)="drop($event)" class="drop-list">
-                    <div *ngFor="let item of dataSource; let i = index" cdkDrag [cdkDragData]="item"
-                        class="table-row draggable-row" [cdkDragDisabled]="false"
-                        (cdkDragStarted)="onDragStarted($event)" (cdkDragEnded)="onDragEnded($event)">
-                        <div class="rank-cell">{{i + 1}}</div>
-                        <div class="item-cell">{{item.name}}</div>
-                        <div *cdkDragPreview></div>
-                    </div>
-                </div>
-
-                <div class="empty-rows">
-                    <div *ngFor="let emptyRow of getEmptyRows(); let i = index" class="table-row empty-row">
-                        <div class="rank-cell">{{dataSource.length + i + 1}}</div>
-                        <div class="item-cell">-</div>
-                    </div>
+            <div cdkDropList (cdkDropListDropped)="drop($event)" class="drop-list">
+                <div *ngFor="let item of dataSource; let i = index" cdkDrag [cdkDragData]="item"
+                    class="table-row draggable-row" [cdkDragDisabled]="false" (cdkDragStarted)="onDragStarted($event)"
+                    (cdkDragEnded)="onDragEnded($event)">
+                    <div class="rank-cell">{{i + 1}}</div>
+                    <div class="item-cell">{{item.name}}</div>
+                    <div *cdkDragPreview></div>
                 </div>
             </div>
-            @if (discordAuthService.isLoggedIn()) {
-            <button mat-flat-button color="primary" (click)="register()" [disabled]="!canRegister()"
-                class="register-button" [matTooltip]="getDisabledTooltip()" [matTooltipDisabled]="canRegister()">Sign
-                Up</button>
+
+            <div class="empty-rows">
+                <div *ngFor="let emptyRow of getEmptyRows(); let i = index" class="table-row empty-row">
+                    <div class="rank-cell">{{dataSource.length + i + 1}}</div>
+                    <div class="item-cell">-</div>
+                </div>
+            </div>
+        </div>
+        @if (discordAuthService.isLoggedIn()) {
+        <button mat-flat-button color="primary" (click)="register()" [disabled]="!canRegister()" class="register-button"
+            [matTooltip]="getDisabledTooltip()" [matTooltipDisabled]="canRegister()">Sign
+            Up</button>
+        }
+        <div class="discord-container">
+            @if (!discordAuthService.isLoggedIn()) {
+            <app-discord-login></app-discord-login>
             }
-            <div class="discord-container">
-                @if (!discordAuthService.isLoggedIn()) {
-                <app-discord-login></app-discord-login>
-                }
-            </div>
         </div>
     </div>
 </div>

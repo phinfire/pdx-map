@@ -2,14 +2,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
 
 :host {
-    background-color: var(--void-color);
     color: var(--text-color);
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     overflow-y: auto;
     max-height: 100%;
     --gap: 2em;
@@ -22,20 +21,6 @@
             header-headline-color: none,
             header-headline-font: var(--font-family) var(--font-weight-bold),
             row-item-label-text-font: var(--font-family) var(--font-weight-regular)));
-    @include mat.button-overrides((filled-container-color: rgb(0, 180, 0),
-        ));
-}
-
-.main {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    width: 95%;
-    height: 95%;
-    background-color: var(--background-color);
-    padding-left: var(--gap);
-    box-shadow: var(--box-shadow);
-    border-radius: 0.5em;
 }
 
 .top {
@@ -74,35 +59,17 @@
     align-items: flex-start;
     width: 100%;
     flex: 1;
-    background-color: var(--background-color);
-    padding: 0 var(--gap) var(--gap) 0;
+    padding: var(--gap) var(--gap) var(--gap) var(--gap);
+    min-height: 0;
 }
 
 .render-wrapper {
-    display: flex;
-    flex-direction: column;
     width: 80%;
+    max-height: 100%;
     height: 100%;
     box-sizing: border-box;
-    justify-content: center;
-    align-items: center;
-    background-color: black;
-
-    border-radius: 0.5em;
-    padding: 0.5em;
-
-    .loading-text {
-        padding: 1.5em;
-        font-size: 1.5em;
-        font-family: var(--hacker-font);
-        text-align: center;
-
-    }
-
-    .loading-text::before {
-        content: "...";
-        visibility: hidden;
-    }
+    overflow: hidden; 
+    min-height: 0;
 }
 
 .table-container {

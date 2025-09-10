@@ -8,11 +8,15 @@ import { PdxFileService } from '../pdx-file.service';
 import { CK3 } from '../../model/ck3/CK3';
 import { Trait } from '../../model/ck3/Trait';
 import { Ck3Save } from '../../model/Ck3Save';
+import { CustomRulerFile } from './CustomRulerFile';
 
 @Injectable({
     providedIn: 'root'
 })
 export class CK3Service {
+
+    private readonly baseUrl = 'assets/gamedata/ck3';
+
     private readonly jomini$ = from(Jomini.initialize()).pipe(shareReplay(1));
 
     private ck3$: Observable<CK3> | null = null;
@@ -172,6 +176,12 @@ export class CK3Service {
         );
     }
 
+    openCk3ZeroSaveFromFile(): Observable<Ck3Save> {
+        return this.openCk3SaveFromFile("https://codingafterdark.de/pdx/ZERO_WILLIAM.ck3").pipe(
+            shareReplay(1)
+        );
+    }
+
     downloadJsonFromFileUrl(fileURL: string, filename: string = 'data.json'): Observable<void> {
         return from(fetch(fileURL)).pipe(
             switchMap(response => {
@@ -198,6 +208,53 @@ export class CK3Service {
                 console.error('Failed to download JSON from file URL:', error);
                 throw error;
             })
+        );
+    }
+
+    parseCustomCharacter(parsedJson: any, ck3: CK3): CustomRulerFile | null {
+        if (!parsedJson || !parsedJson.ruler || !parsedJson.ruler.config) {
+            console.warn("Invalid custom character JSON structure:", parsedJson);
+            return null;
+        }
+        const config = parsedJson.ruler.config;
+        const culture = config.culture;
+        const faith = config.faith;
+        const age = config.age;
+
+        let traitsArray: string[] = [];
+        if (Array.isArray(config.traits)) {
+            traitsArray = config.traits;
+        } else if (typeof config.traits === 'string') {
+            traitsArray = [config.traits];
+        }
+        let education = null;
+        for (const trait of traitsArray) {
+            if (typeof trait === 'string' && trait.startsWith('education_')) {
+                education = trait;
+                break;
+            }
+        }
+        if (!education) {
+            console.warn("No education trait found in custom character");
+        }
+        const traits = traitsArray.map(name => {
+            const trait = ck3.getTraitByName(name);
+            if (trait) {
+                return trait;
+            } 
+            console.warn(`Trait not found: ${name}`);
+            return null;
+        }).filter((t): t is Trait => t !== null);
+        const educationTrait = education ? ck3.getTraitByName(education) : null;
+        console.log("character", parsedJson.ruler);
+        console.log("name", parsedJson.ruler.name);
+        return new CustomRulerFile(
+            config.name,
+            age,
+            culture,
+            faith,
+            traits.filter(t => !t.getName().startsWith('education_')),
+            educationTrait
         );
     }
 }

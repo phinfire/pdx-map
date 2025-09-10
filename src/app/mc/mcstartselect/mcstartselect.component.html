@@ -1,0 +1,84 @@
+@if (campaign) {
+<div class="top">
+    <div class="header-container">
+        <h1>Select Your Starting Position in: <span class="region-name">{{ assignment.region_key }}</span></h1>
+        Choose your starting county within your assigned region.
+    </div>
+    <div class="timer-container">
+        <app-timer [label]="'Deadline:'" [endDate]="campaign.getStartDeadlineDate()"></app-timer>
+    </div>
+</div>
+
+<div class="middle">
+    <div class="render-wrapper">
+        <app-polygon-select #polygonSelect [colorConfigProviders]="[colorConfigProvider]" [selectionCallback]="selectionCallback"
+            [tooltipProvider]="tooltipProvider" [meshBuddiesProvider]="meshBuddiesProvider"></app-polygon-select>
+    </div>
+    <div class="side-container">
+        <h2>Start</h2>
+        <div class="content-wrapper">
+            @if (hasSelectedPosition()) {
+                <div class="selection-info">
+                    <h3>County of:</h3>
+                    <p><strong>{{ getSelectedPositionName() }}</strong></p>
+                </div>
+            }
+            @if (!hasSelectedPosition()) {
+                <p>Click on a county in the map to select your starting county.</p>
+            }
+
+            @if (ruler) {
+                <div class="character-info">
+                    <h3>{{ ruler.name }} ({{ ruler.age }})</h3>
+                    <div class="character-details">
+                        <p><strong>Culture:</strong> {{ ruler.culture }}</p>
+                        <p><strong>Faith:</strong> {{ ruler.faith }}</p>
+                        
+                        <div class="traits-layout">
+                            @if (ruler.educationTrait) {
+                                <div class="education-section">
+                                    <img [src]="ruler.educationTrait.getTraitIconUrl()" 
+                                         [alt]="getLocalizedTraitName(ruler.educationTrait.getName())"
+                                         class="trait-icon education"
+                                         [matTooltip]="getLocalizedTraitName(ruler.educationTrait.getName())"
+                                         matTooltipPosition="above">
+                                </div>
+                            }
+                            
+                            @if (ruler.traits && ruler.traits.length > 0) {
+                                <div class="traits-compact">
+                                    @for (trait of ruler.traits; track trait.getName()) {
+                                        <img [src]="trait.getTraitIconUrl()" 
+                                             [alt]="getLocalizedTraitName(trait.getName())"
+                                             class="trait-icon"
+                                             [matTooltip]="getLocalizedTraitName(trait.getName())"
+                                             matTooltipPosition="above">
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <div class="upload-section">
+                <input #fileInput type="file" accept=".ck3ruler" (change)="onFileSelected($event)" style="display: none;" />
+                <button mat-flat-button 
+                        color="primary" 
+                        class="upload-button" 
+                        [disabled]="!hasSelectedPosition()"
+                        [matTooltip]="!hasSelectedPosition() ? 'Please select a position first' : 'Upload your custom ruler file'"
+                        matTooltipPosition="above"
+                        (click)="fileInput.click()">
+                    Upload Ruler
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+}
+@if (!campaign) {
+<div class="error-container">
+    <p>Something went wrong. No campaign data available.</p>
+</div>
+}

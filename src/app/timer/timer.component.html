@@ -1,5 +1,5 @@
 <div [matTooltip]="endDate | date:'medium'">
-	<span class="label">Sign-up Deadline:</span>
+	<span class="label" [innerText]="label"></span>
 	<span class="time">{{ timeLeft.days }}</span>
 	<span class="label">Days</span>
 	<span class="time">{{ timeLeft.hours }}</span>

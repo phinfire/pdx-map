@@ -10,17 +10,46 @@
         </div>
     </div>
     <div class="tool-bar">
-        <button mat-flat-button color="primary" (click)="assign()">Assign</button>
+        <div class="region-selection-section">
+            <mat-form-field appearance="outline" class="region-select">
+                <mat-label>Regions</mat-label>
+                <mat-select multiple [(ngModel)]="selectedRegions" (selectionChange)="onRegionSelectionChange()">
+                    <mat-select-trigger>
+                        {{ getSelectedRegionCount() }}
+                    </mat-select-trigger>
+                    @for (region of loadedRegions; track region) {
+                        <mat-option [value]="region">{{ region }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="resetSelectedRegions()"
+                matTooltip="Reset regions" class="reset-button">
+                <mat-icon>refresh</mat-icon>
+            </button>
+        </div>
+        
+        <button mat-flat-button color="primary" class="action-button" (click)="assign()"
+            matTooltip="{{ getAssignButtonTooltip() }}">Assign</button>
+        <button mat-flat-button color="primary" class="action-button" (click)="confirmAssignments()" [disabled]="!canConfirmAssignments()"
+            matTooltip="Confirm the current assignments and publish them">Confirm & Publish</button>
+        
+        <div class="remove-user-section">
+            <mat-form-field appearance="outline" class="user-select">
+                <mat-label>Select user to remove</mat-label>
+                <mat-select [(ngModel)]="selectedUserToRemove">
+                    <mat-option value="">-- Select User --</mat-option>
+                    @for (user of getUsers(); track user.id) {
+                        <mat-option [value]="user.id">{{ user.global_name || user.username }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+            <button mat-flat-button color="warn" class="action-button" (click)="removeUserSignup()" [disabled]="!selectedUserToRemove"
+                matTooltip="Remove the selected user's signup">Remove Signup</button>
+        </div>
     </div>
     <div class="center">
         <div class="table-container">
-            <app-table [rowElements]="getUsers()" [columns]="columns"></app-table>
+            <app-table [rowElements]="getUsers()" [columns]="getColumns()"></app-table>
         </div>
-        @if (calculatedAssignments.size > 0) {
-        <div class="spacer"></div>
-        <div class="table-container">
-            <app-table [rowElements]="getAvailableRegionKeys()" [columns]="assignColumnsToDisplay"></app-table>
-        </div>
-        }
     </div>
 </div>

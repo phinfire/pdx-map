@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, shareReplay } from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root'
@@ -20,7 +20,9 @@ export class MapService {
     }
 
     fetchEU4GeoJson(): Observable<any> {
-        return this.http.get(this.eu4GeoJsonUrl);
+        return this.http.get(this.eu4GeoJsonUrl).pipe(
+            shareReplay(1)
+        );
     }
 
     fetchCK3GeoJson(removeWater: boolean, removeWastelands: boolean): Observable<any> {
@@ -32,7 +34,8 @@ export class MapService {
                         (!removeWastelands || feature.properties?.type !== 'wasteland');
                 });
                 return geojson;
-            })
+            }),
+            shareReplay(1)
         );
     }
 }

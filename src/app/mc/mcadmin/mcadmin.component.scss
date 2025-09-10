@@ -8,8 +8,25 @@
     justify-content: center;
     align-items: center;
     background-color: var(--void-color);
-    @include mat.button-overrides((filled-container-color: rgb(0, 180, 0),
+    @include mat.form-field-overrides((disabled-input-text-placeholder-color: orange,
+            disabled-leading-icon-color: red,
+            //container-vertical-padding: 2em,
+            filled-with-label-container-padding-top: 0em,
+            filled-with-label-container-padding-bottom: 0em,
+            container-height: 1em,
         ));
+}
+
+button {
+    margin: 0 1em;
+}
+
+.action-button {
+    height: 56px;
+    width: 12em;
+    min-height: 56px;
+    font-weight: 500;
+    font-size: 1.2em;
 }
 
 
@@ -33,6 +50,82 @@
 
 .tool-bar {
     margin: 1em 0em;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1em;
+    background-color: var(--background-color);
+    border-radius: 0.5em;
+    box-shadow: var(--box-shadow);
+    padding: 1.5em 3em;
+    height: fit-content;
+    border: 1px solid var(--faded-border-color);
+}
+
+.toolbar-section {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.remove-user-section {
+    @extend .toolbar-section;
+    gap: 0.5em;
+    margin-left: 2em;
+    padding-left: 2em;
+    border-left: 1px solid var(--faded-border-color);
+}
+
+.user-select {
+    min-width: 200px;
+}
+
+.region-selection-section {
+    @extend .toolbar-section;
+    padding-right: 2em;
+    border-right: 1px solid var(--faded-border-color);
+    align-items: flex-start;
+    gap: 0.5em;
+}
+
+.reset-button {
+    margin-top: 8px;
+    flex-shrink: 0;
+    width: 2em;
+    height: 2em;
+    min-width: 2em;
+    min-height: 2em;
+    box-shadow: var(--box-shadow-small);
+    color: var(--text-color);
+}
+
+.region-select {
+    min-width: 250px;
+}
+
+::ng-deep .mat-mdc-form-field {
+    height: 56px;
+    
+    .mat-mdc-text-field-wrapper {
+        height: 56px;
+    }
+}
+
+::ng-deep .mat-mdc-select-panel {
+    background-color: var(--background-color) !important;
+}
+
+::ng-deep .mat-mdc-option {
+    background-color: var(--background-color) !important;
+    color: var(--text-color) !important;
+}
+
+::ng-deep .mat-mdc-option:hover {
+    background-color: var(--faded-border-color) !important;
+}
+
+::ng-deep .mat-mdc-option.mdc-list-item--selected {
+    background-color: var(--faded-border-color) !important;
 }
 
 .discord-container {
@@ -46,7 +139,7 @@
 }
 
 .center {
-    width: 90%;
+    width: 100%;
     height: 90%;
     padding: 2em;
     display: flex;
@@ -58,7 +151,7 @@
     }
 
     .table-container {
-        max-width: 50%;
+        min-width: 90%;
         max-height: 100%;
         overflow: auto;
     }

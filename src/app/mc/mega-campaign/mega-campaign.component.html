@@ -1,0 +1,32 @@
+<div class="main">
+@if (campaign) {
+    @if (isInRegionSignupStage()) {
+    <app-mcsignup [campaign]="campaign"></app-mcsignup>
+    }
+    @if (authService.isLoggedIn()) {
+        @if (isInStartSelectionStage()) {
+            @if (userAssignment) {
+                <app-mcstartselect [campaign]="campaign" [assignment]="userAssignment"></app-mcstartselect>
+            }
+            @if (!userAssignment) {
+                <div class="pseudo-component">
+                    <p>No region assigned yet</p>
+                </div>
+                
+            }
+        }
+        @if (isInWaitingForFirstSessionStage()) {
+            <p>Waiting for first session...</p>
+        }
+        @if (isPlayingCk3()) {
+            <p>Playing CK3!</p>
+        }
+    }
+    @if (!authService.isLoggedIn()) {
+        <div class="pseudo-component">
+            <p>Please log in to see more details.</p>
+            <app-discord-login></app-discord-login>
+        </div>
+    }
+}
+</div>

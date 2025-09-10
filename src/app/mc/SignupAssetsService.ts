@@ -64,50 +64,137 @@ export class SignupAssetsService {
         );
     }
 
+    private _loadMapData$: Observable<SignupAssetsData> | null = null;
+
     loadMapData$(): Observable<SignupAssetsData> {
+        const currentData = this._dataSubject.value;
+        if (currentData) {
+            return new Observable<SignupAssetsData>(observer => {
+                observer.next(currentData);
+                observer.complete();
+            });
+        }
+        if (!this._loadMapData$) {
+            this._loadingSubject.next(true);
+            this._loadMapData$ = forkJoin({
+                geoJson: this.mapService.fetchCK3GeoJson(true, false),
+                ck3Save: this.ck3Service.openCk3ZeroSaveFromFile(),
+                parsedRegionConfig: this.fetchRegionConfig$()
+            }).pipe(
+                map(({ geoJson, ck3Save, parsedRegionConfig }) => {
+                    const ck3 = ck3Save.getCK3();
+                    const key2color = new Map<string, number>();
+                    const keysToExclude = SignupAssetsService.collectAllChildren(ck3Save, parsedRegionConfig.topLevelKeysToInclude);
+                    const key2ClusterKey = SignupAssetsService.buildKey2Cluster(ck3, ck3Save, parsedRegionConfig.regions, keysToExclude);
+                    ck3Save.getLandedTitles().filter((title: AbstractLandedTitle) => title.getKey().startsWith("c_")).forEach((title: AbstractLandedTitle) => {
+                        let liegeTitleKey = ck3.getDeJureLiegeTitle(title.getKey())!
+                        liegeTitleKey = ck3.getDeJureLiegeTitle(liegeTitleKey)!;
+                        const deFactoTopLiege = title.getUltimateLiegeTitle();
+                        key2color.set(title.getKey(), deFactoTopLiege.getColor().toNumber());
+                    });
+                    const colorIn1066Provider = new RendererConfigProvider(key2color);
+                    const forceNonInteractive = (key: string) => {
+                        return keysToExclude.has(key) ? true : false;
+                    };
+                    //const countyRealms = SignupAssetsService.findCountiesOwnedByAtMostDoubleCounts(ck3Save, 2);
+                    //const countiesPartOfCountyRealms = new Set<string>();
+                    //countyRealms.forEach(realm => realm.forEach(county => countiesPartOfCountyRealms.add(county)));
+                    //const dotTexture = makeDotTexture(0.6);
+                    const meshes = makeGeoJsonPolygons(geoJson, colorIn1066Provider, (countyKey) => null, forceNonInteractive);
+                    const clusterManager = new ClusterManager(key2ClusterKey);
+                    const data: SignupAssetsData = {
+                        geoJsonData: geoJson,
+                        ck3SaveData: ck3Save,
+                        meshes: meshes,
+                        configProviders: [colorIn1066Provider],
+                        clusterManager: clusterManager,
+                        ck3: ck3,
+                    };
+                    this._dataSubject.next(data);
+                    this._loadingSubject.next(false);
+                    return data;
+                }),
+                shareReplay(1)
+            );
+        }
+        return this._loadMapData$;
+    }
+
+    loadRegionMapData$(regionKey: string): Observable<SignupAssetsData> {
         return forkJoin({
             geoJson: this.mapService.fetchCK3GeoJson(true, false),
-            ck3Save: this.ck3Service.openCk3SaveFromFile(this.baseUrl + "/ZERO_WILLIAM.ck3"),
+            ck3Save: this.ck3Service.openCk3ZeroSaveFromFile(),
             parsedRegionConfig: this.fetchRegionConfig$()
         }).pipe(
             map(({ geoJson, ck3Save, parsedRegionConfig }) => {
                 const ck3 = ck3Save.getCK3();
-                const key2color = new Map<string, number>();
                 const keysToExclude = SignupAssetsService.collectAllChildren(ck3Save, parsedRegionConfig.topLevelKeysToInclude);
                 const key2ClusterKey = SignupAssetsService.buildKey2Cluster(ck3, ck3Save, parsedRegionConfig.regions, keysToExclude);
-                ck3Save.getLandedTitles().filter((title: AbstractLandedTitle) => title.getKey().startsWith("c_")).forEach((title: AbstractLandedTitle) => {
-                    let liegeTitleKey = ck3.getDeJureLiegeTitle(title.getKey())!
-                    liegeTitleKey = ck3.getDeJureLiegeTitle(liegeTitleKey)!;
-                    const deFactoTopLiege = title.getUltimateLiegeTitle();
-                    key2color.set(title.getKey(), deFactoTopLiege.getColor().toNumber());
+                const baseClusterManager = new ClusterManager(key2ClusterKey);
+                const countiesInRegion = baseClusterManager.getCluster2Keys(regionKey);
+                
+                const countyRealms = SignupAssetsService.findCountiesOwnedByAtMostDoubleCounts(ck3Save, 2);
+                const countyToRealmMap = new Map<string, string>();
+                countyRealms.forEach((realm, realmIndex) => {
+                    const realmKey = `realm_${realmIndex}_${realm[0]}`;
+                    realm.forEach(countyKey => {
+                        if (countiesInRegion.includes(countyKey)) {
+                            countyToRealmMap.set(countyKey, realmKey);
+                        }
+                    });
                 });
-                const colorIn1066Provider = new RendererConfigProvider(key2color);
+                countiesInRegion.forEach(countyKey => {
+                    if (!countyToRealmMap.has(countyKey)) {
+                        countyToRealmMap.set(countyKey, `single_${countyKey}`);
+                    }
+                });
+                
+                const key2color = new Map<string, number>();
+                ck3Save.getLandedTitles()
+                    .filter((title: AbstractLandedTitle) => title.getKey().startsWith("c_") && countiesInRegion.includes(title.getKey()))
+                    .forEach((title: AbstractLandedTitle) => {
+                        const deFactoTopLiege = title.getUltimateLiegeTitle();
+                        key2color.set(title.getKey(), deFactoTopLiege.getColor().toNumber());
+                    });
+                
+                const colorProvider = new RendererConfigProvider(key2color);
                 const forceNonInteractive = (key: string) => {
                     return keysToExclude.has(key) ? true : false;
                 };
-                //const countyRealms = SignupAssetsService.findCountiesOwnedByAtMostDoubleCounts(ck3Save, 2);
-                //const countiesPartOfCountyRealms = new Set<string>();
-                //countyRealms.forEach(realm => realm.forEach(county => countiesPartOfCountyRealms.add(county)));
-                //const dotTexture = makeDotTexture(0.6);
-                const meshes = makeGeoJsonPolygons(geoJson, colorIn1066Provider, (countyKey) => null, forceNonInteractive);
-                const clusterManager = new ClusterManager(key2ClusterKey);
+                
+                const countiesOwnedByDoubleOrSingleCounts = new Set<string>();
+                countyRealms.forEach(realm => { realm.forEach(county => {
+                    if (countiesInRegion.includes(county)) {
+                        countiesOwnedByDoubleOrSingleCounts.add(county);
+                    }
+                })});
+                const allMeshes = makeGeoJsonPolygons(geoJson, colorProvider, (countyKey) => null, forceNonInteractive);
+                const meshes = allMeshes.filter(mesh => countiesInRegion.includes(mesh.key));
+                meshes.forEach(mesh => {
+                    if (!countiesOwnedByDoubleOrSingleCounts.has(mesh.key)) {
+                        mesh.interactive = false;
+                    }
+                    //mesh.interactive = true;
+                    //mesh.locked = false;
+                });
+                
+                const clusterManager = new ClusterManager(countyToRealmMap);
                 const data: SignupAssetsData = {
                     geoJsonData: geoJson,
                     ck3SaveData: ck3Save,
                     meshes: meshes,
-                    configProviders: [colorIn1066Provider],
+                    configProviders: [colorProvider],
                     clusterManager: clusterManager,
                     ck3: ck3,
                 };
-                this._dataSubject.next(data);
-                this._loadingSubject.next(false);
+                
                 return data;
             }),
             shareReplay(1)
         );
     }
 
-    private static findCountiesOwnedByAtMostDoubleCounts(save: Ck3Save, k: number): string[][] {
+    static findCountiesOwnedByAtMostDoubleCounts(save: Ck3Save, k: number): string[][] {
         const holder2CountyTitles = new Map<string, string[]>();
         for (const title of save.getLandedTitles()) {
             if (!title.getKey().startsWith("c_")) {
@@ -144,11 +231,6 @@ export class SignupAssetsService {
     private static buildKey2Cluster(ck3: CK3, ck3Save: Ck3Save, regions: Region[], key2Exclude: Set<string>) {
         const key2ClusterKey = new Map<string, string>();
         ck3Save.getLandedTitles().filter((title: AbstractLandedTitle) => title.getKey().startsWith("c_")).forEach((title: AbstractLandedTitle) => {
-            /*let liegeTitleKey = ck3.getDeJureLiegeTitle(title.getKey())!
-            liegeTitleKey = ck3.getDeJureLiegeTitle(liegeTitleKey)!;
-            liegeTitleKey = ck3.getDeJureLiegeTitle(liegeTitleKey)!;
-            const liegeTitle = ck3Save.getTitle(liegeTitleKey);
-            key2ClusterKey.set(title.getKey(), liegeTitle.getKey());*/
             if (key2Exclude.has(title.getKey())) {
                 return;
             }
@@ -203,11 +285,9 @@ export class SignupAssetsService {
             }
             const regionName = parts[0].trim();
             const formula = parts[1].trim();
-
             const plusElements = new Set<string>();
             const minusElements = new Set<string>();
             const baseElements = new Set<string>();
-
             let currentOp: '+' | '~' = '+';
             const tokens = formula.match(/([+~])|([a-zA-Z0-9_-]+)/g) || [];
             tokens.forEach((token, idx) => {

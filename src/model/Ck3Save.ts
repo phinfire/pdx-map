@@ -25,7 +25,6 @@ export class Ck3Save implements ICk3Save {
 
     static fromRawData(data: any, ck3: CK3): Ck3Save {
         const save = new Ck3Save(ck3);
-        console.log("Initializing CK3 Save with data:", data);
         save.initialize(data);
         return save;
     }

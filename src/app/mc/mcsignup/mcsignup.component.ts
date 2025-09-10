@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, OnInit, HostListener, AfterViewInit } from '@angular/core';
+import { Component, inject, ViewChild, OnInit, HostListener, AfterViewInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,6 +17,8 @@ import { DynamicColorConfig } from '../../viewers/polygon-select/DynamicColorCon
 import { PolygonSelectComponent } from '../../viewers/polygon-select/polygon-select.component';
 import { RendererConfigProvider } from '../../viewers/polygon-select/RendererConfigProvider';
 import { TimerComponent } from '../../timer/timer.component';
+import { MegaCampaign } from '../MegaCampaign';
+import { MegaService } from '../MegaService';
 
 export interface TableItem {
     key: string;
@@ -33,8 +35,12 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
 
     @ViewChild(PolygonSelectComponent) polygonSelectComponent!: PolygonSelectComponent;
 
+    @Input() campaign!: MegaCampaign;
+
     private readonly MAX_SELECTIONS = 5;
     private _snackBar = inject(MatSnackBar);
+
+    megaService = inject(MegaService);
 
     displayedColumns: string[] = ['index', 'value'];
     dataSource: TableItem[] = [];
@@ -43,8 +49,6 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
     perRegionSignups: Map<string, number> = new Map();
 
     private key2Value: Map<string, number> = new Map();
-
-    deadline = new Date('2025-09-13T00:00:00');
 
     get tableDataSource(): TableItem[] {
         const emptyRowsCount = this.MAX_SELECTIONS - this.dataSource.length;
@@ -95,6 +99,9 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
     ) { }
 
     ngOnInit() {
+        this.megaService.getAvailableCampaigns$().subscribe(campaigns => {
+            this.campaign = campaigns[0];
+        });
         combineLatest([
             this.signupAssetsService.getRegionNameList$(),
             this.mcSignupService.getAggregatedRegistrations$(),
@@ -107,9 +114,7 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
                         this.key2Value.set(clusterKey, regionValue);
                     }
                 }
-                if (this.polygonSelectComponent) {
-                    this.polygonSelectComponent.refreshAllColors();
-                }
+                this.launchPolygonSelect(currentData);
             }
         });
 
@@ -122,32 +127,6 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
                 this.aggregatedSignupsCount = -1;
             }
         });
-        this.signupAssetsService.loadMapData$().subscribe({
-            next: (data: SignupAssetsData) => {
-                if (this.polygonSelectComponent) {
-                    this.initializeMapWithData(data);
-                }
-            },
-            error: (error) => {
-                console.error('Error loading map data:', error);
-            }
-        });
-        const userPicksSub = this.mcSignupService.userPicks$.subscribe({
-            next: (picks: string[]) => {
-                this.dataSource = picks.map((key: string) => ({
-                    key,
-                    name: key
-                }));
-                this.dataSource = [...this.dataSource];
-                if (this.polygonSelectComponent) {
-                    this.polygonSelectComponent.setLockedStates(this.dataSource.map(item => item.key), true, false);
-                }
-            },
-            error: (err) => {
-                console.error('Failed to load registration:', err);
-            }
-        });
-        this.subsToUnsubFromOnDestroy.push(userPicksSub);
     }
 
     ngOnDestroy() {
@@ -157,44 +136,33 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        setTimeout(() => {
-            this.initializeMap();
-        }, 100);
-    }
-
-    private initializeMap() {
-        if (!this.polygonSelectComponent) {
-            setTimeout(() => this.initializeMap(), 100);
-            return;
-        }
-        if (this.isDataReady()) {
-            const data = this.signupAssetsService.getCurrentData();
-            if (data) {
-                this.initializeMapWithData(data);
-                const regionKeys = this.dataSource.map(item => item.key);
-                for (const key of regionKeys) {
-                    const reprKey = data?.clusterManager.getCluster2Keys(key)[0];
-                    this.polygonSelectComponent.setLockedState(reprKey, true, false);
-                }
+        const userPicksSub = this.mcSignupService.userPicks$.subscribe({
+            next: (picks: string[]) => {
+                this.dataSource = picks.map((key: string) => ({
+                    key,
+                    name: key
+                }));
+                this.dataSource = [...this.dataSource];
+            },
+            error: (err) => {
+                console.error('Failed to load registration:', err);
             }
-        }
+        });
+        this.subsToUnsubFromOnDestroy.push(userPicksSub);
     }
 
-    private initializeMapWithData(data: SignupAssetsData) {
+    private launchPolygonSelect(data: SignupAssetsData) {
         if (!this.polygonSelectComponent || !data.meshes || !data.configProviders) {
+            console.error('MCSignupComponent: Cannot launch - missing components or data');
             return;
         }
-
-        this.colorConfigProviders = [...data.configProviders, new DynamicColorConfig(this.key2Value)];
-        this.polygonSelectComponent.setMeshes(data.meshes);
-        this.polygonSelectComponent.refreshAllColors();
-        setTimeout(() => {
-            this.polygonSelectComponent.forceResize();
-            this.polygonSelectComponent.fitCameraToPolygons(0.1);
-        }, 100);
-        setTimeout(() => {
-            this.polygonSelectComponent.forceResize();
-        }, 500);
+        const colorConfigProviders = [...data.configProviders, new DynamicColorConfig(this.key2Value)];
+        this.polygonSelectComponent.launch(data.meshes, colorConfigProviders);
+        const regionKeys = this.dataSource.map(item => item.key);
+        for (const key of regionKeys) {
+            const reprKey = data.clusterManager.getCluster2Keys(key)[0];
+            this.polygonSelectComponent.setLockedState(reprKey, true, false);
+        }
         const stats = this.signupAssetsService.getMeshStatistics(data.meshes);
         console.log(`Loaded ${stats.meshCount} polygon meshes with ${stats.triangleCount.toLocaleString()} triangles total`);
     }
@@ -270,7 +238,7 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
     @HostListener('window:resize', ['$event'])
     onWindowResize(event: any) {
         if (this.polygonSelectComponent) {
-            this.polygonSelectComponent.forceResize();
+            this.polygonSelectComponent.handleResize();
         }
     }
 
@@ -278,14 +246,6 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
         this._snackBar.open(message, action, {
             duration: 3000,
         });
-    }
-
-    isDataReady() {
-        return this.signupAssetsService.isDataReady();
-    }
-
-    isLoading() {
-        return this.signupAssetsService.isLoading();
     }
 
     getRegisteredPlayersCount() {
