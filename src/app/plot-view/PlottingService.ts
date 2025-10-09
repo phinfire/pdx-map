@@ -52,8 +52,8 @@ export class PlottingService {
             .nice()
             .range([chartHeight, 0]);
         this.renderXAxis(svg, x, chartHeight, showXAxisTickLabels);
-        this.renderYAxis(svg, y, bars);
-    this.renderBars(svg, bars, x, y, color, chartHeight);
+        this.renderYAxis(svg, y, bars, false);
+        this.renderBars(svg, bars, x, y, color, chartHeight);
         this.renderBarImagesAndLabels(svg, bars, x, y, showLabelsWithImages, nativeElement);
         this.injectBarPlotStyles(hostElement);
     }
@@ -80,16 +80,17 @@ export class PlottingService {
             .call(d3.axisBottom(x));
         if (showXAxisTickLabels) {
             xAxisG.selectAll("text")
-                .attr("transform", "rotate(-30)")
-                .style("text-anchor", "end");
+                .attr("transform", "translate(0,20) rotate(45)")
+                .attr("font-size", "1.4em")
+                .style("text-anchor", "start");
         } else {
             xAxisG.selectAll("text").remove();
         }
     }
 
-    private renderYAxis(svg: d3.Selection<SVGGElement, unknown, null, undefined>, y: d3.ScaleLinear<number, number>, bars: Plotable[]) {
+    private renderYAxis(svg: d3.Selection<SVGGElement, unknown, null, undefined>, y: d3.ScaleLinear<number, number>, bars: Plotable[], doThatIntegerTrick: boolean) {
         const allIntegers = bars.every(d => Number.isInteger(d.value));
-        if (allIntegers) {
+        if (allIntegers && doThatIntegerTrick) {
             const yDomain = y.domain();
             const min = Math.ceil(yDomain[0]);
             const max = Math.floor(yDomain[1]);
@@ -122,7 +123,7 @@ export class PlottingService {
             svg,
             20,
             new DefaultPlotStyle(),
-            10 // yOffset: closer to cursor
+            10
         );
         svg.selectAll(".bar")
             .data(bars)
@@ -202,6 +203,7 @@ export class PlottingService {
                         tooltipText = null;
                     });
             } else {
+                /*
                 group.append("text")
                     .attr("class", "bar-label-above")
                     .attr("x", 0)
@@ -218,21 +220,9 @@ export class PlottingService {
                         hideCursorText(tooltipText, d3.select(this));
                         tooltipText = null;
                     });
+                    */
             }
         });
-
-        const labelYOffset = 12;
-        svg.selectAll(".bar-text-label")
-            .data(bars.filter(d => !d.getImageUrl() || showLabelsWithImages))
-            .enter()
-            .append("text")
-            .attr("class", "bar-text-label")
-            .attr("x", d => (x(d.label) || 0) + x.bandwidth() / 2)
-            .attr("y", y.range()[0] + labelYOffset)
-            .attr("text-anchor", "middle")
-            .text(d => d.label)
-            .style("font-size", "0.9rem")
-            .style("dominant-baseline", "hanging");
     }
 
     private injectBarPlotStyles(hostElement: d3.Selection<HTMLElement, unknown, null, undefined>) {

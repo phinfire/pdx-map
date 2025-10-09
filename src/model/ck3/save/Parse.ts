@@ -146,14 +146,14 @@ export function createTitle(data: any, save: ICk3Save, ck3: CK3): AbstractLanded
     const holder = data.holder;
     const de_facto_liege = data.de_facto_liege;
     const capitalHoldingIndex = data.capital || null;
+    const deJureVassalIndices = data.de_jure_vassals || [];
     if (key.startsWith("x_")) {
         const rgb = new RGB(data.color.rgb[0], data.color.rgb[1], data.color.rgb[2]);
         const tierString = data.tier ? RulerTier.fromRealmTier(data.tier) : RulerTier.NONE;
-        const vassalTitleIndices = data.de_jure_vassals || [];
         const name = data.name;
-        return new CustomLandedTitle(key, holder, de_facto_liege, rgb, tierString, vassalTitleIndices, name, capitalHoldingIndex, save, ck3);
+        return new CustomLandedTitle(key, holder, de_facto_liege, rgb, tierString, deJureVassalIndices, name, capitalHoldingIndex, save, ck3);
     } else {
-        return new LandedTitle(key, holder, de_facto_liege, capitalHoldingIndex, save, ck3);
+        return new LandedTitle(key, holder, de_facto_liege, deJureVassalIndices, capitalHoldingIndex, save, ck3);
     }
 }
 

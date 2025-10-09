@@ -24,7 +24,7 @@ export class PlotViewComponent {
         private elementRef: ElementRef
     ) {
         if (data && data.plotables) {
-            this.plotables = data.plotables;
+            this.plotables = data.plotables.sort((a, b) => b.value - a.value);
             this.plotType = data.plotType;
         } else {
             this.plotables = this.plotablesInput;
@@ -35,7 +35,7 @@ export class PlotViewComponent {
         if (this.plotables && this.plotables.length > 0) {
             this.elementRef.nativeElement.innerHTML = '';
             if (this.plotType === 'bar' || (!this.plotType && this.plotablesInput && this.plotablesInput.length > 0)) {
-                this.plottingService.drawBarPlot(this.plotables, this.elementRef.nativeElement, false, false);
+                this.plottingService.drawBarPlot(this.plotables, this.elementRef.nativeElement, false, true);
             } else if (this.plotType === 'pie') {
                 this.plottingService.pieChart(this.plotables, this.elementRef.nativeElement);
             }

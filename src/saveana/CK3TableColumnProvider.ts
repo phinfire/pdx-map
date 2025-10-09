@@ -16,7 +16,7 @@ export class CK3TableColumnProvider {
                     char => char.getCulture() ? char.getCulture()!.getName() : null, null, false, this.rootUrl + "/message_feed/culture.webp"),
                     TableColumn.from("Tech", 
                         char => char.getCulture() ? char.getCulture()!.getResearchedInnovationNames().length : 0,
-                        char => char.getCulture() ? char.getCulture()!.getResearchedInnovationNames().join("\n") : ""
+                        char => char.getCulture() ? char.getCulture()!.getResearchedInnovationNames().map((n: string) => n.replace("innovation_", "")).join("\n") : ""
                     ),
                 new SimpleTableColumn<Character>("age", "Age",
                     char => char.getAge()),
@@ -42,8 +42,8 @@ export class CK3TableColumnProvider {
                     "Rank",
                     null,
                     true,
-                    (char: Character) => char.getCharacterTier().getImageUrl(),
-                    (char: Character) => char.getCharacterTier().getName(),
+                    (char: Character) => char.getHighestTitle()?.getTier().getImageUrl(),
+                    (char: Character) => char.getHighestTitle()?.getTier().getStateTitle() + " of " + (char.getHighestTitle() ? char.getHighestTitle()!.getLocalisedName() : "No Title"),
                     null,
                     true
                 ),
@@ -62,14 +62,18 @@ export class CK3TableColumnProvider {
                     false,
                     this.rootUrl + "/icon_domain.webp"
                 ),
-                new SimpleTableColumn<Character>("titles", "Titles",
-                    char => char.getTitles().length, null, false),
-                new SimpleTableColumn<Character>("vassals", "Vassals",
-                    char => char.getVassals().length, null, false, this.rootUrl + "/icon_vassal.webp"),
-                new SimpleTableColumn<Character>("levies", "Levies",
-                    char => char.getLevies(), null, false, this.rootUrl + "/icon_soldier.webp"),
-                new SimpleTableColumn<Character>("maa", "MAA",
-                    char => char.getNonLevyTroops(), null, false),
+                TableColumn.from("Titles", 
+                    char => char.getTitles().length,
+                    char => char.getTitles().map(title => title.getTier().getStateTitle() + " of " + title.getLocalisedName()).join("\n"),
+                ),
+                //new SimpleTableColumn<Character>("vassals", "Vassals",
+                //    char => char.getVassals().length, null, false, this.rootUrl + "/icon_vassal.webp"),
+                TableColumn.from("Troops", 
+                    char => char.getLevies() + char.getNonLevyTroops() + char.getKnights().length,
+                    char => `Levies: ${char.getLevies()}\nMAA: ${char.getNonLevyTroops()}\nKnights: ${char.getKnights().length}`
+                ),
+                new SimpleTableColumn<Character>("army", "Levies", char => char.getLevies(), null, false, this.rootUrl + "/icon_soldier.webp"),
+                new SimpleTableColumn<Character>("maa", "MAA", char => char.getNonLevyTroops(), null, false),
                 new SimpleTableColumn<Character>("knights", "Knights",
                     char => char.getKnights().length, null, false, this.rootUrl + "/icon_knight.webp"),
         ]);

@@ -39,4 +39,6 @@ export interface ICk3Save {
     getCounties(): County[];
 
     getCK3(): CK3;
+
+    isPlayerCharacter(character: Character): boolean;
 }

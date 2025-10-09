@@ -37,18 +37,32 @@ export class SaveViewSplashComponent {
     sideNavContentProvider = inject(SideNavContentProvider);
 
     activeSave?: any;
+    activeSaveRawData?: any;
     isProcessing = false;
     private clearSaveActionHandle?: string;
+    private downloadSaveActionHandle?: string;
 
     referenceSaves = [
-        { url: 'http://localhost:5500/public/Duke_Friedrich_II_of_Lower_Lotharingia_1107_07_25.ck3',
-            gamename: 'Crusader Kings 3', label: 'Duke Friedrich II of Lower Lotharingia', type: FileType.CK3 },
-        { url: 'http://localhost:5500/public/MY Emperor_Havel_of_Greater_Elbia_1208_03_24.ck3',
-            gamename: 'Crusader Kings 3', label: 'Emperor Havel of Greater Elbia', type: FileType.CK3 },
-        { url: 'http://localhost:5500/public/greater elbia_1898_07_06.v3',
-            gamename: 'Victoria 3', label: 'Greater Elbia 1898', type: FileType.VIC3 },
-        { url: 'http://localhost:5500/public/mp_Greater_Elbia1705_05_28.eu4',
-            gamename: 'Europa Universalis IV', label: 'MP Greater Elbia 1705', type: FileType.EU4 }
+        {
+            url: "http://localhost:5500/public/King_Friedrich_of_Niederlothringen_1139_01_01.ck3",
+            gamename: 'Crusader Kings 3', label: 'King Friedrich of Niederlothringen', type: FileType.CK3
+        },
+        {
+            url: 'http://localhost:5500/public/Duke_Friedrich_II_of_Lower_Lotharingia_1107_07_25.ck3',
+            gamename: 'Crusader Kings 3', label: 'Duke Friedrich II of Lower Lotharingia', type: FileType.CK3
+        },
+        {
+            url: 'http://localhost:5500/public/MY Emperor_Havel_of_Greater_Elbia_1208_03_24.ck3',
+            gamename: 'Crusader Kings 3', label: 'Emperor Havel of Greater Elbia', type: FileType.CK3
+        },
+        {
+            url: 'http://localhost:5500/public/greater elbia_1898_07_06.v3',
+            gamename: 'Victoria 3', label: 'Greater Elbia 1898', type: FileType.VIC3
+        },
+        {
+            url: 'http://localhost:5500/public/mp_Greater_Elbia1705_05_28.eu4',
+            gamename: 'Europa Universalis IV', label: 'MP Greater Elbia 1705', type: FileType.EU4
+        }
     ];
 
     @ViewChild('chute') chuteDiv!: ElementRef<HTMLDivElement>;
@@ -59,7 +73,7 @@ export class SaveViewSplashComponent {
         if (firstExample) {
             this.startProcessing();
             this.loadReferenceSave(firstExample.url, firstExample.type)
-                .then(save => this.handleSuccess(save))
+                .then(result => this.handleSuccess(result.save, result.rawData))
                 .catch(error => this.handleError(this.getErrorMessage(error, firstExample.type)));
         }
     }
@@ -94,7 +108,7 @@ export class SaveViewSplashComponent {
         }
         this.startProcessing();
         this.processFileByType(file, files, fileType)
-            .then(save => this.handleSuccess(save))
+            .then(result => this.handleSuccess(result.save, result.rawData))
             .catch(error => this.handleError(this.getErrorMessage(error, fileType)));
     }
 
@@ -106,7 +120,7 @@ export class SaveViewSplashComponent {
         return FileType.UNSUPPORTED;
     }
 
-    private async processFileByType(file: File, files: File[], fileType: FileType): Promise<any> {
+    private async processFileByType(file: File, files: File[], fileType: FileType): Promise<{save: any, rawData: any}> {
         switch (fileType) {
             case FileType.CK3:
                 return this.processCk3File(file);
@@ -121,25 +135,28 @@ export class SaveViewSplashComponent {
         }
     }
 
-    private async processCk3File(file: File): Promise<Ck3Save> {
+    private async processCk3File(file: File): Promise<{save: Ck3Save, rawData: any}> {
         const result = await this.ck3Service.importFilePromise(file, true);
         const ck3 = await firstValueFrom(this.ck3Service.initializeCK3());
         console.log("Imported CK3 file", result.name, result.json);
-        return Ck3Save.fromRawData(result.json, ck3);
+        const save = Ck3Save.fromRawData(result.json, ck3);
+        return { save, rawData: result.json };
     }
 
-    private async processVic3File(files: File[]): Promise<Vic3Save> {
+    private async processVic3File(files: File[]): Promise<{save: Vic3Save, rawData: any}> {
         const namesAndJsons = await this.fileService.importFilesPromise(files);
         const first = namesAndJsons[0];
         console.log("Imported Victoria 3 file", first.name, first.json);
-        return Vic3Save.makeSaveFromRawData(first.json);
+        const save = Vic3Save.makeSaveFromRawData(first.json);
+        return { save, rawData: first.json };
     }
 
-    private async processEu4File(files: File[]): Promise<Eu4Save> {
+    private async processEu4File(files: File[]): Promise<{save: Eu4Save, rawData: any}> {
         const namesAndJsons = await this.fileService.importFilesPromise(files);
         const first = namesAndJsons[0];
         console.log("Imported EU4 file", first.name, first.json);
-        return new Eu4Save(first.json);
+        const save = new Eu4Save(first.json);
+        return { save, rawData: first.json };
     }
 
     private async processJsonFile(files: File[]): Promise<never> {
@@ -150,8 +167,10 @@ export class SaveViewSplashComponent {
         this.isProcessing = true;
     }
 
-    private handleSuccess(save: any): void {
+    private handleSuccess(save: any, rawData?: any): void {
         this.activeSave = save;
+        this.activeSaveRawData = rawData;
+        this.addDownloadJSONAction();
         this.addClearSaveAction();
         this.finishProcessing();
     }
@@ -222,11 +241,11 @@ export class SaveViewSplashComponent {
     onReferenceSaveSelected(event: MatSelectChange) {
         const selectedUrl = event.value;
         const selectedSave = this.referenceSaves.find(save => save.url === selectedUrl);
-        
+
         if (selectedSave) {
             this.startProcessing();
             this.loadReferenceSave(selectedSave.url, selectedSave.type)
-                .then(save => this.handleSuccess(save))
+                .then(result => this.handleSuccess(result.save, result.rawData))
                 .catch(error => this.handleError(this.getErrorMessage(error, selectedSave.type)));
         }
     }
@@ -241,26 +260,49 @@ export class SaveViewSplashComponent {
         return this.referenceSaves.filter(save => save.gamename === gamename);
     }
 
-    private async loadReferenceSave(url: string, fileType: FileType): Promise<any> {
+    private async loadReferenceSave(url: string, fileType: FileType): Promise<{save: any, rawData: any}> {
         try {
             const response = await fetch(url);
             const blob = await response.blob();
             const file = new File([blob], url.split('/').pop() || 'reference-save');
-            
+
             return this.processFileByType(file, [file], fileType);
         } catch (error) {
             throw new Error(`Failed to load reference save: ${error}`);
         }
     }
 
+    private addDownloadJSONAction(): void {
+        if (this.downloadSaveActionHandle) {
+            this.sideNavContentProvider.removeToolbarAction(this.downloadSaveActionHandle);
+        }
+        this.downloadSaveActionHandle = this.sideNavContentProvider.addToolbarAction(
+            'download',
+            'Download JSON',
+            () => {
+                if (!this.activeSaveRawData) return;
+                const jsonStr = JSON.stringify(this.activeSaveRawData, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'save.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        );
+    }
+
     private addClearSaveAction(): void {
         if (this.clearSaveActionHandle) {
             this.sideNavContentProvider.removeToolbarAction(this.clearSaveActionHandle);
         }
-        
+
         this.clearSaveActionHandle = this.sideNavContentProvider.addToolbarAction(
             'close',
-            'Clear current save', 
+            'Clear current save',
             () => this.clearSave()
         );
         const saveName = this.getSaveDisplayName();
@@ -269,13 +311,14 @@ export class SaveViewSplashComponent {
 
     private clearSave(): void {
         this.activeSave = undefined;
+        this.activeSaveRawData = undefined;
         if (this.clearSaveActionHandle) {
             this.sideNavContentProvider.removeToolbarAction(this.clearSaveActionHandle);
             this.clearSaveActionHandle = undefined;
         }
         this.sideNavContentProvider.clearToolbarLabel();
     }
-    
+
     private getSaveDisplayName(): string {
         if (!this.activeSave) return '';
         if (this.activeSaveIsCk3()) {
@@ -283,21 +326,21 @@ export class SaveViewSplashComponent {
             const date = SimplifiedDate.fromDate(asCk3Save.getIngameDate());
             return date.getDateWithShortenedMonthName();
         }
-        
+
         if (this.activeSaveIsVic3()) {
             const country = this.activeSave.country_name || this.activeSave.tag;
             const date = this.activeSave.date;
             if (country && date) return `${country} (${date})`;
             if (country) return country;
         }
-        
+
         if (this.activeSaveIsEu4()) {
             const country = this.activeSave.country || this.activeSave.tag;
             const date = this.activeSave.date;
             if (country && date) return `${country} (${date})`;
             if (country) return country;
         }
-        
+
         return 'Loaded Save';
     }
 }

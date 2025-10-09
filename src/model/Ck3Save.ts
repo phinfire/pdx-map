@@ -9,6 +9,7 @@ import { Ck3Player } from "./ck3/Player";
 import { ICk3Save } from "./ck3/save/ICk3Save";
 import { readAllFaiths, readAllCultures, readLandedTitles, createTitle, readPlayers, readDynasties, readCountries, readAllHoldings } from "./ck3/save/Parse";
 import { AbstractLandedTitle } from "./ck3/title/AbstractLandedTitle";
+import { CustomLandedTitle } from "./ck3/title/CustomLandedTitle";
 import { ParadoxSave } from "./ParadoxSave";
 
 export class Ck3Save implements ICk3Save, ParadoxSave {
@@ -39,9 +40,7 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     }
 
     private initialize(data: any) {
-        // Create all characters first
         this.createAllCharacters(data);
-        
         this.players = readPlayers(data, (id, data) => this.findDataAndCreateCharacter(data, id));
         this.faiths = readAllFaiths(data);
         this.cultures = readAllCultures(data);
@@ -63,7 +62,7 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
                 this.livingCharacters.set(characterId, char);
             }
         }
-        
+
         // Create all dead unprunable characters
         const deadUnprunableData = data.dead_unprunable || {};
         for (const characterId in deadUnprunableData) {
@@ -72,7 +71,7 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
                 this.deadUnprunableCharacters.set(characterId, char);
             }
         }
-        
+
         // Create all dead prunable characters
         const deadPrunableData = data.dead_prunable || {};
         for (const characterId in deadPrunableData) {
@@ -145,7 +144,8 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     }
 
     getPlayerNameByCharacterId(characterId: string): string | null {
-        throw new Error("Method not implemented.");
+        const player = this.players.find(p => p.getLastPlayedCharacter() != null && p.getLastPlayedCharacter()!.getCharacterId() === characterId);
+        return player ? player.getName() : null;
     }
 
     getCulture(cultureIndex: number): Culture {
@@ -193,5 +193,13 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
 
     getCounties(): County[] {
         return this.counties;
+    }
+
+    public isPlayerCharacter(character: Character): boolean {
+        return this.players.some(player => {
+            const char = player.getLastPlayedCharacter();
+            if (!char) return false;
+            return char.getCharacterId() === character.getCharacterId();
+        });
     }
 }

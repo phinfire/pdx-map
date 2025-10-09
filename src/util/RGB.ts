@@ -14,6 +14,14 @@ export class RGB {
         return `#${this.toNumber().toString(16).padStart(6, '0')}`;
     }
 
+    adjustBrightness(factor: number): RGB {
+        return new RGB(
+            Math.min(255, Math.max(0, Math.round(this.r * factor))),
+            Math.min(255, Math.max(0, Math.round(this.g * factor))),
+            Math.min(255, Math.max(0, Math.round(this.b * factor)))
+        );
+    }
+
     public static fromHSV(h: number, s: number, v: number): RGB {
         const c = v * s;
         const x = c * (1 - Math.abs((h / 60) % 2 - 1));
@@ -34,4 +42,6 @@ export class RGB {
         }
         return new RGB(Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255));
     }
+
+    
 }

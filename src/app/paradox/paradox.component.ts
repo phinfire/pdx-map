@@ -100,7 +100,6 @@ export class ParadoxComponent implements OnDestroy {
                 this.markActionAsSeen(action.id);
             }
         });
-        
         return actions;
     }
 

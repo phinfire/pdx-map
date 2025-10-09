@@ -23,12 +23,12 @@ export class RulerTier {
         return index != -1 ? RulerTier.TIERS[index+1] : RulerTier.NONE;
     }
 
-    constructor(private name: string, private index: number) {
+    private constructor(private name: string, private index: number) {
 
     }
 
     public getNextHigherTier(): RulerTier {
-        return this.index < RulerTier.TIERS.length ? RulerTier.TIERS[this.index] : RulerTier.NONE;
+        return RulerTier.TIERS[Math.min(this.index + 1, RulerTier.TIERS.length - 1)];
     }
 
     public static fromRealmTier(realmTier: string) {

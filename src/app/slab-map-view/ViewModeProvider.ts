@@ -1,11 +1,12 @@
 import { Injectable } from "@angular/core";
-import { ValueViewMode, ViewMode } from "./ViewMode";
+import { CategoryViewMode, ValueViewMode, ViewMode } from "./ViewMode";
 import { County } from "../../model/ck3/County";
 import { ICk3Save } from "../../model/ck3/save/ICk3Save";
 import { Eu4Save } from '../../model/eu4/Eu4Save';
 import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvider';
 import { RGB } from '../../util/RGB';
 import { ValueGradientColorConfig } from "../viewers/polygon-select/DynamicColorConfig";
+import { AbstractLandedTitle } from "../../model/ck3/title/AbstractLandedTitle";
 
 @Injectable({
     providedIn: 'root'
@@ -14,17 +15,52 @@ export class ViewModeProvider {
 
     public buildViewModesForCk3(save: ICk3Save): ViewMode<any>[] {
         return [
+            this.buildCategoryViewMode(save),
             this.build(save, (entity: County) => entity.getDevelopment(), "Development", "bar_chart"),
             this.buildIncomeView(save),
         ];
     }
 
+    private buildCategoryViewMode(save: ICk3Save) {
+        const key2Entity = new Map<string, AbstractLandedTitle>();
+        save.getCounties().forEach(county => {
+            const title = save.getTitle(county.getKey());
+            key2Entity.set(county.getKey(), title);
+        });
+        const entity2Category = (entity: AbstractLandedTitle) => {
+            const ultiLiege = entity.getUltimateLiegeTitle();
+            const holder = ultiLiege.getHolder();
+            if (holder) {
+                const highestHolderTitle = holder.getHighestTitle()!;
+                const isPlayer = holder != null && save.isPlayerCharacter(holder);
+                return { title: highestHolderTitle, isPlayer: isPlayer };
+            }
+            return { title: ultiLiege, isPlayer: false };
+        };
+        const category2Color = (category: { title: AbstractLandedTitle, isPlayer: boolean }) => {
+            const baseColor = category.title.getColor();
+            if (category.isPlayer) {
+                return baseColor;
+            }
+            return baseColor.adjustBrightness(0.4);
+        };
+        const cat2Name = (cat: { title: AbstractLandedTitle, isPlayer: boolean }) => {
+            return cat.title.getLocalisedName() + (cat.isPlayer ? " (Player)" : "");
+        }
+        return new CategoryViewMode<AbstractLandedTitle, { title: AbstractLandedTitle, isPlayer: boolean }>(key2Entity, entity2Category, category2Color, (entity: AbstractLandedTitle) => entity.getLocalisedName(), cat2Name, "Liege", "account_tree");
+    }
+
     private build(save: ICk3Save, entity2Value: (entity: County) => number, valueName: string, icon: string): ViewMode<any> {
+        const key2Entity = this.getProvinceId2Province(save);
+        return new ValueViewMode<County>(key2Entity, entity2Value, (entity: County) => (save as ICk3Save).getTitle(entity.getKey())!.getLocalisedName(), valueName, icon);
+    }
+
+    private getProvinceId2Province(save: ICk3Save) {
         const key2Entity = new Map<string, County>();
         save.getCounties().forEach(county => {
             key2Entity.set(county.getKey(), county);
         });
-        return new ValueViewMode<County>(key2Entity, entity2Value, (entity: County) => (save as ICk3Save).getTitle(entity.getKey())!.getLocalisedName(), valueName, icon);
+        return key2Entity;
     }
 
     private buildIncomeView(save: ICk3Save): ViewMode<any> {

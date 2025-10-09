@@ -8,12 +8,14 @@ export abstract class AbstractLandedTitle {
 
     private holderIndex: number | null = null;
     private deFactoLiegeIndex: number | null;
+    private deJureVassalIndices: number[];
 
-    protected constructor(private key: string, holder: string, deFactoLiege: string | null, private capitalHoldingIndex: number | null, protected save: ICk3Save, protected ck3: CK3) {
+    protected constructor(private key: string, holder: string, deFactoLiege: string | null, deJureVassalIndices: number[], private capitalHoldingIndex: number | null, protected save: ICk3Save, protected ck3: CK3) {
         if (holder) {
             this.holderIndex = parseInt(holder);
         }
         this.deFactoLiegeIndex = deFactoLiege ? parseInt(deFactoLiege) : null;
+        this.deJureVassalIndices = deJureVassalIndices || [];
     }
 
     public abstract getColor(): RGB;
@@ -48,17 +50,25 @@ export abstract class AbstractLandedTitle {
     }
 
     public getUltimateLiegeTitle() {
+        const path = this.getDeFactoPathToUltimateLiege();
+        return path[path.length - 1];
+    }
+
+    public getDeFactoPathToUltimateLiege(): AbstractLandedTitle[] {
+        const path: AbstractLandedTitle[] = [];
         let current: AbstractLandedTitle = this;
+        path.push(current);
         while (current.getDeFactoLiegeTitle() != null) {
             const next = current.getDeFactoLiegeTitle()!;
-            if (next == null || next.getKey() == current.getKey()) {
-                return current;
+            if (next == null) {
+                break;
             }
+            path.push(next);
             current = next;
         }
-        return current;
+        return path;
     }
-    
+
     public getUltimatePlayerHeldLiegeTitle(): AbstractLandedTitle | null {
         if (this.getHolder() === null) {
             return null;
@@ -69,5 +79,15 @@ export abstract class AbstractLandedTitle {
         }
         const liegeTitle = this.getDeFactoLiegeTitle();
         return liegeTitle ? liegeTitle.getUltimatePlayerHeldLiegeTitle() : null;
+    }
+
+    public getDeJureVassalTitles(): AbstractLandedTitle[] {
+        return this.deJureVassalIndices
+            .map((index: number) => this.save.getTitleByIndex(index))
+            .filter((title: AbstractLandedTitle | null) => title != null) as AbstractLandedTitle[];
+    }
+
+    public getStateTitle() {
+        return this.getTier().getStateTitle() + " of " + this.getLocalisedName();
     }
 }

@@ -11,18 +11,19 @@
             </ng-template>
         </th>
         <td mat-cell *matCellDef="let element; let i = index"
-            [ngClass]="{'negative-cell': col.cellValue(element, i) < 0}">
+            [ngClass]="{'negative-cell': safeGetCellValue(col, element, i) < 0}">
             <ng-container *ngIf="col.isImage; else textCell">
-                <img [src]="col.visibleCellValue(element, i)" alt="" [matTooltip]="col.cellTooltip(element, i)"
-                    [matTooltipDisabled]="!showTooltips || !col.cellTooltip(element, i)" />
+                <img [src]="safeGetVisibleCellValue(col, element, i)" alt="" 
+                     [matTooltip]="safeGetCellTooltip(col, element, i)"
+                     [matTooltipDisabled]="!showTooltips || !safeGetCellTooltip(col, element, i)" />
             </ng-container>
             <ng-template #textCell>
-                <span [matTooltip]="col.cellTooltip(element, i)"
-                    [matTooltipDisabled]="!showTooltips || !col.cellTooltip(element, i)"
+                <span [matTooltip]="safeGetCellTooltip(col, element, i)"
+                    [matTooltipDisabled]="!showTooltips || !safeGetCellTooltip(col, element, i)"
                     matTooltipClass="tooltip-secret">
-                    {{ col.visibleCellValue(element, i) }}
-                    <sub *ngIf="col.subscript && col.subscript(element)">
-                        {{ col.subscript(element) }}
+                    {{ safeGetVisibleCellValue(col, element, i) }}
+                    <sub *ngIf="col.subscript && safeGetSubscript(col, element)">
+                        {{ safeGetSubscript(col, element) }}
                     </sub>
                 </span>
             </ng-template>
@@ -36,5 +37,6 @@
 <ng-template #headermenu>
   <div class="col-context-menu" cdkMenu>
     <button class="col-context-menu-item" cdkMenuItem (click)="openPlot()">📊 Plot</button>
+    <button class="col-context-menu-item" cdkMenuItem (click)="downloadCSV()">⬇️ Download CSV</button>
   </div>
 </ng-template>

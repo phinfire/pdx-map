@@ -1,16 +1,17 @@
 <mat-tab-group>
-    @for (entry of columnMap.entries(); track entry[0]) {
-        <mat-tab [label]="entry[0]">
-            <ng-template matTabContent>
-                <div class="table-container">
-                    <app-table [rowElements]="getRowElements()" [columns]="entry[1]"></app-table>
-                </div>
-            </ng-template>
-        </mat-tab>
-    }
-    <mat-tab label="Map">
+    <!--<mat-tab label="Map">
         <div class="map-container">
-           <app-slab-map-view [save]="activeSave"></app-slab-map-view>
+            <app-slab-map-view [save]="activeSave"></app-slab-map-view>
         </div>
     </mat-tab>
+-->
+    @for (entry of columnMap.entries(); track entry[0]) {
+    <mat-tab [label]="entry[0]">
+        <ng-template matTabContent>
+            <div class="table-container">
+                <app-table [rowElements]="getRowElements()" [columns]="entry[1]"></app-table>
+            </div>
+        </ng-template>
+    </mat-tab>
+    }
 </mat-tab-group>

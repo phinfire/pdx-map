@@ -196,7 +196,7 @@ export class Character {
 
     public getTitles() {
         if (this.cachedHeldTitles == null) {
-            this.cachedHeldTitles = this.save.getHeldTitles(this);
+            this.cachedHeldTitles = this.save.getHeldTitles(this).sort((a, b) => b.getTier().compare(a.getTier()) || b.getLocalisedName().localeCompare(a.getLocalisedName()));
         }
         return this.cachedHeldTitles;
     }
@@ -251,11 +251,6 @@ export class Character {
         const deathDate = this.deathDate!;
         const birthDate = this.getBirthDate();
         return deathDate.getFullYear() - birthDate.getFullYear();
-    }
-
-    public getVassals() { //TODO
-        const vassalCharId2Title = new Map<string, number[]>();
-        return [];
     }
 
     public equals(other: Character) {
