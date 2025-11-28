@@ -1,47 +1,47 @@
 <mat-toolbar>
-    <button mat-icon-button class="menu-button" aria-label="Menu" (click)="drawer.toggle()">
-        <mat-icon>menu</mat-icon>
+  <button mat-icon-button class="menu-button" aria-label="Menu" (click)="drawer.toggle()">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>PDX</span>
+  @if (getToolbarLabel()) {
+    <span class="toolbar-label">{{ getToolbarLabel() }}</span>
+  }
+  <span class="spacer"></span>
+  @for (action of getToolbarActionsArray(); track trackByActionId($index, action)) {
+    <button mat-icon-button
+      class="toolbar-action"
+      [@newActionAlert]="getAnimationState(action.id)"
+      (@newActionAlert.done)="onAnimationDone($event, action.id)"
+      [attr.aria-label]="action.tooltip"
+      [matTooltip]="action.tooltip"
+      (click)="onActionClick(action)">
+      <mat-icon>{{ action.icon }}</mat-icon>
     </button>
-    <span>PDX</span>
-    @if (getToolbarLabel()) {
-        <span class="toolbar-label">{{ getToolbarLabel() }}</span>
-    }
-    <span class="spacer"></span>
-    <ng-container *ngFor="let action of getToolbarActionsArray(); trackBy: trackByActionId">
-        <button mat-icon-button 
-                class="toolbar-action" 
-                [@newActionAlert]="getAnimationState(action.id)"
-                (@newActionAlert.done)="onAnimationDone($event, action.id)"
-                [attr.aria-label]="action.tooltip" 
-                [matTooltip]="action.tooltip"
-                (click)="onActionClick(action)">
-            <mat-icon>{{ action.icon }}</mat-icon>
-        </button>
-    </ng-container>
-    <span class="spacer-right"></span>
+  }
+  <span class="spacer-right"></span>
 </mat-toolbar>
 
 <mat-drawer-container class="container" autosize>
-    <mat-drawer #drawer class="sidenav" mode="side">
-        <div class="sidenav-top">
-            <div class="panorama">
-                <button mat-icon-button (click)="setTheme(false); toggleAnimation('day')"
-                    class="theme-button day-button" [class.sink]="currentTheme === 'day'" [class.hover-effect]="true">
-                    <mat-icon>wb_sunny</mat-icon>
-                </button>
-                <button mat-icon-button (click)="setTheme(true); toggleAnimation('night')"
-                    class="theme-button night-button" [class.sink]="currentTheme === 'night'"
-                    [class.hover-effect]="true">
-                    <mat-icon>nightlight</mat-icon>
-                </button>
-            </div>
-        </div>
-        <ng-container *ngFor="let action of sideNavContentProvider.getActions()">
-            <button mat-button (click)="action.action()">{{ action.label }}</button>
-            <mat-divider></mat-divider>
-        </ng-container>
-    </mat-drawer>
+  <mat-drawer #drawer class="sidenav" mode="side">
+    <div class="sidenav-top">
+      <div class="panorama">
+        <button mat-icon-button (click)="setTheme(false); toggleAnimation('day')"
+          class="theme-button day-button" [class.sink]="currentTheme === 'day'" [class.hover-effect]="true">
+          <mat-icon>wb_sunny</mat-icon>
+        </button>
+        <button mat-icon-button (click)="setTheme(true); toggleAnimation('night')"
+          class="theme-button night-button" [class.sink]="currentTheme === 'night'"
+          [class.hover-effect]="true">
+          <mat-icon>nightlight</mat-icon>
+        </button>
+      </div>
+    </div>
+    @for (action of sideNavContentProvider.getActions(); track action) {
+      <button mat-button (click)="action.action()">{{ action.label }}</button>
+      <mat-divider></mat-divider>
+    }
+  </mat-drawer>
 
-    <app-save-view-splash></app-save-view-splash>
+  <app-save-view-splash></app-save-view-splash>
 
 </mat-drawer-container>

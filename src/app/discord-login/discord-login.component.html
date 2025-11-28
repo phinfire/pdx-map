@@ -1,11 +1,12 @@
-<button 
-    mat-flat-button 
-    (click)="loginWithDiscord()" 
-    class="login-button" 
-    *ngIf="!isLoggedIn()"
+@if (!isLoggedIn()) {
+  <button
+    mat-flat-button
+    (click)="loginWithDiscord()"
+    class="login-button"
     [disabled]="!(isApiOnline$ | async)"
     [matTooltip]="!(isApiOnline$ | async) ? 'Discord login is currently unavailable - API offline' : ''"
     matTooltipPosition="above">
     <mat-icon svgIcon="discord-logo" aria-hidden="false"></mat-icon>
     <span>Login with Discord</span>
-</button>
+  </button>
+}

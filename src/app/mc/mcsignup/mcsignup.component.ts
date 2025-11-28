@@ -1,6 +1,6 @@
 import { Router } from '@angular/router';
 import { Component, inject, ViewChild, OnInit, HostListener, AfterViewInit, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -28,7 +28,7 @@ export interface TableItem {
 
 @Component({
     selector: 'app-mcsignup',
-    imports: [CommonModule, PolygonSelectComponent, DiscordLoginComponent, MatButtonModule, MatIconModule, MatTableModule, DragDropModule, DiscordFieldComponent, MatProgressSpinnerModule, MatTooltipModule, TimerComponent],
+    imports: [PolygonSelectComponent, DiscordLoginComponent, MatButtonModule, MatIconModule, MatTableModule, DragDropModule, DiscordFieldComponent, MatProgressSpinnerModule, MatTooltipModule, TimerComponent],
     templateUrl: './mcsignup.component.html',
     styleUrl: './mcsignup.component.scss'
 })

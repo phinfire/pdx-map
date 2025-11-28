@@ -1,7 +1,7 @@
 import { Component, Input, SimpleChanges } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
-import { CommonModule } from '@angular/common';
+
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { FormsModule } from '@angular/forms';
@@ -18,7 +18,7 @@ import { TableComponent } from '../vic3-country-table/vic3-country-table.compone
 
 @Component({
     selector: 'app-save-view',
-    imports: [MatTabsModule, TableComponent, MatProgressSpinnerModule, CommonModule, MatRadioModule, FormsModule, MatButtonToggleModule, PlotViewComponent],
+    imports: [MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule, PlotViewComponent],
     templateUrl: './save-view.component.html',
     styleUrl: './save-view.component.scss',
 })

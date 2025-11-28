@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { CommonModule } from '@angular/common';
+
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SideNavContentProvider } from '../SideNavContentProvider';
@@ -12,7 +12,7 @@ import { trigger, state, style, transition, animate, keyframes } from '@angular/
 
 @Component({
     selector: 'app-paradox',
-    imports: [SaveViewSplashComponent, MatToolbarModule, MatButtonModule, MatIconModule, MatSidenavModule, CommonModule, MatDividerModule, MatTooltipModule],
+    imports: [SaveViewSplashComponent, MatToolbarModule, MatButtonModule, MatIconModule, MatSidenavModule, MatDividerModule, MatTooltipModule],
     templateUrl: './paradox.component.html',
     styleUrl: './paradox.component.scss',
     animations: [

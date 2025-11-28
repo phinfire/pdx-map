@@ -1,5 +1,5 @@
 import { Component, ElementRef, Input, SimpleChanges, ViewChild, NgZone, AfterViewInit } from '@angular/core';
-import { NgFor } from '@angular/common';
+
 import * as THREE from 'three';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';

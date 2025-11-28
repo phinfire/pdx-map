@@ -1,48 +1,50 @@
 <table mat-table [dataSource]="dataSource" matSort>
-    <ng-container *ngFor="let col of columns; let index = index" [matColumnDef]="col.def" [sticky]="false">
-        <th mat-header-cell *matHeaderCellDef [mat-sort-header]="col.sortable ? col.def : ''"
-            [matTooltip]="col.tooltip" matTooltipClass="tooltip" [cdkContextMenuTriggerFor]="headermenu"
-            (cdkContextMenuOpened)="selectedColumn = col">
-            <ng-container *ngIf="col.headerImage; else headerText">
-                <img [src]="col.headerImage" alt="" style="max-height:1.4em;vertical-align:middle;" />
-            </ng-container>
-            <ng-template #headerText>
-                {{col.header}}
-            </ng-template>
-        </th>
-        <td mat-cell *matCellDef="let element; let i = index"
-            [ngClass]="{'negative-cell': safeGetCellValue(col, element, i) < 0}">
-            <ng-container *ngIf="col.isImage; else textCell">
-                <img [src]="safeGetVisibleCellValue(col, element, i)" alt="" 
-                     [matTooltip]="safeGetCellTooltip(col, element, i)"
-                     [matTooltipDisabled]="!showTooltips || !safeGetCellTooltip(col, element, i)" />
-            </ng-container>
-            <ng-template #textCell>
-                <span [matTooltip]="safeGetCellTooltip(col, element, i)"
-                    [matTooltipDisabled]="!showTooltips || !safeGetCellTooltip(col, element, i)"
-                    matTooltipClass="tooltip-secret">
-                    {{ safeGetVisibleCellValue(col, element, i) }}
-                    <sub *ngIf="col.subscript && safeGetSubscript(col, element)">
-                        {{ safeGetSubscript(col, element) }}
-                    </sub>
-                </span>
-            </ng-template>
+  @for (col of columns; track col; let index = $index) {
+    <ng-container [matColumnDef]="col.def" [sticky]="false">
+      <th mat-header-cell *matHeaderCellDef [mat-sort-header]="col.sortable ? col.def : ''"
+        [matTooltip]="col.tooltip" matTooltipClass="tooltip" [cdkContextMenuTriggerFor]="headermenu"
+        (cdkContextMenuOpened)="selectedColumn = col">
+        @if (col.headerImage) {
+          <img [src]="col.headerImage" alt="" style="max-height:1.4em;vertical-align:middle;" />
+        } @else {
+          {{col.header}}
+        }
+      </th>
+      <td mat-cell *matCellDef="let element; let i = index"
+        [ngClass]="{'negative-cell': safeGetCellValue(col, element, i) < 0}">
+        @if (col.isImage) {
+          <img [src]="safeGetVisibleCellValue(col, element, i)" alt=""
+            [matTooltip]="safeGetCellTooltip(col, element, i)"
+            [matTooltipDisabled]="!showTooltips || !safeGetCellTooltip(col, element, i)" />
+          } @else {
+            <span [matTooltip]="safeGetCellTooltip(col, element, i)"
+              [matTooltipDisabled]="!showTooltips || !safeGetCellTooltip(col, element, i)"
+              matTooltipClass="tooltip-secret">
+              {{ safeGetVisibleCellValue(col, element, i) }}
+              @if (col.subscript && safeGetSubscript(col, element)) {
+                <sub>
+                  {{ safeGetSubscript(col, element) }}
+                </sub>
+              }
+            </span>
+          }
         </td>
-    </ng-container>
+      </ng-container>
+    }
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-</table>
+  </table>
 
-<ng-template #headermenu>
+  <ng-template #headermenu>
     <div class="col-context-menu" cdkMenu @menuFadeScale>
-                <button class="col-context-menu-item" cdkMenuItem (click)="openPlot()"
-                                matTooltip="Plot column data" matTooltipPosition="right">
-                        <mat-icon>bar_chart</mat-icon>
-                </button>
-                <button class="col-context-menu-item" cdkMenuItem (click)="downloadCSV()"
-                                matTooltip="Download column as CSV" matTooltipPosition="right">
-                        <mat-icon>download</mat-icon>
-                </button>
+      <button class="col-context-menu-item" cdkMenuItem (click)="openPlot()"
+        matTooltip="Plot column data" matTooltipPosition="right">
+        <mat-icon>bar_chart</mat-icon>
+      </button>
+      <button class="col-context-menu-item" cdkMenuItem (click)="downloadCSV()"
+        matTooltip="Download column as CSV" matTooltipPosition="right">
+        <mat-icon>download</mat-icon>
+      </button>
     </div>
-</ng-template>
+  </ng-template>

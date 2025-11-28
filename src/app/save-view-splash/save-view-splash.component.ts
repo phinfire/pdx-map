@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, Input, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
@@ -27,7 +27,7 @@ enum FileType {
 
 @Component({
     selector: 'app-save-view-splash',
-    imports: [SaveViewComponent, CommonModule, MatButtonModule, MatProgressSpinnerModule, Ck3SaveViewComponent, MatSelectModule, MatFormFieldModule],
+    imports: [SaveViewComponent, MatButtonModule, MatProgressSpinnerModule, Ck3SaveViewComponent, MatSelectModule, MatFormFieldModule],
     templateUrl: './save-view-splash.component.html',
     styleUrl: './save-view-splash.component.scss'
 })
