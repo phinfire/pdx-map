@@ -7,12 +7,12 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SideNavContentProvider } from '../SideNavContentProvider';
-import { SaveViewSplashComponent } from '../save-view-splash/save-view-splash.component';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { trigger, state, style, transition, animate, keyframes } from '@angular/animations';
 
 @Component({
     selector: 'app-paradox',
-    imports: [SaveViewSplashComponent, MatToolbarModule, MatButtonModule, MatIconModule, MatSidenavModule, MatDividerModule, MatTooltipModule],
+    imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatSidenavModule, MatDividerModule, MatTooltipModule, RouterModule],
     templateUrl: './paradox.component.html',
     styleUrl: './paradox.component.scss',
     animations: [
@@ -69,9 +69,15 @@ export class ParadoxComponent implements OnDestroy {
 
     protected sideNavContentProvider = inject(SideNavContentProvider);
     protected renderer = inject(Renderer2);
+    protected router = inject(Router);
+    protected activatedRoute = inject(ActivatedRoute);
+    
+    currentRoute: string = '';
 
     constructor() {
-
+        this.router.events.subscribe(() => {
+            this.currentRoute = this.router.url.split('?')[0] || '';
+        });
     }
 
     setTheme(darkMode: boolean) {
@@ -164,5 +170,18 @@ export class ParadoxComponent implements OnDestroy {
     ngOnDestroy(): void {
         this.animationTimeouts.forEach(timeout => clearTimeout(timeout));
         this.animationTimeouts.clear();
+    }
+
+    // Navigation methods
+    navigate(path: string): void {
+        this.router.navigate([path]);
+    }
+
+    isActiveRoute(path: string): boolean {
+        // Handle root path
+        if (path === 'save') {
+            return this.currentRoute === '' || this.currentRoute === '/';
+        }
+        return this.currentRoute === '/' + path || this.currentRoute === path;
     }
 }

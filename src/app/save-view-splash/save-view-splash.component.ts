@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, Input, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, Input, ViewChild, OnDestroy } from '@angular/core';
 
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
@@ -31,7 +31,7 @@ enum FileType {
     templateUrl: './save-view-splash.component.html',
     styleUrl: './save-view-splash.component.scss'
 })
-export class SaveViewSplashComponent {
+export class SaveViewSplashComponent implements OnDestroy {
 
     ck3Service = inject(CK3Service);
     sideNavContentProvider = inject(SideNavContentProvider);
@@ -342,5 +342,18 @@ export class SaveViewSplashComponent {
         }
 
         return 'Loaded Save';
+    }
+
+    ngOnDestroy(): void {
+        // Clean up toolbar actions when component is destroyed
+        if (this.clearSaveActionHandle) {
+            this.sideNavContentProvider.removeToolbarAction(this.clearSaveActionHandle);
+            this.clearSaveActionHandle = undefined;
+        }
+        if (this.downloadSaveActionHandle) {
+            this.sideNavContentProvider.removeToolbarAction(this.downloadSaveActionHandle);
+            this.downloadSaveActionHandle = undefined;
+        }
+        this.sideNavContentProvider.clearToolbarLabel();
     }
 }
