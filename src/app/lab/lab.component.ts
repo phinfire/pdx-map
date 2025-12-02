@@ -18,10 +18,11 @@ import { AssignmentService } from "../mc/AssignmentService";
 import { SlabMapViewComponent } from "../slab-map-view/slab-map-view.component";
 import { Vic3Save } from "../../model/vic/Vic3Save";
 import { Eu4Save } from "../../model/eu4/Eu4Save";
+import { LineviewerComponent } from "../lineviewer/lineviewer.component";
 
 @Component({
     selector: 'app-lab',
-    imports: [SlabMapViewComponent],
+    imports: [LineviewerComponent],
     templateUrl: './lab.component.html',
     styleUrl: './lab.component.scss'
 })
@@ -48,9 +49,9 @@ export class LabComponent {
                 console.error('Error loading EU4 save file:', error);
             }
         } else {
-            this.ck3Service.openCk3SaveFromFile("http://localhost:5500/public/Duke_Friedrich_II_of_Lower_Lotharingia_1107_07_25.ck3").subscribe(save => {
+            /*this.ck3Service.openCk3SaveFromFile("http://localhost:5500/public/Duke_Friedrich_II_of_Lower_Lotharingia_1107_07_25.ck3").subscribe(save => {
             this.save = save;
-        });
+        });*/
         }
     }
 }

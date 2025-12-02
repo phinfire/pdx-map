@@ -38,10 +38,10 @@
     </div>
     <div class="sidenav-content">
         <button mat-raised-button (click)="navigate('save')" [disabled]="isActiveRoute('save')">Save</button>
-        <button mat-raised-button (click)="navigate('map')" [disabled]="isActiveRoute('map')">Map</button>
-        <button mat-raised-button (click)="navigate('lab')" [disabled]="isActiveRoute('lab')">Lab</button>
         <button mat-raised-button (click)="navigate('mc')" [disabled]="isActiveRoute('mc')">Mega Campaign</button>
         <button mat-raised-button (click)="navigate('mc/admin')" [disabled]="isActiveRoute('mc/admin')">MC Admin</button>
+        <button mat-raised-button (click)="navigate('map')" [disabled]="isActiveRoute('map')">Map</button>
+        <button mat-raised-button (click)="navigate('lab')" [disabled]="isActiveRoute('lab')">Lab</button>
     </div>
     
     @for (action of sideNavContentProvider.getActions(); track action.label) {

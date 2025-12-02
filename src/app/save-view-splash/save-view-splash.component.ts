@@ -316,6 +316,10 @@ export class SaveViewSplashComponent implements OnDestroy {
             this.sideNavContentProvider.removeToolbarAction(this.clearSaveActionHandle);
             this.clearSaveActionHandle = undefined;
         }
+        if (this.downloadSaveActionHandle) {
+            this.sideNavContentProvider.removeToolbarAction(this.downloadSaveActionHandle);
+            this.downloadSaveActionHandle = undefined;
+        }
         this.sideNavContentProvider.clearToolbarLabel();
     }
 

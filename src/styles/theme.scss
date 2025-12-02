@@ -11,6 +11,13 @@ html {
             ),
             typography: 'Titillium Web',
             density: 0));
+    @include mat.form-field-overrides((disabled-input-text-placeholder-color: orange,
+        disabled-leading-icon-color: red,
+        //container-vertical-padding: 2em,
+        filled-with-label-container-padding-top: 0em,
+        filled-with-label-container-padding-bottom: 0em,
+        container-height: 1em,
+    ));
 }
 
 :root {
@@ -94,4 +101,30 @@ html {
 
     --mat-sys-surface: var(--dark-theme-background-color);
     --mat-sys-on-surface: var(--dark-theme-text-color);
+}
+
+// Global combo box (mat-select) styling
+.mat-mdc-form-field {
+    height: 56px;
+
+    .mat-mdc-text-field-wrapper {
+        height: 56px;
+    }
+}
+
+.mat-mdc-select-panel {
+    background-color: var(--background-color) !important;
+}
+
+.mat-mdc-option {
+    background-color: var(--background-color) !important;
+    color: var(--text-color) !important;
+}
+
+.mat-mdc-option:hover {
+    background-color: var(--faded-border-color) !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected {
+    background-color: var(--faded-border-color) !important;
 }
