@@ -41,6 +41,7 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     isLoading = false;
     selectedMetric: string = '';
     optionsList: Array<[string, LineAccessor]> = [];
+    showDataPointMarkers = true;
 
     get allSeriesVisible(): boolean {
         return this.series.length > 0 && this.series.every(s => s.entity?.isVisible?.() ?? false);
@@ -103,6 +104,10 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         this.redrawChart();
     }
 
+    toggleDataPointMarkers() {
+        this.redrawChart();
+    }
+
     getVisibility(series: SeriesWithEntity): boolean {
         return series.entity?.isVisible?.() ?? false;
     }
@@ -118,11 +123,16 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     }
 
     private setSeriesFromMap(seriesMap: Map<LineableEntity, DataSeries>) {
+        const previousVisibility = new Map(this.series.map(s => [s.entity, s.entity?.isVisible?.() ?? false]));
         this.series = Array.from(seriesMap.entries()).map(([entity, ds]) => ({
             ...ds,
             entity
         }));
-        this.series.forEach(s => s.entity?.setVisible?.(true));
+        this.series.forEach(s => {
+            const previousState = previousVisibility.get(s.entity);
+            s.entity?.setVisible?.(previousState ?? true);
+        });
+        
         this.cdr.markForCheck();
     }
 
@@ -132,7 +142,7 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         }
         const visibleSeries = this.series.filter(s => s.entity?.isVisible?.() ?? false);
         const chartContainer = this.elementRef.nativeElement.querySelector('.chart-container');
-        this.svgElement = this.plotterService.redrawChart(visibleSeries, chartContainer);
+        this.svgElement = this.plotterService.redrawChart(visibleSeries, chartContainer, this.showDataPointMarkers);
         if (chartContainer && this.svgElement) {
             chartContainer.appendChild(this.svgElement);
         }

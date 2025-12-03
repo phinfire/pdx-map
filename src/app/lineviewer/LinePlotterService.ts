@@ -14,11 +14,11 @@ export interface DataSeries {
 export class LinePlotterService {
     
     private readonly LABEL_FONT = '"Titillium Web", sans-serif';
-    private readonly MARKER_SIZE = 6;
+    private readonly MARKER_SIZE = 8;
     private readonly TRIANGLE_SIZE = 14;
     private readonly AXIS_TEXT_COLOR = 'currentColor';
 
-    public redrawChart(dataSeries: DataSeries[], chartContainer: HTMLElement): SVGSVGElement {
+    public redrawChart(dataSeries: DataSeries[], chartContainer: HTMLElement, showDataPoints: boolean): SVGSVGElement {
         if (dataSeries.length === 0) {
             return document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGSVGElement;
         }
@@ -78,6 +78,7 @@ export class LinePlotterService {
             .style('font-family', this.LABEL_FONT);
 
         const linesGroup = gSelection.append('g').attr('class', 'lines-group');
+        const pointsGroup = gSelection.append('g').attr('class', 'points-group').style('pointer-events', 'none');
         const hoverGroup = gSelection.append('g').attr('class', 'hover-group').style('pointer-events', 'none');
 
         dataSeries.forEach(series => {
@@ -88,6 +89,16 @@ export class LinePlotterService {
                 .attr('stroke', series.color)
                 .attr('stroke-width', 2)
                 .attr('fill', 'none');
+
+            if (showDataPoints) {
+                series.values.forEach(point => {
+                    pointsGroup.append('circle')
+                        .attr('cx', xScale(point.x))
+                        .attr('cy', yScale(point.y))
+                        .attr('r', 5)
+                        .attr('fill', series.color)
+                });
+            }
         });
 
         const overlay = gSelection.append('rect')
@@ -235,6 +246,7 @@ export class LinePlotterService {
             .attr('cx', pixelX)
             .attr('cy', pixelY)
             .style('stroke', color)
+            .style('fill', color)
             .style('opacity', 1);
     }
 

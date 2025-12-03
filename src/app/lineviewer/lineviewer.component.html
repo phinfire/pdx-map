@@ -10,6 +10,12 @@
           }
         </mat-select>
       </mat-form-field>
+      <span class="toolbar-spacer"></span>
+      <mat-checkbox 
+          [(ngModel)]="showDataPointMarkers" 
+          (change)="toggleDataPointMarkers()">
+          Show sample markers
+      </mat-checkbox>
     </mat-toolbar>
     <div class="chart-container">
       @if (isLoading) {
