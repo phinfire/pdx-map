@@ -1,19 +1,24 @@
-import { Component, ViewChild, ElementRef, AfterViewInit, inject } from '@angular/core';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSliderModule } from '@angular/material/slider';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import * as d3 from 'd3';
-import { MegaModderE2VService } from './MegaModderE2VService';
-import { D3JsService } from '../../../services/D3JsService';
+
 import { HttpClient } from '@angular/common/http';
+import { AfterViewInit, Component, ElementRef, inject, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatTabsModule } from '@angular/material/tabs';
+import * as d3 from 'd3';
 import { map } from 'rxjs/operators';
+import { Vic3GameFilesService } from '../../../model/vic/Vic3GameFilesService';
+import { SkanderbegProxyService } from '../../../services/api/SkanderbegProxyService';
+import { D3JsService } from '../../../services/D3JsService';
+import { PdxFileService } from '../../../services/pdx-file.service';
+import { TableColumn } from '../../../util/table/TableColumn';
+import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
+import { MegaModderE2VService } from './MegaModderE2VService';
 
 @Component({
     selector: 'app-mega-modder',
-    imports: [MatTabsModule, MatSelectModule, MatFormFieldModule, MatSliderModule, CommonModule, FormsModule],
+    imports: [MatTabsModule, MatSelectModule, MatFormFieldModule, MatSliderModule, FormsModule, TableComponent],
     templateUrl: './mega-modder.component.html',
     styleUrl: './mega-modder.component.scss',
 })
@@ -27,16 +32,12 @@ export class MegaModderComponent implements AfterViewInit {
     private readonly service = inject(MegaModderE2VService);
     private d3jsService = inject(D3JsService);
     private http = inject(HttpClient);
+    private vic3GameFilesService = inject(Vic3GameFilesService);
+    private skanderbegProxyService = inject(SkanderbegProxyService);
+    private pdxFileService = inject(PdxFileService);
 
     selectedSaveId: string = '';
-    saves = [
-        {id: "4ab822", year: 1705},
-        { id: "0554a9", year: 1652 },
-        { id: "572a90", year: 1613 },
-        { id: "0b9b77", year: 1557 },
-        { id: "76c960", year: 1504 },
-        { id: "54ebd1", year: 1444 }
-    ];
+    saves = this.skanderbegProxyService.getAvailableSaves();
 
     readonly xDomainAbsMin: number = 0;
     readonly xDomainAbsMax: number = 4500;
@@ -45,12 +46,24 @@ export class MegaModderComponent implements AfterViewInit {
     xDomainMin: number = this.xDomainAbsMin;
     xDomainMax: number = this.xDomainAbsMax;
     private currentPlayerDevData: Array<{ name: string; dev: number; color: string; nationId?: string }> = [];
+    mappingTableRows: Array<{ eu4Name: string; vic3Tag: string; eu4Dev: number; vic3Pop: number; adjustedVic3Pop: number; totalAdjustedVic3Pop: number; unityAdjustedVic3Pop: number; unityTotalVic3Pop: number }> = [];
+    mappingTableColumns: TableColumn<{ eu4Name: string; vic3Tag: string; eu4Dev: number; vic3Pop: number; adjustedVic3Pop: number; totalAdjustedVic3Pop: number; unityAdjustedVic3Pop: number; unityTotalVic3Pop: number }>[] = [
+        new TableColumn('name', 'EU4 Tag', null, true, (e) => e.eu4Name, () => null),
+        new TableColumn('vic3Tag', 'Vic3 Tag', null, true, (e) => e.vic3Tag, () => null),
+        new TableColumn('eu4Dev', 'Dev', null, true, (e) => e.eu4Dev, () => null),
+        new TableColumn('vic3Pop', 'Raw', null, true, (e) => e.vic3Pop, () => null),
+        //new TableColumn('adjustedVic3Pop', 'Opt.1', null, true, (e) => e.adjustedVic3Pop, () => null),
+        new TableColumn('totalAdjustedVic3Pop', 'Opt.1 Σ  ', "Nations and their vassals scaled by overlord ratio", true, (e) => e.totalAdjustedVic3Pop, () => null),
+        //new TableColumn('unityAdjustedVic3Pop', 'Opt.2', null, true, (e) => e.unityAdjustedVic3Pop, () => null),
+        new TableColumn('unityTotalVic3Pop', 'Opt.2 Σ ', "Nations and their vassals scaled by combined ratio", true, (e) => e.unityTotalVic3Pop, () => null)
+    ];
 
     ngAfterViewInit(): void {
         this.loadSliderValuesFromLocalStorage();
         if (this.xDomainMin < this.xDomainMax) {
             this.renderChart();
         }
+        this.testGuessTagMapping();
     }
 
     private loadSliderValuesFromLocalStorage(): void {
@@ -100,8 +113,8 @@ export class MegaModderComponent implements AfterViewInit {
 
             if (distance < markerRadius && distance < minDistance) {
                 minDistance = distance;
-                closestMarker = { 
-                    dev: marker.dev, 
+                closestMarker = {
+                    dev: marker.dev,
                     value: this.service.getDevelopmentToPopTransformation()(marker.dev),
                     playerName: marker.name,
                     nationId: marker.nationId
@@ -131,7 +144,7 @@ export class MegaModderComponent implements AfterViewInit {
         const container = d3.select(this.chartContainer.nativeElement);
         container.selectAll('*').remove();
         const svg = this.createSvgContainer(container, dimensions);
-        
+
         const scales = this.createScales(data, dimensions);
         const workingWidth = dimensions.width - dimensions.marginLeft - dimensions.marginRight;
         const workingHeight = dimensions.height - dimensions.marginTop - dimensions.marginBottom;
@@ -140,7 +153,7 @@ export class MegaModderComponent implements AfterViewInit {
         this.drawPlayerMarkers(svg, playerDevData, scales);
         this.drawAxes(svg, scales, workingHeight);
         this.drawAxisLabels(svg, workingWidth, workingHeight);
-        
+
         this.setupHoverInteraction(svg, scales, visibleData, playerDevData, colors, dimensions, workingWidth, workingHeight);
     }
 
@@ -220,7 +233,7 @@ export class MegaModderComponent implements AfterViewInit {
 
     private setupHoverInteraction(svg: any, scales: any, visibleData: any, playerDevData: any, colors: any, dimensions: any, workingWidth: number, workingHeight: number) {
         const hoverGroup = svg.append('g').attr('class', 'hover-group').style('pointer-events', 'none');
-        
+
         const marker = hoverGroup.append('circle')
             .attr('class', 'hover-marker')
             .attr('r', this.MARKER_SIZE)
@@ -259,7 +272,7 @@ export class MegaModderComponent implements AfterViewInit {
 
         overlay.on('mousemove', (event: MouseEvent) => {
             const mousePos = d3.pointer(event, overlay.node());
-            
+
             let closestPoint: { dev: number; value: number } | null = null;
             if (playerDevData && playerDevData.length > 0) {
                 closestPoint = this.findClosestMarker(playerDevData, mousePos[0], mousePos[1], scales.x, scales.y);
@@ -277,7 +290,7 @@ export class MegaModderComponent implements AfterViewInit {
                     .style('opacity', 1);
 
                 const valueStr = this.d3jsService.formatValue(closestPoint.value);
-                
+
                 let labelLines: string[] = [];
                 if ('playerName' in closestPoint && closestPoint.playerName && typeof closestPoint.playerName === 'string') {
                     labelLines = [closestPoint.playerName, `Dev: ${closestPoint.dev}, Pop: ${valueStr}M`];
@@ -288,7 +301,7 @@ export class MegaModderComponent implements AfterViewInit {
                 const textEl = label.select('text');
                 textEl.selectAll('tspan').remove();
                 textEl.attr('x', 6).attr('y', 14);
-                
+
                 labelLines.forEach((line, idx) => {
                     textEl.append('tspan')
                         .attr('x', 6)
@@ -304,7 +317,7 @@ export class MegaModderComponent implements AfterViewInit {
                     const labelY = Math.max(pixelY - 30, 0);
                     const flagX = labelX + (bbox.width + 8 - 72) / 2;
                     const flagY = labelY + bbox.height + 32;
-                    
+
                     flagImage
                         .attr('href', `https://codingafterdark.de/mc/ideas/flags/${closestPoint.nationId}.webp`)
                         .attr('x', flagX)
@@ -398,6 +411,8 @@ export class MegaModderComponent implements AfterViewInit {
         return `rgb(${r},${g},${b})`;
     }
 
+
+
     private renderDevChart(playerDevData: Array<{ name: string; dev: number; color: string }>): void {
         console.log('Rendering dev chart with data:', playerDevData);
         const accentColor = window.getComputedStyle(document.documentElement).getPropertyValue('--mat-sys-primary').trim() || '#1976d2';
@@ -485,5 +500,123 @@ export class MegaModderComponent implements AfterViewInit {
             .style('font-family', this.d3jsService.getFont())
             .style('font-size', '14px')
             .text('Total Development');
+    }
+
+    testGuessTagMapping(): void {
+        const eu4SaveURL = "http://localhost:5500/public/mp_Palatinate1705_10_30.eu4";
+        this.pdxFileService.loadEu4SaveFromUrl(eu4SaveURL)
+            .then(save => this.processEu4Save(save))
+            .catch(error => console.error('Failed to load EU4 save:', error));
+    }
+
+    private processEu4Save(save: any): void {
+        const provinces = new Map<string, any>();
+        for (const [key, prov] of save.getProvinces().entries()) {
+            if (prov.getOwner() != null) {
+                provinces.set(key, prov);
+            }
+        }
+        this.vic3GameFilesService.getHistoryStateRegions().subscribe(historyRegions => {
+            const vic3OwnershipMap = this.buildVic3OwnershipMap(historyRegions);
+            this.service.guessTagMapping(provinces, vic3OwnershipMap).subscribe(mapping => {
+                this.processTagMapping(save, provinces, mapping);
+            });
+        });
+    }
+
+    private buildVic3OwnershipMap(historyRegions: any[]): Map<string, string> {
+        const vic3OwnershipMap = new Map<string, string>();
+        for (const region of historyRegions) {
+            for (const provinceId of region.tiles) {
+                vic3OwnershipMap.set(provinceId, region.ownerCountryTag);
+            }
+        }
+        return vic3OwnershipMap;
+    }
+
+    private processTagMapping(save: any, provinces: Map<any, any>, mapping: Map<any, any>): void {
+        console.log('Guessed tag mapping:', mapping.size);
+        console.log("Nation tags in save:", save.getAllExistingCountryTags().size);
+
+        const sortedLexByEu4Tags = Array.from(mapping.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+        const eu4DevByTag = this.buildEu4DevByTag(provinces);
+
+        this.vic3GameFilesService.getModPops().subscribe((pops: any) => {
+            const vic3PopByTag = this.buildVic3PopByTag(pops);
+            this.buildMappingTableRows(save, sortedLexByEu4Tags, eu4DevByTag, vic3PopByTag);
+        });
+    }
+
+    private buildEu4DevByTag(provinces: Map<any, any>): Map<string, number> {
+        const eu4DevByTag = new Map<string, number>();
+        provinces.forEach((prov) => {
+            const owner = prov.getOwner();
+            if (owner) {
+                const tag = owner.getTag();
+                const currentDev = eu4DevByTag.get(tag) || 0;
+                const devArray = prov.getDevelopment();
+                const provDev = Array.isArray(devArray) ? devArray.reduce((a, b) => a + b, 0) : devArray;
+                eu4DevByTag.set(tag, currentDev + provDev);
+            }
+        });
+        return eu4DevByTag;
+    }
+
+    private buildVic3PopByTag(pops: any[]): Map<string, number> {
+        const vic3PopByTag = new Map<string, number>();
+        for (const pop of pops) {
+            if (!vic3PopByTag.has(pop.countryTag)) {
+                vic3PopByTag.set(pop.countryTag, 0);
+            }
+            const currentPop = vic3PopByTag.get(pop.countryTag) || 0;
+            vic3PopByTag.set(pop.countryTag, currentPop + pop.size);
+        }
+        return vic3PopByTag;
+    }
+
+    private buildMappingTableRows(save: any, sortedLexByEu4Tags: Array<[string, string]>, eu4DevByTag: Map<string, number>, vic3PopByTag: Map<string, number>): void {
+        const rows: any[] = [];
+        for (const [eu4Tag, vic3Tag] of sortedLexByEu4Tags) {
+            const eu4Nation = save.getCountry(eu4Tag);
+            if (!eu4Nation.isIndependent()) {
+                continue;
+            }
+            const groupNations: Array<[string, string]> = [
+                [eu4Tag, vic3Tag],
+                ...sortedLexByEu4Tags.filter(
+                    ([subjectTag]) => save.getCountry(subjectTag).getOverlordTag() === eu4Tag
+                )
+            ];
+
+            const totalGroupDev = groupNations.map(([tag]) => eu4DevByTag.get(tag) || 0).reduce((a, b) => a + b, 0);
+            const overlordDev = eu4DevByTag.get(eu4Tag) || 0;
+            const overlordRatio = 1000000 * this.service.getDevelopmentToPopTransformation()(overlordDev) / overlordDev;
+            const groupBalancedDevPopRatio = 1000000 * this.service.getDevelopmentToPopTransformation()(totalGroupDev) / totalGroupDev;
+            const localRows = [];
+            for (const [tag, vic3MapTag] of groupNations) {
+                const nation = save.getCountry(tag);
+                const name = nation.getName();
+                const dev = eu4DevByTag.get(tag) || 0;
+                const adjustedPop = Math.floor(overlordRatio * dev);
+                const unityAdjustedPop = Math.floor(groupBalancedDevPopRatio * dev);
+                localRows.push({
+                    eu4Name: nation.getOverlordTag() == null ? name : nation.getOverlordTag() + "'s " + name,
+                    vic3Tag: vic3MapTag,
+                    eu4Dev: dev,
+                    vic3Pop: vic3PopByTag.get(vic3MapTag) || 0,
+                    adjustedVic3Pop: adjustedPop,
+                    totalAdjustedVic3Pop: adjustedPop,
+                    unityAdjustedVic3Pop: unityAdjustedPop,
+                    unityTotalVic3Pop: unityAdjustedPop,
+                });
+            }
+            const totalAdjustedPop = localRows.map(r => r.adjustedVic3Pop).reduce((a, b) => a + b, 0);
+            const totalUnityAdjustedPop = localRows.map(r => r.unityAdjustedVic3Pop).reduce((a, b) => a + b, 0);
+            localRows[0].totalAdjustedVic3Pop = totalAdjustedPop;
+            localRows[0].unityTotalVic3Pop = totalUnityAdjustedPop;
+            
+            rows.push(...localRows);
+        }
+        this.mappingTableRows = rows;
     }
 }

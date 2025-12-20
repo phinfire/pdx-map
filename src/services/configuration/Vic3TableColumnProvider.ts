@@ -11,7 +11,7 @@ import { ModelElementList } from "../../model/vic/ModelElementList";
 import { Ownership } from "../../model/vic/Ownership";
 import { Pop } from "../../model/vic/Pop";
 import { PowerBloc } from "../../model/vic/PowerBloc";
-import { Vic3GameFiles } from "../../model/vic/Vic3GameFiles";
+import { Vic3GameFilesService } from "../../model/vic/Vic3GameFilesService";
 import { AggregatingTableColumn } from "../../util/table/AggregatingTableColumn";
 import { Building } from "../../model/vic/Building";
 
@@ -311,7 +311,7 @@ export class Vic3TableColumnProvider {
 
     locLookup = new Map<string, string>();
 
-    constructor(http: HttpClient, private vic3GameFiles: Vic3GameFiles) {
+    constructor(http: HttpClient, private vic3GameFiles: Vic3GameFilesService) {
         const dataUrl = "https://codingafterdark.de/pdx/vic3gamedata/"
         http.get(dataUrl + 'converted_countries_l_english.yml', { responseType: 'text' }).subscribe((data) => {
             for (const line of data.split('\n')) {

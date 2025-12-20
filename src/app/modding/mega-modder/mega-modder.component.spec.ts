@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MegaCampaignComponent } from './mega-campaign.component';
+import { MegaModderComponent } from './mega-modder.component';
 
-describe('MegaCampaignComponent', () => {
-  let component: MegaCampaignComponent;
-  let fixture: ComponentFixture<MegaCampaignComponent>;
+describe('MegaModderComponent', () => {
+  let component: MegaModderComponent;
+  let fixture: ComponentFixture<MegaModderComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MegaCampaignComponent]
+      imports: [MegaModderComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(MegaCampaignComponent);
+    fixture = TestBed.createComponent(MegaModderComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

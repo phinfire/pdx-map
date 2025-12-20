@@ -41,4 +41,8 @@ export class Eu4Save {
         }
         return this.cachedProvinces;
     }
+
+    getAllExistingCountryTags(): Set<string> {
+        return new Set(Array.from(this.getProvinces().values()).map(prov => prov.getOwner() ? prov.getOwner()!.getTag() : null).filter(tag => tag !== null));
+    }
 }

@@ -45,26 +45,37 @@ export class SaveViewSplashComponent implements OnDestroy {
 
     referenceSaves = [
         {
-            url: "http://localhost:5500/public/King_Friedrich_of_Niederlothringen_1139_01_01.ck3",
+            file: "King_Friedrich_of_Niederlothringen_1139_01_01.ck3",
             gamename: 'Crusader Kings 3', label: 'King Friedrich of Niederlothringen', type: FileType.CK3
         },
         {
-            url: 'http://localhost:5500/public/Duke_Friedrich_II_of_Lower_Lotharingia_1107_07_25.ck3',
+            file: "Duke_Friedrich_II_of_Lower_Lotharingia_1107_07_25.ck3",
             gamename: 'Crusader Kings 3', label: 'Duke Friedrich II of Lower Lotharingia', type: FileType.CK3
         },
         {
-            url: 'http://localhost:5500/public/MY Emperor_Havel_of_Greater_Elbia_1208_03_24.ck3',
+            file: "MY Emperor_Havel_of_Greater_Elbia_1208_03_24.ck3",
             gamename: 'Crusader Kings 3', label: 'Emperor Havel of Greater Elbia', type: FileType.CK3
         },
         {
-            url: 'http://localhost:5500/public/greater elbia_1898_07_06.v3',
+            file: "greater elbia_1898_07_06.v3",
             gamename: 'Victoria 3', label: 'Greater Elbia 1898', type: FileType.VIC3
         },
         {
-            url: 'http://localhost:5500/public/mp_Greater_Elbia1705_05_28.eu4',
+            file: "mp_Greater_Elbia1705_05_28.eu4",
             gamename: 'Europa Universalis IV', label: 'MP Greater Elbia 1705', type: FileType.EU4
+        },
+        {
+            file: "mp_Palatinate1705_10_30.eu4",
+            gamename: 'Europa Universalis IV', label: 'MP Palatinate 1705', type: FileType.EU4
         }
-    ];
+    ].map(e => {
+        return {
+            url: "https://codingafterdark.de/pdx_example_saves/" + e.file,
+            gamename: e.gamename,
+            label: e.label,
+            type: e.type
+        };
+    });
 
     @ViewChild('chute') chuteDiv!: ElementRef<HTMLDivElement>;
     @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
@@ -141,7 +152,6 @@ export class SaveViewSplashComponent implements OnDestroy {
     private async processCk3File(file: File): Promise<{save: Ck3Save, rawData: any}> {
         const result = await this.ck3Service.importFilePromise(file, true);
         const ck3 = await firstValueFrom(this.ck3Service.initializeCK3());
-        console.log("Imported CK3 file", result.name, result.json);
         const save = Ck3Save.fromRawData(result.json, ck3);
         return { save, rawData: result.json };
     }
@@ -149,7 +159,6 @@ export class SaveViewSplashComponent implements OnDestroy {
     private async processVic3File(files: File[]): Promise<{save: Vic3Save, rawData: any}> {
         const namesAndJsons = await this.fileService.importFilesPromise(files);
         const first = namesAndJsons[0];
-        console.log("Imported Victoria 3 file", first.name, first.json);
         const save = Vic3Save.makeSaveFromRawData(first.json);
         return { save, rawData: first.json };
     }
@@ -157,7 +166,7 @@ export class SaveViewSplashComponent implements OnDestroy {
     private async processEu4File(files: File[]): Promise<{save: Eu4Save, rawData: any}> {
         const namesAndJsons = await this.fileService.importFilesPromise(files);
         const first = namesAndJsons[0];
-        console.log("Imported EU4 file", first.name, first.json);
+        console.log('EU4 Save JSON:', first.json);
         const save = new Eu4Save(first.json);
         return { save, rawData: first.json };
     }

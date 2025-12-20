@@ -1,0 +1,42 @@
+<div class="main">
+  <div class="dropzone" [class.dragging]="isDragging" (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+    <p>Drop files here to parse</p>
+  </div>
+
+  @if (parsedFiles.length > 0) {
+    <div class="parsed-files">
+      <div class="parsed-files-header">
+        <div class="left">
+          <h3>Parsed Files</h3>
+        </div>
+        <div class="right">
+          <button mat-icon-button (click)="downloadAll()" matTooltip="Download All">
+            <mat-icon>download</mat-icon>
+          </button>
+          <button mat-icon-button (click)="clearAll()" matTooltip="Clear All">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      <div class="file-list">
+        @for (file of parsedFiles; track file) {
+          <div class="file-item">
+            <div class="left file-item-left">
+              <span class="file-name">{{ file.name }}</span>
+            </div>
+            <div class="right">
+              <button mat-icon-button (click)="downloadJson(file)" matTooltip="Download JSON">
+                <mat-icon>{{ isDownloaded(file.name) ? 'file_download_done' : 'file_download' }}</mat-icon>
+              </button>
+              <button mat-icon-button (click)="removeParsedFile(file.name)" matTooltip="Remove">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>

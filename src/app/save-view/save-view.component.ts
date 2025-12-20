@@ -1,4 +1,4 @@
-import { Component, Input, SimpleChanges } from '@angular/core';
+import { Component, inject, Input, SimpleChanges } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
 
@@ -8,23 +8,25 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { Country } from '../../model/vic/Country';
 import { GoodCategory } from '../../model/vic/enum/GoodCategory';
-import { Vic3GameFiles } from '../../model/vic/Vic3GameFiles';
+import { Vic3GameFilesService } from '../../model/vic/Vic3GameFilesService';
 import { Vic3Save } from '../../model/vic/Vic3Save';
 import { GoodsViewMode } from '../../services/configuration/GoodViewMode';
 import { Vic3TableColumnProvider } from '../../services/configuration/Vic3TableColumnProvider';
 import { PersistenceService } from '../../services/PersistanceService';
-import { PlotViewComponent } from '../plot-view/plot-view.component';
 import { TableComponent } from '../vic3-country-table/vic3-country-table.component';
 
 @Component({
     selector: 'app-save-view',
-    imports: [MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule, PlotViewComponent],
+    imports: [MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule],
     templateUrl: './save-view.component.html',
     styleUrl: './save-view.component.scss',
 })
 export class SaveViewComponent {
 
     @Input() activeSave?: Vic3Save;
+
+    private persistence = inject(PersistenceService);
+    protected columnProvider = inject(Vic3TableColumnProvider);
 
     includeAi = true;
     selectedTabIndex = 0;
@@ -35,7 +37,7 @@ export class SaveViewComponent {
     selectedGoodsCategory: GoodCategory = GoodCategory.INDUSTRIAL;
     availableGoodsCategories: GoodCategory[] = Object.values(GoodCategory);
 
-    constructor(private http: HttpClient, private persistence: PersistenceService, private vic3GameFiles: Vic3GameFiles, public columnProvider: Vic3TableColumnProvider) {
+    constructor() {
         this.selectedTabIndex = parseInt(this.persistence.getValue('saveViewTabIndex') || '0');
     }
 

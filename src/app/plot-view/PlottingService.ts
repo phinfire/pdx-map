@@ -229,8 +229,15 @@ export class PlottingService {
 
     private injectBarPlotStyles(hostElement: d3.Selection<HTMLElement, unknown, null, undefined>) {
         hostElement.selectAll("style").remove();
+        
+        // Get the computed background color from the host element
+        const computedBgColor = window.getComputedStyle(hostElement.node() || document.body).backgroundColor;
+        
         const styleElement = hostElement.append("style");
         styleElement.text(`
+                svg {
+                    background-color: ${computedBgColor};
+                }
                 .bar {
                     transition: opacity 0.1s ease-in-out;
                     box-shadow: 0 4px 12px 0 rgba(0,0,0,0.25);

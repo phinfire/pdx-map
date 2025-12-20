@@ -10,7 +10,7 @@
     max-height: 100%;
     max-width: 100%;
     border-radius: 0.5em;
-    border: 4px solid var(--faded-border-color);
+    //border: 4px solid var(--faded-border-color);
     font-family: var(--header-font-family);
     @include mat.table-overrides((row-item-container-height: 3em,
             row-item-label-text-size: 1em,

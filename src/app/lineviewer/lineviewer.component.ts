@@ -4,7 +4,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { LinePlotterService, DataSeries } from './LinePlotterService';
 import { Eu4SaveSeriesData } from './model/Eu4SaveSeriesData';
@@ -20,7 +20,7 @@ interface SeriesWithEntity extends DataSeries {
 
 @Component({
     selector: 'app-lineviewer',
-    imports: [MatCheckboxModule, MatToolbarModule, MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule, CommonModule, FormsModule],
+    imports: [MatCheckboxModule, MatToolbarModule, MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule, FormsModule],
     templateUrl: './lineviewer.component.html',
     styleUrl: './lineviewer.component.scss',
 })
@@ -28,8 +28,7 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     private elementRef = inject(ElementRef);
     private plotterService = inject(LinePlotterService);
     private cdr = inject(ChangeDetectorRef);
-
-    private data: LineViewerData = new Eu4SaveSeriesData();
+    private data = inject(Eu4SaveSeriesData);
     
     private svgElement: SVGSVGElement | null = null;
     private resizeObserver: ResizeObserver | null = null;

@@ -1,0 +1,54 @@
+<div class="main">
+  <mat-tab-group>
+    <mat-tab label="Tag Mapping">
+      <div class="tab-content">
+        <h2>Estimated EU4 to Vic3 Tag Mapping</h2>
+        <div class="table-wrapper">
+          <app-table [rowElements]="mappingTableRows" [columns]="mappingTableColumns"></app-table>
+        </div>
+      </div>
+    </mat-tab>
+    <mat-tab label="Dev to Pop">
+      <ng-template mat-tab-label>
+        Halberat Function
+      </ng-template>
+      <div class="tab-content">
+        <div class="controls-container">
+          <div>
+            <mat-form-field appearance="outline" class="save-selector">
+              <mat-label>Select Save</mat-label>
+              <mat-select [(ngModel)]="selectedSaveId" (selectionChange)="onSaveSelected($event.value)">
+                @for (save of saves; track save) {
+                  <mat-option [value]="save.id">
+                    {{ save.year }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="sliders-container">
+            <div class="slider-row">
+              <label class="slider-label">X-Domain Min:</label>
+              <mat-slider class="slider-control" [min]="xDomainAbsMin" [max]="xDomainAbsMax" [step]="10">
+                <input matSliderThumb [(ngModel)]="xDomainMin" (change)="onXDomainChange()" />
+              </mat-slider>
+              <span class="slider-value">{{ xDomainMin }}</span>
+            </div>
+
+            <div class="slider-row">
+              <label class="slider-label">X-Domain Max:</label>
+              <mat-slider class="slider-control" [min]="xDomainAbsMin" [max]="xDomainAbsMax" [step]="10">
+                <input matSliderThumb [(ngModel)]="xDomainMax" (change)="onXDomainChange()" />
+              </mat-slider>
+              <span class="slider-value">{{ xDomainMax }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div #chartContainer></div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+</div>

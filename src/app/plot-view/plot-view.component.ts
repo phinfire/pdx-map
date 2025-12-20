@@ -3,19 +3,22 @@ import { Component, OnInit, ElementRef, Inject, inject, Input, Optional, OnChang
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Plotable } from './plot/Plotable';
 import { PlottingService } from './PlottingService';
+import { PlotExportService } from './PlotExportService';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
     selector: 'app-plot-view',
-    imports: [MatButtonModule, MatIcon, MatMenuModule],
+    imports: [MatButtonModule, MatIcon, MatMenuModule, MatTooltipModule],
     templateUrl: './plot-view.component.html',
     styleUrl: './plot-view.component.scss'
 })
 export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
 
     plottingService = inject(PlottingService);
+    plotExportService = inject(PlotExportService);
 
     plotables: Plotable[] = [];
     plotType: string | null = null;
@@ -25,58 +28,40 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
 
     @Input() plotablesInput: Plotable[] = [];
 
-        downloadPlotAsSVG() {
-            if (!this.previousPlot) return;
-            const serializer = new XMLSerializer();
-            const svgString = serializer.serializeToString(this.previousPlot);
-            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = (this.title || 'plot') + '.svg';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+    downloadPlotAsSVG() {
+        if (!this.previousPlot) return;
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(this.previousPlot);
+        const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (this.title || 'plot') + '.svg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
 
-        downloadPlotAsPNG() {
-            if (!this.previousPlot) return;
-            const serializer = new XMLSerializer();
-            const svgString = serializer.serializeToString(this.previousPlot);
-            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(svgBlob);
-            const img = new Image();
-            // Get width/height from SVG attributes
-            const width = this.previousPlot.width.baseVal.value || 800;
-            const height = this.previousPlot.height.baseVal.value || 500;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                    ctx.drawImage(img, 0, 0, width, height);
-                    canvas.toBlob(blob => {
-                        if (blob) {
-                            const pngUrl = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = pngUrl;
-                            a.download = (this.title || 'plot') + '.png';
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(pngUrl);
-                        }
-                    }, 'image/png');
-                }
-                URL.revokeObjectURL(url);
-            };
-            img.onerror = () => {
-                URL.revokeObjectURL(url);
-            };
-            img.src = url;
-        }
+    downloadPlotAsPNG() {
+        if (!this.previousPlot) return;
+        
+        const previousPlot = this.previousPlot;
+        const width = previousPlot.width.baseVal.value || 800;
+        const height = previousPlot.height.baseVal.value || 500;
+        const hostElement = this.elementRef.nativeElement as HTMLElement;
+
+        this.plotExportService.exportPlotAsPNG(previousPlot, width, height, hostElement, this.title).catch(err => {
+            console.error('Error exporting plot as PNG:', err);
+        });
+    }
+
+
+
+
+
+
+
 
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) private data: { plotables: Plotable[], plotType: string, title: string } | null,
@@ -88,25 +73,33 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
             this.title = data.title;
             this.isFromDialog = true;
         } else {
-            this.plotables = this.plotablesInput;
+            this.plotables = [];
+            this.isFromDialog = false;
         }
     }
 
     ngOnInit() {
         if (!this.isFromDialog && this.plotablesInput && this.plotablesInput.length > 0) {
             this.plotables = this.plotablesInput;
+            this.redrawPlot();
         }
     }
 
     ngAfterViewInit() {
-        this.redrawPlot();
+        // Only redraw if we have data
+        if (this.plotables && this.plotables.length > 0) {
+            this.redrawPlot();
+        }
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (changes['plotablesInput'] && this.plotablesInput && this.plotablesInput.length > 0) {
-            this.plotables = this.plotablesInput;
-            this.plotType = null;
-            this.redrawPlot();
+        if (changes['plotablesInput']) {
+            if (this.plotablesInput && this.plotablesInput.length > 0) {
+                this.plotables = this.plotablesInput;
+                this.plotType = null;
+                // Use setTimeout to ensure view is initialized
+                setTimeout(() => this.redrawPlot(), 0);
+            }
         }
     }
 

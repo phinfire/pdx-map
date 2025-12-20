@@ -3,7 +3,7 @@ import { LineAccessor } from "./LineAccessor";
 
 export interface LineViewerData {
 
-    getEntities(): LineableEntity[];
+    getLineableEntities(): LineableEntity[];
 
     getOptions(): Map<string, LineAccessor>;
 

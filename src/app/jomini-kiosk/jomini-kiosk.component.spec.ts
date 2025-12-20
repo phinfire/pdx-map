@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MegaModderComponent } from './mega-modder.component';
+import { JominiKioskComponent } from './jomini-kiosk.component';
 
-describe('MegaModderComponent', () => {
-  let component: MegaModderComponent;
-  let fixture: ComponentFixture<MegaModderComponent>;
+describe('JominiKioskComponent', () => {
+  let component: JominiKioskComponent;
+  let fixture: ComponentFixture<JominiKioskComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MegaModderComponent]
+      imports: [JominiKioskComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(MegaModderComponent);
+    fixture = TestBed.createComponent(JominiKioskComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

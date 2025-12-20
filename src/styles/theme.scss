@@ -59,10 +59,9 @@ html {
 
 .light-theme {
     --background-color: var(--light-theme-background-color);
-    /* --background-color-alt removed, replaced with new neutral for tables */
-    --table-row-alt: rgba(0, 0, 0, 0.025); /* subtle dark overlay for light theme */
-    --table-row-hover: rgba(0, 0, 0, 0.06); /* slightly more for hover on base */
-    --table-row-alt-hover: rgba(0, 0, 0, 0.12); /* more for hover on alt */
+    --table-row-alt: rgba(0, 0, 0, 0.025);
+    --table-row-hover: rgba(0, 0, 0, 0.06);
+    --table-row-alt-hover: rgba(0, 0, 0, 0.12);
     --lighter-background-color: rgb(240, 240, 240);
     --text-color: var(--light-theme-text-color);
     --border-color: var(--text-color);
@@ -81,7 +80,6 @@ html {
 
 .dark-theme {
     --background-color: var(--dark-theme-background-color);
-    /* --background-color-alt removed, replaced with new neutral for tables */
     --table-row-alt: rgba(255, 255, 255, 0.025);
     --table-row-hover: rgba(255, 255, 255, 0.06);
     --table-row-alt-hover: rgba(255, 255, 255, 0.12);

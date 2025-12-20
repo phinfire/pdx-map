@@ -6,11 +6,8 @@ import { makeGeoJsonPolygons } from '../../util/geometry/threeGeometry';
 import { MapService } from '../map.service';
 import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvider';
 import { Eu4Save } from '../../model/eu4/Eu4Save';
-import { RGB } from '../../util/RGB';
 import { BehaviorConfigProvider } from '../viewers/polygon-select/BehaviorConfigProvider';
-import { ValueGradientColorConfig } from '../viewers/polygon-select/DynamicColorConfig';
-import { County } from '../../model/ck3/County';
-import { ValueViewMode, ViewMode } from './ViewMode';
+import { ViewMode } from './ViewMode';
 import { ICk3Save } from '../../model/ck3/save/ICk3Save';
 import { ViewModeProvider } from './ViewModeProvider';
 
