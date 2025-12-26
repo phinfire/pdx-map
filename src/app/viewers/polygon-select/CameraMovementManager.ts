@@ -4,7 +4,7 @@ export class CameraMovementManager {
     private readonly EDGE_SCROLL_THRESHOLD = 50;
     private readonly KEYBOARD_PAN_SPEED = 5;
     private readonly EDGE_SCROLL_SPEED = 2;
-    private isMiddleMouseDown = false;
+    private isMouseDragging = false;
     private lastMousePos: { x: number, y: number } | null = null;
     private isEdgeScrolling = false;
     private edgeScrollAnimationId: number | null = null;
@@ -54,7 +54,7 @@ export class CameraMovementManager {
     }
     
     private onMouseMove = (event: MouseEvent) => {
-        if (this.mouseDragEnabled && this.isMiddleMouseDown && this.lastMousePos) {
+        if (this.mouseDragEnabled && this.isMouseDragging && this.lastMousePos) {
             const dx = event.clientX - this.lastMousePos.x;
             const dy = event.clientY - this.lastMousePos.y;
             const speed = 0.2 * (this.camera.position.z / this.cameraHeight);
@@ -70,16 +70,16 @@ export class CameraMovementManager {
     };
     
     private onMouseDown = (event: MouseEvent) => {
-        if (this.mouseDragEnabled && event.button === 1) { // Middle mouse button
-            this.isMiddleMouseDown = true;
+        if (this.mouseDragEnabled && (event.button === 0 || event.button === 1 || event.button === 2)) { // Left, Middle, or Right mouse button
+            this.isMouseDragging = true;
             this.lastMousePos = { x: event.clientX, y: event.clientY };
             event.preventDefault();
         }
     };
     
     private onMouseUp = (event: MouseEvent) => {
-        if (this.mouseDragEnabled && event.button === 1) { // Middle mouse button
-            this.isMiddleMouseDown = false;
+        if (this.mouseDragEnabled && (event.button === 0 || event.button === 1 || event.button === 2)) { // Left, Middle, or Right mouse button
+            this.isMouseDragging = false;
             this.lastMousePos = null;
             event.preventDefault();
         }
@@ -275,7 +275,7 @@ export class CameraMovementManager {
         this.mouseDragEnabled = enabled;
         if (!enabled) {
             // Stop any ongoing drag
-            this.isMiddleMouseDown = false;
+            this.isMouseDragging = false;
             this.lastMousePos = null;
         }
     }

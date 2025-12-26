@@ -1,2 +1,3 @@
-        <app-polygon-select #polygonSelect [colorConfigProviders]="[viewMode.getColorConfig()]" [selectionCallback]="selectionCallback"
-                    [tooltipProvider]="viewMode.getTooltip()" [meshBuddiesProvider]="meshBuddiesProvider" [customButtons]="getCustomButtons()"></app-polygon-select>
+<app-polygon-select #polygonSelect [colorConfigProviders]="colorConfigProviders"
+    [selectionCallback]="selectionCallback" [tooltipProvider]="currentTooltipProvider"
+    [meshBuddiesProvider]="meshBuddiesProvider" [customButtons]="getCustomButtons()"></app-polygon-select>

@@ -22,12 +22,13 @@
         <button class="corner-button" (click)="exportMapImage(); $event.stopPropagation()" title="Export map as image">
             <mat-icon>camera_alt</mat-icon>
         </button>
-        <button class="corner-button" 
+        <!--<button class="corner-button" 
                 [class.active]="tooltipManager.isTooltipEnabled()"
                 (click)="toggleTooltips(); $event.stopPropagation()" 
                 [title]="tooltipManager.isTooltipEnabled() ? 'Disable tooltips' : 'Enable tooltips'">
             <mat-icon>{{ tooltipManager.isTooltipEnabled() ? 'chat_bubble' : 'chat_bubble_outline' }}</mat-icon>
         </button>
+    -->
         @if (customButtons.length > 0) {
             <span class="button-separator"></span>
         }

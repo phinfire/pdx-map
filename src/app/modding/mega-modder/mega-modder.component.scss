@@ -39,6 +39,7 @@
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
+    gap: 1rem;
 }
 
 .table-wrapper {
@@ -54,6 +55,57 @@ table {
     max-width: 100%;
     overflow: auto;
     box-sizing: border-box;
+}
+
+.stats-table {
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    width: 30rem;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: auto;
+    margin-bottom: 1rem;
+
+    tr {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+        padding: 0.5rem 1rem;
+
+        &.label {
+            font-weight: 500;
+            min-width: 200px;
+        }
+
+        &.value {
+            text-align: right;
+            min-width: 150px;
+        }
+    }
+}
+
+.warning-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.warning-icon {
+    color: #ff9800;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.button-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: center;
 }
 
 .controls-container {
@@ -93,4 +145,8 @@ table {
 .slider-value {
     min-width: 60px;
     text-align: right;
+}
+
+.download-button {
+    margin: 0;
 }

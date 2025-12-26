@@ -16,8 +16,9 @@ export class ValueGradientColorConfig extends ColorConfigProvider {
         const max = Math.max(...Array.from(this.key2Value.values()));
         const normalizedValue = value / max;
         const scale = d3.scaleSequential(d3.interpolateInferno);
+        const offsetValue = 0.1 + normalizedValue * 0.8;
         scale.domain([0, 1]);
-        const hex = scale(normalizedValue);
+        const hex = scale(offsetValue);
         return parseInt(hex.slice(1), 16);
     }
 

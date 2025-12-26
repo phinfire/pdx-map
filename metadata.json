@@ -1,0 +1,30 @@
+  {
+    "name" : "Mymod",                     /* Name of your mod as it should be displayed to players */
+    "id" : "com.github.mymod",            /* Id of the mod, as chosen by the modder. This must be unique - we suggest using a reverse domain name 
+                                             notation, but any string sufficiently unique will do. It is used when *other* mods refer to yours in relationships.
+                                             Please note that the ID needs to be consistent over time. Do not include version numbers or change if you rename your
+                                             mod, since that would wreck any relationships. Do not use the example ID given here! */
+    "version" : "1.1",                    /* Version of your mod. The launcher will typically understand semantic versioning, others are hit-and-miss */
+    "game_id" : "victoria3",              /* Game for which the mod is created. Should always be "victoria3", unless something is seriously off. Safety catch to 
+                                             avoid games trying to load mods that are made for other games and violently crashing */
+    "supported_game_version" : "1.0.4",   /* Version of the game for which your mod has been made. This works with "*" as a wildcard and "+" to indicate "or higher" */
+    "short_description" : "Best mod!",    /* A description of your mod to be shown in popups or other places where longer texts or descriptions with 
+                                             decorations won't fit */
+    "tags" : ["province", "fix"],         /* Tags defines in what categories your mod will be listed under locally. To prevent tag spamming, a maximum of 5 are allowed.
+                                             Please note that this does not guarantee that any mods backend list the mod correctly (make sure to specify tags during upload) */
+    "relationships" : [                   /* Descriptions on how your mod relates to other mods. Naturally, an empty list means "no relationships" */
+        {
+            "rel_type" : "dependency",    /* The type of relationship that this item describes. Supported types are "dependency", "incompatible_with", 
+                                             "load_before", "load_after" - The latter three are being tested in launcher version 2023.10-rc */
+            "id" : "com.github.othermod", /* The "id" of the mod the relationship concerns */
+            "display_name" : "Othermod",  /* Display name of the other mod if that mod is *not* present on disk - If you have it installed, we'll use 
+                                             the "name" from its own descriptor file */
+            "resource_type" : "mod",      /* What type of item you depend on. Currently we only support "mod", but "dlc" is being considered as well */
+            "version" : "1.2.*"           /* If this version of your mod depends on a certain version of the other mod, you can put it here. If you don't 
+                                             care, just use "*". Same globbing as for "supported_game_version" */
+        }
+    ],                 
+    "game_custom_data" : {                /* Victoria 3-specific information that the game engine needs to know */
+      "multiplayer_synchronized" : true   /*  */
+    }
+  }

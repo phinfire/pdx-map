@@ -3,6 +3,15 @@ import { from, map, mergeMap, Observable, shareReplay } from "rxjs";
 import { PdxFileService } from "../../../services/pdx-file.service";
 import { HttpClient } from "@angular/common/http";
 import { Eu4SaveProvince } from "../../../model/eu4/Eu4SaveProvince";
+import { MapStateRegion } from "../../../model/vic/game/MapStateRegion";
+
+interface HistoryStateRegion {
+    stateKey: string;
+    ownerCountryTag: string;
+    tiles: string[];
+    is_incorporated: boolean;
+    homeland?: string;
+}
 
 @Injectable({
     providedIn: 'root',
@@ -85,10 +94,209 @@ export class MegaModderE2VService {
                         eu4ToVic3TagMapping.set(eu4Tag, bestVic3Tag);
                     }
                 }
-                console.log('Reconstructed provinces:', reconProvince.size, 'out of', provinces.size);
-                console.log('Reconstructed tags:', reconTags.size, 'out of', mappingVotes.size);
                 return eu4ToVic3TagMapping;
             })
         );
+    }
+
+    refineTagMapping(mapping: Map<string, string>,
+        eu4DevLookup: (tag: string) => number,
+        eu4VassalLookup: (tag: string) => string[],
+        vic3VassalLookup: (tag: string) => string[]
+    ): Map<string, string> {
+        const refined = new Map<string, string>();
+        const conflictingMappings = this.getConflictingMappings(mapping);
+        for (const [eu4Tag, vic3Tag] of mapping.entries()) {
+            if (!conflictingMappings.has(vic3Tag)) {
+                refined.set(eu4Tag, vic3Tag);
+            }
+        }
+        
+        // Case: A is a vassal of B, both have been mapped to vic(B). vic(A) is unassigned.
+        for (const [vic3Tag, eu4Tags] of conflictingMappings.entries()) {
+            if (eu4Tags.length === 2) {
+                console.log(`Refining mapping for VIC3 tag ${vic3Tag} with EU4 tags ${eu4Tags.join(", ")}`);
+                const tagOfPotentialOverlord = eu4DevLookup(eu4Tags[0]) > eu4DevLookup(eu4Tags[1]) ? eu4Tags[0] : eu4Tags[1];
+                const tagOfPotentialSubject = eu4DevLookup(eu4Tags[0]) > eu4DevLookup(eu4Tags[1]) ? eu4Tags[1] : eu4Tags[0];
+                const eu4OverlordVassals = eu4VassalLookup(tagOfPotentialOverlord);
+                const vic3Vassals = vic3VassalLookup(vic3Tag);
+                if (eu4OverlordVassals.includes(tagOfPotentialSubject)) {
+                    const unmatchedVassals = vic3Vassals.filter(vic3VassalTag => {
+                        return !Array.from(refined.values()).includes(vic3VassalTag);
+                    });
+                    if (unmatchedVassals.length === 1) {
+                        refined.set(tagOfPotentialSubject, unmatchedVassals[0]);
+                        continue;
+                    }
+                    if (unmatchedVassals.length === 0) {
+                        refined.set(tagOfPotentialOverlord, vic3Tag);
+                        continue;
+                    }
+                }
+            }
+            for (const eu4Tag of eu4Tags) {
+                refined.set(eu4Tag, vic3Tag);
+            }
+        }
+        return refined;
+    }
+
+
+    private getConflictingMappings(mapping: Map<string, string>): Map<string, string[]> {
+        const vic3TagCounts = new Map<string, string[]>();
+        for (const [eu4Tag, vic3Tag] of mapping.entries()) {
+            if (!vic3TagCounts.has(vic3Tag)) {
+                vic3TagCounts.set(vic3Tag, []);
+            }
+            vic3TagCounts.get(vic3Tag)!.push(eu4Tag);
+        }
+        const conflictingMappings = new Map<string, string[]>();
+        for (const [vic3Tag, eu4Tags] of vic3TagCounts.entries()) {
+            if (eu4Tags.length > 1) {
+                conflictingMappings.set(vic3Tag, eu4Tags);
+            }
+        }
+        
+        return conflictingMappings;
+    }
+
+    private buildTileOwnershipMap(historyRegions: HistoryStateRegion[]): Map<string, string> {
+        const tileOwnerMap = new Map<string, string>();
+        for (const region of historyRegions) {
+            for (const tile of region.tiles) {
+                tileOwnerMap.set(tile, region.ownerCountryTag);
+            }
+        }
+        return tileOwnerMap;
+    }
+
+    getInitialArableLandByCountry(
+        historyRegions: HistoryStateRegion[], 
+        mapStateRegions: MapStateRegion[]
+    ): Map<string, number> {
+        const tileOwnerMap = this.buildTileOwnershipMap(historyRegions);
+        const arableLandByCountry = new Map<string, number>();
+        for (const mapState of mapStateRegions) {
+            const tiles = Array.from(mapState.getTiles());
+
+            if (tiles.length === 0 || mapState.getArableLand() === 0) {
+                continue;
+            }
+
+            const tilesByOwner = new Map<string, string[]>();
+            for (const tile of tiles) {
+                const owner = tileOwnerMap.get(tile) || '';
+                if (!tilesByOwner.has(owner)) {
+                    tilesByOwner.set(owner, []);
+                }
+                tilesByOwner.get(owner)!.push(tile);
+            }
+
+            const arableLandPerTile = mapState.getArableLand() / tiles.length;
+
+            for (const [owner, ownerTiles] of tilesByOwner.entries()) {
+                if (!owner) continue;
+
+                const countryArableLand = arableLandPerTile * ownerTiles.length;
+                const currentTotal = arableLandByCountry.get(owner) ?? 0;
+                arableLandByCountry.set(owner, currentTotal + countryArableLand);
+            }
+        }
+
+        return arableLandByCountry;
+    }
+
+    scaleArableLandByCountry(
+        historyRegions: HistoryStateRegion[], 
+        mapStateRegions: MapStateRegion[],
+        scalingFactors: Map<string, number>
+    ): MapStateRegion[] {
+        const tileOwnerMap = this.buildTileOwnershipMap(historyRegions);
+        const scaledRegionsByName = new Map<string, { region: MapStateRegion; arableLand: number }>();
+
+        for (const mapState of mapStateRegions) {
+            const stateKey = mapState.getName();
+            const tiles = Array.from(mapState.getTiles());
+
+            if (tiles.length === 0 || mapState.getArableLand() === 0) {
+                continue;
+            }
+
+            const tilesByOwner = new Map<string, string[]>();
+            for (const tile of tiles) {
+                const owner = tileOwnerMap.get(tile) || '';
+                if (!tilesByOwner.has(owner)) {
+                    tilesByOwner.set(owner, []);
+                }
+                tilesByOwner.get(owner)!.push(tile);
+            }
+
+            const arableLandPerTile = mapState.getArableLand() / tiles.length;
+            let totalScaledArableLand = 0;
+
+            for (const [owner, ownerTiles] of tilesByOwner.entries()) {
+                if (!owner) continue;
+
+                const countryArableLand = arableLandPerTile * ownerTiles.length;
+                const rawScaleFactor = scalingFactors.get(owner) ?? 1;
+                totalScaledArableLand += countryArableLand * Math.max(rawScaleFactor, 1);
+            }
+
+            // Aggregate by state name - if same state appears multiple times, combine arable land
+            if (scaledRegionsByName.has(stateKey)) {
+                const existing = scaledRegionsByName.get(stateKey)!;
+                existing.arableLand += totalScaledArableLand;
+            } else {
+                scaledRegionsByName.set(stateKey, { region: mapState, arableLand: totalScaledArableLand });
+            }
+        }
+
+        // Create final regions with aggregated arable land
+        const scaledRegions: MapStateRegion[] = [];
+        for (const [stateKey, data] of scaledRegionsByName.entries()) {
+            const scaledRegion = data.region.withArableLand(data.arableLand);
+            scaledRegions.push(scaledRegion);
+        }
+
+        return scaledRegions;
+    }
+
+    aggregateCountryMetrics(
+        metrics: Map<string, Map<string, number>>
+    ): Map<string, any> {
+        const metricNames = Array.from(metrics.keys());
+        const allCountries = new Set<string>();
+        for (const metricMap of metrics.values()) {
+            for (const tag of metricMap.keys()) {
+                allCountries.add(tag);
+            }
+        }
+
+        const aggregated = new Map<string, any>();
+
+        for (const countryTag of allCountries) {
+            const countryData: any = {};
+            const ratios = new Map<string, number>();
+            for (const metricName of metricNames) {
+                const metricMap = metrics.get(metricName)!;
+                countryData[metricName] = metricMap.get(countryTag) ?? 0;
+            }
+            for (let i = 0; i < metricNames.length; i++) {
+                for (let j = i + 1; j < metricNames.length; j++) {
+                    const numerator = metricNames[i];
+                    const denominator = metricNames[j];
+                    const numeratorValue = countryData[numerator];
+                    const denominatorValue = countryData[denominator];
+
+                    const ratio = denominatorValue > 0 ? numeratorValue / denominatorValue : 0;
+                    ratios.set(`${numerator}/${denominator}`, ratio);
+                }
+            }
+
+            countryData.ratios = ratios;
+            aggregated.set(countryTag, countryData);
+        }
+
+        return aggregated;
     }
 }

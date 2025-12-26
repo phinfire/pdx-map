@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LineviewerComponent } from './lineviewer.component';
+import { LabComponent } from './lab.component';
 
-describe('LineviewerComponent', () => {
-  let component: LineviewerComponent;
-  let fixture: ComponentFixture<LineviewerComponent>;
+describe('LabComponent', () => {
+  let component: LabComponent;
+  let fixture: ComponentFixture<LabComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LineviewerComponent]
+      imports: [LabComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(LineviewerComponent);
+    fixture = TestBed.createComponent(LabComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

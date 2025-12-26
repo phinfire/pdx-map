@@ -7,6 +7,8 @@ import { SaveViewSplashComponent } from './save-view-splash/save-view-splash.com
 import { LineviewerComponent } from './lineviewer/lineviewer.component';
 import { MegaModderComponent } from './modding/mega-modder/mega-modder.component';
 import { JominiKioskComponent } from './jomini-kiosk/jomini-kiosk.component';
+import { LabComponent } from './lab/lab.component';
+import { ResourcemapComponent } from './resourcemap/resourcemap.component';
 
 export const routes: Routes = [
     {
@@ -14,12 +16,12 @@ export const routes: Routes = [
         component: ParadoxComponent,
         children: [
             { path: 'save', component: SaveViewSplashComponent },
-            { path: 'map', component: MapComponent },
+            { path: 'map', component: ResourcemapComponent },
             { path: 'stonks', component: LineviewerComponent },
             { path: 'mc', component: MegaCampaignComponent },
             { path: 'mc/admin', component: MCAdminComponent },
             { path: 'mc/modder', component: MegaModderComponent },
-            { path: 'jomini', component: JominiKioskComponent }
+            { path: 'jomini', component: JominiKioskComponent },
         ]
     }
 ];

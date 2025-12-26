@@ -1,10 +1,9 @@
+import { Eu4Save } from "./Eu4Save";
 
 export class Eu4SaveCountry {
 
-    constructor(private tag: string, private countryData: any) {
-        if (tag.startsWith("Z0A")) {
-            console.log(`Loaded country ${tag}`, countryData);
-        }
+    constructor(private tag: string, private countryData: any, private playerName: string | null) {
+        
     }
 
     getColor(): number[] {
@@ -29,5 +28,9 @@ export class Eu4SaveCountry {
 
     getName(): string {
         return this.countryData.name || this.getTag();
+    }
+    
+    getPlayerName(): string | null {
+        return this.playerName;
     }
 }

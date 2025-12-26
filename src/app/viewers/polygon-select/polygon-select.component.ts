@@ -25,10 +25,6 @@ export class PolygonSelectComponent {
     };
     @Input() meshBuddiesProvider: (key: string) => string[] = (key: string) => [key];
     @Input() tooltipProvider: (key: string) => string = (key: string) => key;
-    /**
-     * Custom buttons to inject from parent. Each button is an object:
-     * { icon: string, title: string, action: () => void, [optional] active?: boolean }
-     */
     @Input() customButtons: Array<{ icon: string, title: string, action: () => void, active?: boolean }> = [];
 
     private readonly LIGHT_INTENSITY = 3;
@@ -120,6 +116,9 @@ export class PolygonSelectComponent {
             for (const poly of this.polygons.values()) {
                 this.refreshPolyColor(poly);
             }
+        }
+        if (changes['tooltipProvider']) {
+            console.log("Tooltip provider changed");
         }
     }
 

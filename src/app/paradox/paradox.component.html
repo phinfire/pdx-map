@@ -67,6 +67,10 @@
                     <mat-icon class="nav-icon">data_object</mat-icon>
                     <span class="nav-label">Parser Kiosk</span>
                 </button>
+                <button mat-button class="nav-button" (click)="navigate('lab')" [disabled]="isActiveRoute('lab')">
+                    <mat-icon class="nav-icon">science</mat-icon>
+                    <span class="nav-label">Lab</span>
+                </button>
             </div>
         </div>
 

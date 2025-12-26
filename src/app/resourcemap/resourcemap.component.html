@@ -1,0 +1,26 @@
+<div class="lab-container">
+  <div class="selection-box-wrapper">
+    <mat-form-field appearance="outline" class="resource-select">
+      <mat-label>Select Resource</mat-label>
+      <mat-select [(value)]="selectedResource" (selectionChange)="onResourceSelected(selectedResource)">
+        @for (category of getUniqueResourceCategories(); track category) {
+          <mat-optgroup [label]="category">
+            @for (resource of getResourcesByCategory(category); track resource) {
+              <mat-option [value]="resource">{{ formatResourceName(resource) }}</mat-option>
+            }
+          </mat-optgroup>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="map-wrapper">
+    <app-slab-map-view 
+      [geoJsonFetcher]="geoJsonFetcher" 
+      [viewModes]="viewModes" 
+      [colorConfigProviders]="colorConfigProviders"
+      [behaviorConfig]="behaviorConfig">
+    </app-slab-map-view>
+  </div>
+</div>
+

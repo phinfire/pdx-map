@@ -10,6 +10,7 @@ export class MapService {
 
     private readonly eu4GeoJsonUrl = "https://codingafterdark.de/pdx/data/eu4_provinces.geojson";
     private readonly ck3GeoJsonUrl = "https://codingafterdark.de/pdx/data/counties.geojson"
+    private readonly vic3GeoJsonUrl = "http://localhost:5500/public/states.geojson";
 
     constructor(private http: HttpClient) {
         
@@ -25,6 +26,12 @@ export class MapService {
     fetchCK3GeoJson(removeWater: boolean, removeWastelands: boolean): Observable<any> {
         return this.http.get(this.ck3GeoJsonUrl).pipe(
             map((geojson: any) => this.filterGeoJsonFeatures(geojson, removeWater, removeWastelands, ['sea', 'river'], ['wasteland'])),
+            shareReplay(1)
+        );
+    }
+
+    fetchVic3GeoJson(removeWastelands: boolean): Observable<any> {
+        return this.http.get(this.vic3GeoJsonUrl).pipe(
             shareReplay(1)
         );
     }

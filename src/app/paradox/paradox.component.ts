@@ -16,18 +16,18 @@ import { trigger, state, style, transition, animate, keyframes } from '@angular/
     styleUrl: './paradox.component.scss',
     animations: [
         trigger('newActionAlert', [
-            state('normal', style({ 
-                transform: 'scale(1)', 
+            state('normal', style({
+                transform: 'scale(1)',
                 backgroundColor: 'transparent',
                 boxShadow: 'none'
             })),
-            state('flashing', style({ 
-                transform: 'scale(1.1)', 
+            state('flashing', style({
+                transform: 'scale(1.1)',
                 backgroundColor: 'rgba(255, 215, 0, 0.6)',
                 boxShadow: '0 0 8px rgba(255, 215, 0, 0.8)'
             })),
-            state('pulsing', style({ 
-                transform: 'scale(1)', 
+            state('pulsing', style({
+                transform: 'scale(1)',
                 backgroundColor: 'transparent',
                 boxShadow: '0 0 0 2px rgba(255, 215, 0, 0.5)'
             })),
@@ -39,22 +39,22 @@ import { trigger, state, style, transition, animate, keyframes } from '@angular/
                 ]))
             ]),
             transition('flashing => pulsing', [
-                animate('500ms ease-out', style({ 
-                    transform: 'scale(1)', 
+                animate('500ms ease-out', style({
+                    transform: 'scale(1)',
                     backgroundColor: 'transparent',
                     boxShadow: '0 0 0 2px rgba(255, 215, 0, 0.5)'
                 }))
             ]),
             transition('pulsing => normal', [
-                animate('800ms ease-out', style({ 
-                    transform: 'scale(1)', 
+                animate('800ms ease-out', style({
+                    transform: 'scale(1)',
                     backgroundColor: 'transparent',
                     boxShadow: 'none'
                 }))
             ]),
             transition('* => normal', [
-                animate('300ms ease-out', style({ 
-                    transform: 'scale(1)', 
+                animate('300ms ease-out', style({
+                    transform: 'scale(1)',
                     backgroundColor: 'transparent',
                     boxShadow: 'none'
                 }))
@@ -70,7 +70,7 @@ export class ParadoxComponent implements OnDestroy {
     protected renderer = inject(Renderer2);
     protected router = inject(Router);
     protected activatedRoute = inject(ActivatedRoute);
-    
+
     currentRoute: string = '';
 
     constructor() {
