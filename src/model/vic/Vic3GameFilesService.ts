@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, switchMap, from, shareReplay, map, forkJoin } from 'rxjs';
+import { Observable, switchMap, from, shareReplay, map, forkJoin, of } from 'rxjs';
 import { PdxFileService } from '../../services/pdx-file.service';
 import { GoodCategory } from './enum/GoodCategory';
 import { ResourceType } from './enum/ResourceType';
@@ -32,13 +32,45 @@ export class Vic3GameFilesService {
 
     private readonly PATH = "http://localhost:5500/public/"
 
+    private readonly STATE_RESOURCE_NAME_TO_GOOD_REPRESENTATION: Record<string, string> = {
+        'grains': 'grain',
+        'bg_maize_farms': 'grain',
+        'bg_millet_farms': 'grain',
+        'bg_rice_farms': 'grain',
+        'bg_rye_farms': 'grain',
+        'bg_wheat_farms': 'grain',
+        'gold': 'gold',
+
+        'bg_banana_plantations': 'fruit',
+        'bg_coffee_plantations': 'coffee',
+        'bg_cotton_plantations': 'fabric',
+        'bg_dye_plantations': 'dye',
+        'bg_livestock_ranches': 'meat',
+        'bg_opium_plantations': 'opium',
+        'bg_silk_plantations': 'silk',
+        'bg_sugar_plantations': 'sugar',
+        'bg_tea_plantations': 'tea',
+        'bg_tobacco_plantations': 'tobacco',
+        'bg_vineyard_plantations': 'wine',
+
+        'bg_coal_mining': 'coal',
+        'bg_fishing': 'fish',
+        'bg_iron_mining': 'iron',
+        'bg_lead_mining': 'lead',
+        'bg_logging': 'wood',
+        'bg_oil_extraction': 'oil',
+        'bg_rubber': 'rubber',
+        'bg_sulfur_mining': 'sulfur',
+        'bg_whaling': 'fish',
+    };
+
     private readonly goods$: Observable<Good[]>;
     private readonly mapStateRegions$: Observable<MapStateRegion[]>;
     private readonly historyStateRegions$: Observable<HistoryStateRegion[]>;
 
     private modPops$: Observable<ModPop[]>;
     private modBuildings$: Observable<ModBuilding[]>;
-    private diplomaticPacts$: Observable<{overlordTag: string, vassalTag: string, type: string}[]>;
+    private diplomaticPacts$: Observable<{ overlordTag: string, vassalTag: string, type: string }[]>;
 
     constructor(private http: HttpClient, private fileService: PdxFileService) {
         const dataUrl = "https://codingafterdark.de/pdx/vic3gamedata/00_goods.txt";
@@ -50,22 +82,22 @@ export class Vic3GameFilesService {
             switchMap(jsons => from([this.parseMapStateRegions(jsons)])),
             shareReplay(1)
         );
-        this.historyStateRegions$ = this.http.get(this.PATH + "3624541199/common/history/states/99_converter_states.txt", { responseType: 'text' }).pipe(
+        this.historyStateRegions$ = this.http.get(this.PATH + "3633691719/common/history/states/99_converter_states.txt", { responseType: 'text' }).pipe(
             switchMap(data => from(this.fileService.parseContentToJsonPromise(data))),
             map(json => this.buildHistoryStateRegions(json)),
             shareReplay(1)
         );
-        this.modPops$ = this.http.get(this.PATH + "3624541199/common/history/pops/99_converted_pops.txt", { responseType: 'text' }).pipe(
+        this.modPops$ = this.http.get(this.PATH + "3633691719/common/history/pops/99_converted_pops.txt", { responseType: 'text' }).pipe(
             switchMap(data => from(this.fileService.parseContentToJsonPromise(data))),
             map((json: any) => this.parseModPops(json)),
             shareReplay(1)
         );
-        this.modBuildings$ = this.http.get(this.PATH + "3624541199/common/history/buildings/99_converted_buildings.txt", { responseType: 'text' }).pipe(
+        this.modBuildings$ = this.http.get(this.PATH + "3633691719/common/history/buildings/99_converted_buildings.txt", { responseType: 'text' }).pipe(
             switchMap(data => from(this.fileService.parseContentToJsonPromise(data))),
             map((json: any) => this.parseModBuildings(json)),
             shareReplay(1)
         );
-        this.diplomaticPacts$ = this.http.get(this.PATH + "3624541199/common/history/diplomacy/00_subject_relationships.txt", { responseType: 'text' }).pipe(
+        this.diplomaticPacts$ = this.http.get(this.PATH + "3633691719/common/history/diplomacy/00_subject_relationships.txt", { responseType: 'text' }).pipe(
             switchMap(data => from(this.fileService.parseContentToJsonPromise(data))),
             map((json) => this.parseDiplomaticPacts(json)),
             shareReplay(1)
@@ -75,37 +107,37 @@ export class Vic3GameFilesService {
         });
     }
 
-    parseDiplomaticPacts(json: JSON): {overlordTag: string, vassalTag: string, type: string}[] {
-        const pacts: {overlordTag: string, vassalTag: string, type: string}[] = [];
+    getGoodIconPath(string: string): string {
+        return "/public/"
+    }
+
+
+    parseDiplomaticPacts(json: JSON): { overlordTag: string, vassalTag: string, type: string }[] {
+        const pacts: { overlordTag: string, vassalTag: string, type: string }[] = [];
         const diplomacyData = (json as any)["DIPLOMACY"];
-        
         if (!diplomacyData || !Array.isArray(diplomacyData)) {
             return pacts;
         }
-
-        // The DIPLOMACY data is parsed as a flat array: [countryTag, {?{pactData}}, countryTag2, ...]
         for (let i = 0; i < diplomacyData.length; i += 2) {
             const overlordKey = diplomacyData[i];
             const countryData = diplomacyData[i + 1];
-            
+
             if (!overlordKey || !countryData) continue;
-            
+
             const overlordTag = overlordKey.split(":")[1] || overlordKey;
             const pactWrapper = countryData["?"];
-            
+
             if (!pactWrapper) continue;
-            
-            // pactWrapper contains the actual pact definitions
             if (pactWrapper["create_diplomatic_pact"]) {
                 const pactsList = Array.isArray(pactWrapper["create_diplomatic_pact"])
                     ? pactWrapper["create_diplomatic_pact"]
                     : [pactWrapper["create_diplomatic_pact"]];
-                
+
                 for (const pact of pactsList) {
                     if (pact && pact["country"] && pact["type"]) {
                         const vassalKey = pact["country"];
                         const vassalTag = typeof vassalKey === 'string' ? vassalKey.split(":")[1] : vassalKey;
-                        
+
                         pacts.push({
                             overlordTag: overlordTag,
                             vassalTag: vassalTag,
@@ -115,7 +147,7 @@ export class Vic3GameFilesService {
                 }
             }
         }
-        
+
         return pacts;
     }
 
@@ -143,19 +175,27 @@ export class Vic3GameFilesService {
         return this.diplomaticPacts$;
     }
 
+    mapResourceToGood(resourceName: string): Observable<Good | null> {
+        const goodName = this.STATE_RESOURCE_NAME_TO_GOOD_REPRESENTATION[resourceName];
+        if (!goodName) {
+            return of(null);
+        }
+        return this.goods$.pipe(
+            map(goods => goods.find(g => g.key === goodName) || null)
+        );
+    }
+
     getAllAvailableResources(): Observable<string[]> {
         return this.mapStateRegions$.pipe(
             map(regions => {
                 const resources = new Set<string>();
                 for (const region of regions) {
-                    // Get arable resources
                     const arableResourcesMap = region.getArableResources();
                     for (const [resource, slots] of arableResourcesMap.entries()) {
                         if (slots > 0) {
                             resources.add(resource);
                         }
                     }
-                    // Get other resources
                     const otherResourcesMap = region.getOtherResources();
                     for (const [resource, slots] of otherResourcesMap.entries()) {
                         if (slots > 0) {
@@ -173,17 +213,14 @@ export class Vic3GameFilesService {
             map(regions => {
                 const resourceTypes = new Map<string, ResourceType>();
                 for (const region of regions) {
-                    // Map arable resources
                     const arableResourcesMap = region.getArableResources();
                     for (const resource of arableResourcesMap.keys()) {
                         resourceTypes.set(resource, ResourceType.ARABLE);
                     }
-                    // Map capped resources
                     const cappedResourcesMap = region.getCappedResources();
                     for (const resource of cappedResourcesMap.keys()) {
                         resourceTypes.set(resource, ResourceType.CAPPED);
                     }
-                    // Map uncapped resources
                     const uncappedResources = region.getUncappedResources();
                     for (const res of uncappedResources) {
                         resourceTypes.set(res.type, ResourceType.UNCAPPED);
@@ -220,12 +257,12 @@ export class Vic3GameFilesService {
                 const arableLand = entry.arable_land ?? 0;
                 const arableResources = normalizeToArray(entry.arable_resources);
                 const possibleFarmTypes = new Set<string>(arableResources);
-                
+
                 const arableResourcesMap = new Map<string, number>();
                 const otherResourcesMap = new Map<string, number>();
                 const cappedResourcesMap = new Map<string, number>();
                 const uncappedResourcesArray: Array<{ type: string; undiscovered_amount: number }> = [];
-                
+
                 for (const resource of arableResources) {
                     arableResourcesMap.set(resource, arableLand);
                 }
@@ -247,7 +284,7 @@ export class Vic3GameFilesService {
                 }
 
                 const traits = new Set<string>(entry.traits ? normalizeToArray(entry.traits) : []);
-                
+
                 regions.push(new MapStateRegion(
                     key,
                     key,
@@ -310,10 +347,10 @@ export class Vic3GameFilesService {
         const actualJSON = json.STATES;
         const regions: HistoryStateRegion[] = [];
         for (const [fullKey, stateData] of Object.entries<any>(actualJSON)) {
-            const createStates = Array.isArray(stateData.create_state) 
-                ? stateData.create_state 
+            const createStates = Array.isArray(stateData.create_state)
+                ? stateData.create_state
                 : [stateData.create_state];
-            
+
             for (const createState of createStates) {
                 const countryStr = createState.country;
                 const country = typeof countryStr === 'string' ? countryStr.split(':')[1] : countryStr;
@@ -334,7 +371,7 @@ export class Vic3GameFilesService {
                 regions.push(result);
             }
         }
-        
+
         return regions;
     }
 
@@ -364,24 +401,24 @@ export class Vic3GameFilesService {
     private parseModBuildings(json: JSON) {
         const buildings: ModBuilding[] = [];
         const buildingsData = (json as any)["BUILDINGS"];
-        
+
         for (const [stateKey, stateData] of Object.entries<any>(buildingsData)) {
             const stateName = stateKey.split(":")[1] || stateKey;
-            
+
             for (const [regionStateKey, regionStateData] of Object.entries<any>(stateData)) {
                 const regionStateName = regionStateKey.split(":")[1] || regionStateKey;
-                
+
                 if (regionStateData["create_building"]) {
-                    const buildingsList = Array.isArray(regionStateData["create_building"]) 
-                        ? regionStateData["create_building"] 
+                    const buildingsList = Array.isArray(regionStateData["create_building"])
+                        ? regionStateData["create_building"]
                         : [regionStateData["create_building"]];
-                    
+
                     for (const buildingData of buildingsList) {
                         const buildingName = buildingData["building"];
                         const ownershipList = Array.isArray(buildingData["add_ownership"])
                             ? buildingData["add_ownership"]
                             : [buildingData["add_ownership"]];
-                        
+
                         for (const ownership of ownershipList) {
                             if (ownership && ownership["building"]) {
                                 const bldg = ownership["building"];
@@ -399,7 +436,7 @@ export class Vic3GameFilesService {
                 }
             }
         }
-        
+
         return buildings;
     }
 
@@ -449,7 +486,7 @@ export class Vic3GameFilesService {
     public writeBackHistoryStateRegions(regions: HistoryStateRegion[]): string {
         const lines: string[] = [];
         lines.push("STATES = {");
-        
+
         const regionsByState = new Map<string, HistoryStateRegion[]>();
         for (const region of regions) {
             if (!regionsByState.has(region.stateKey)) {
@@ -477,7 +514,7 @@ export class Vic3GameFilesService {
             }
             lines.push(`\t}`);
         }
-        
+
         lines.push("}");
         return lines.join("\n");
     }
@@ -490,7 +527,7 @@ export class Vic3GameFilesService {
         return await zip.generateAsync({ type: 'blob' });
     }
 
-public async writeMapStateRegionsToZip(regions: MapStateRegion[]): Promise<Blob> {
+    public async writeMapStateRegionsToZip(regions: MapStateRegion[]): Promise<Blob> {
         const JSZip = (await import('jszip')).default;
         const zip = new JSZip();
         const regionsByFile = new Map<string, MapStateRegion[]>();
@@ -512,27 +549,27 @@ public async writeMapStateRegionsToZip(regions: MapStateRegion[]): Promise<Blob>
         const lines: string[] = [];
         for (const region of regions) {
             const name = region.getName();
-            
+
             lines.push(`${name} = {`);
-            
+
             if (region.getId() !== undefined) {
                 lines.push(`\tid = ${region.getId()}`);
             }
-            
+
             if (region.getSubsistenceBuilding()) {
                 lines.push(`\tsubsistence_building = "${region.getSubsistenceBuilding()}"`);
             }
-            
+
             const tiles = Array.from(region.getTiles());
             if (tiles.length > 0) {
                 lines.push(`\tprovinces = { ${tiles.map(t => `"${t}"`).join(' ')} }`);
             }
-            
+
             const traits = Array.from(region.getTraits());
             if (traits.length > 0) {
                 lines.push(`\ttraits = { ${traits.join(' ')} }`);
             }
-            
+
             if (region.getCity()) {
                 lines.push(`\tcity = "${region.getCity()}"`);
             }
@@ -548,17 +585,17 @@ public async writeMapStateRegionsToZip(regions: MapStateRegion[]): Promise<Blob>
             if (region.getWood()) {
                 lines.push(`\twood = "${region.getWood()}"`);
             }
-            
+
             const arableLand = region.getArableLand();
             if (arableLand > 0) {
                 lines.push(`\tarable_land = ${arableLand}`);
             }
-            
+
             const farmTypes = Array.from(region.getPossibleFarmTypes());
             if (farmTypes.length > 0) {
                 lines.push(`\tarable_resources = { ${farmTypes.join(' ')} }`);
             }
-            
+
             const cappedResources = region.getCappedResources();
             if (cappedResources.size > 0) {
                 lines.push(`\tcapped_resources = {`);
@@ -567,7 +604,7 @@ public async writeMapStateRegionsToZip(regions: MapStateRegion[]): Promise<Blob>
                 }
                 lines.push(`\t}`);
             }
-            
+
             const uncappedResources = region.getUncappedResources();
             if (uncappedResources.length > 0) {
                 lines.push(`\tresource = {`);
@@ -577,11 +614,11 @@ public async writeMapStateRegionsToZip(regions: MapStateRegion[]): Promise<Blob>
                 }
                 lines.push(`\t}`);
             }
-            
+
             if (region.getNavalExitId() !== undefined) {
                 lines.push(`\tnaval_exit_id = ${region.getNavalExitId()}`);
             }
-            
+
             lines.push(`}`);
             lines.push(``);
         }

@@ -1,0 +1,48 @@
+<div class="main">
+  <div class="population-summary">
+    <h2>Alliance Total Population</h2>
+    <div class="population-display" [class.over-threshold]="isOverThreshold()">
+      <span class="population-value">{{ formatPopulation(totalPopulation) }}</span>
+      <span class="population-threshold" matTooltip="Alliance population threshold"> / {{ formatPopulation(userThreshold) }}</span>
+    </div>
+    <div class="population-gauge-container">
+      <div class="gauge-row-wrapper">
+        <div class="gauge-bar-wrapper">
+          <div class="gauge-bar-container">
+            <div class="gauge-bar" [style.width.%]="getBarFillPercentage()" [class.over-threshold]="isOverThreshold()"></div>
+            <div *ngIf="getOverflowPercentage() > 0" class="overflow-bar" [style.width.%]="getOverflowPercentage()" [style.left.%]="getMarkerPercentage()" [class.delayed]="isOverThreshold()"></div>
+          </div>
+          <div class="threshold-marker" [style.left.%]="getMarkerPercentage()"></div>
+        </div>
+        <button mat-icon-button aria-label="Reset selection" (click)="resetSelection()">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nations-grid">
+    <div *ngFor="let nation of nations" class="nation-item">
+      <button
+        class="flag-button"
+        [class.selected]="nation.selected"
+        [class.disabled]="nation.disabled"
+        [disabled]="nation.disabled"
+        (click)="toggleNation(nation)"
+      >
+        <img
+          [src]="getFlagUrl(nation.key)"
+          [alt]="nation.name"
+          class="flag-icon"
+          (error)="$event.target.style.display='none'"
+        />
+      </button>
+      <div class="nation-info">
+        <div class="nation-name">{{ nation.name }}</div>
+        <div class="nation-population">
+          {{ nation.selected && nation.countryShell ? formatPopulation(nation.countryShell.getPopulation()) : '' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

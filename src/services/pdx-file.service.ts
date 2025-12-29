@@ -182,7 +182,6 @@ export class PdxFileService {
             const response = await fetch(url);
             const blob = await response.blob();
             const file = new File([blob], url.split('/').pop() || 'eu4-save');
-
             const namesAndJsons = await this.importFilesPromise([file]);
             const first = namesAndJsons[0];
             const save = new Eu4Save(first.json);

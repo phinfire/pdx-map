@@ -13,13 +13,16 @@
                     </tr>
                     <tr>
                         <td class="label">Max. Power Bloc Population:</td>
-                        <td class="value">{{ (3.5 * (totalWorldPopulation / 1000000) / playerCount).toFixed(1) }}M</td>
+                        <td class="value">{{ (3.0 * (totalWorldPopulation / 1000000) / playerCount).toFixed(1) }}M</td>
                     </tr>
                 </table>
                 <div class="button-row">
-                    <button mat-raised-button (click)="downloadScaledPopulations()" class="download-button">Download Scaled Populations</button>
-                    <button mat-raised-button (click)="downloadScaledStates()" class="download-button">Download Scaled States</button>
-                    <mat-icon class="warning-icon" *ngIf="hasNonUniqueMappings" matTooltip="{{ conflictingTagsTooltip }}">warning</mat-icon>
+                    <button mat-raised-button (click)="downloadScaledPopulations()" class="download-button">Download
+                        Scaled Populations</button>
+                    <button mat-raised-button (click)="downloadScaledStates()" class="download-button">Download Scaled
+                        States</button>
+                    <mat-icon class="warning-icon" *ngIf="hasNonUniqueMappings"
+                        matTooltip="{{ conflictingTagsTooltip }}">warning</mat-icon>
                 </div>
                 <div class="table-wrapper">
                     <app-table [rowElements]="mappingTableRows" [columns]="mappingTableColumns"></app-table>

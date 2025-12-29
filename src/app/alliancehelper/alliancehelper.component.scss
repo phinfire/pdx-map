@@ -1,0 +1,269 @@
+.gauge-explanation {
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    text-align: center;
+}
+.overflow-bar {
+    position: absolute;
+    height: 100%;
+    background: #e53935;
+    border-radius: 0 12px 12px 0;
+    top: 0;
+    transition: width 0.3s ease, left 0.3s ease;
+    z-index: 1;
+    pointer-events: none;
+}
+:host {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main {
+    width: 90%;
+    height: 90%;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    border-radius: 1rem;
+}
+
+.population-summary {
+    flex: 0 0 30%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 15px;
+}
+
+.population-summary h2 {
+    margin: 0;
+    font-size: 1.75rem;
+}
+
+.population-display {
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--mat-sys-primary);
+    transition: color 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+.population-value {
+    color: inherit;
+    transition: color 0.3s ease;
+}
+
+.population-display.over-threshold .population-value {
+    color: #e53935;
+}
+
+.population-threshold {
+    font-size: 2rem;
+    color: var(--text-color);
+}
+
+.nations-grid {
+    height: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    column-gap: 0.5rem;
+    row-gap: 0.5rem;
+    overflow-y: auto;
+    padding: 1rem 10%;
+    justify-content: center;
+}
+
+.nation-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.flag-button {
+    background: none;
+    border: 2px solid var(--border-color);
+    width: 80px;
+    height: 80px;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, border-width 0.15s ease;
+    box-sizing: border-box;
+}
+
+.flag-button:hover {
+    border-color: var(--mat-sys-primary);
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.flag-button.selected {
+    border-color: var(--mat-sys-primary);
+    border-width: 5px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28), 0 0 0 6px rgba(0, 0, 0, 0.04);
+    transform: scale(1.03);
+}
+
+.flag-button:focus-visible {
+    outline: 5px solid rgba(0, 0, 0, 0.06);
+    outline-offset: 2px;
+}
+
+.flag-button.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--border-color);
+    background-color: rgba(0, 0, 0, 0.1);
+    filter: grayscale(100%);
+}
+
+.flag-button.disabled:hover {
+    border-color: var(--border-color);
+    transform: none;
+    box-shadow: none;
+}
+
+.population-gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.gauge-row-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    width: 100%;
+}
+
+.gauge-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    width: 80%;
+}
+
+.gauge-bar-wrapper {
+    position: relative;
+    width: 66%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.gauge-bar-container {
+    position: relative;
+    width: 100%;
+    height: 48px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    z-index: 3;
+}
+
+.gauge-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--mat-sys-primary);
+    transition: background 0.3s ease, width 0.3s ease;
+    border-radius: 12px 0 0 12px;
+    z-index: 1;
+}
+
+.gauge-bar.over-threshold {
+    background: #e53935;
+}
+
+.overflow-bar {
+    position: absolute;
+    height: 100%;
+    background: #e53935;
+    border-radius: 0 12px 12px 0;
+    top: 0;
+    transition: width 0.32s cubic-bezier(.2,.8,.2,1), left 0.32s cubic-bezier(.2,.8,.2,1);
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* When showing overflow (entering over-threshold), delay slightly so the base fill reaches the marker first */
+.overflow-bar.delayed {
+    transition-delay: 0.09s;
+}
+
+/* When removing overflow (exiting over-threshold), no delay for snappy reset */
+.overflow-bar:not(.delayed) {
+    transition-delay: 0s;
+}
+
+.threshold-marker {
+    position: absolute;
+    left: 80%;
+    top: -2px;
+    bottom: -2px;
+    width: 3px;
+    background-color: #ffffff;
+    border-left: 2px dashed rgba(255, 255, 255, 0.7);
+    border-right: 2px dashed rgba(255, 255, 255, 0.7);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.flag-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+.nation-info {
+    text-align: center;
+    width: 100%;
+    min-height: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.nation-name {
+    font-size: 0.95rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-height: 1.1rem;
+}
+
+.nation-population {
+    font-size: 0.85rem;
+    color: var(--mat-sys-primary);
+    min-height: 1.1rem;
+}
+
+.flag-button.disabled + .nation-info .nation-name,
+.flag-button.disabled + .nation-info .nation-population {
+    opacity: 0.45;
+    color: var(--text-color);
+}
+

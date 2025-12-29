@@ -1,9 +1,24 @@
 import { inject, Injectable } from "@angular/core";
-import { from, map, mergeMap, Observable, shareReplay } from "rxjs";
+import { BehaviorSubject, from, map, mergeMap, Observable, shareReplay, combineLatest } from "rxjs";
 import { PdxFileService } from "../../../services/pdx-file.service";
 import { HttpClient } from "@angular/common/http";
 import { Eu4SaveProvince } from "../../../model/eu4/Eu4SaveProvince";
 import { MapStateRegion } from "../../../model/vic/game/MapStateRegion";
+
+export interface MappingTableRow {
+    eu4Tag: string;
+    eu4Name: string;
+    vic3Tag: string;
+    vic3Name: string;
+    eu4Dev: number;
+    vic3Pop: number;
+    adjustedVic3Pop: number;
+    scalingFactor: number;
+    initialArableLand: number;
+    scaledArableLand: number;
+    subjects?: MappingTableRow[];
+    vic3Subjects: string[];
+}
 
 interface HistoryStateRegion {
     stateKey: string;
@@ -19,6 +34,34 @@ interface HistoryStateRegion {
 export class MegaModderE2VService {
 
     private readonly eu2vicProvinceMapping$: Observable<{ eu4: string[], vic3: string[] }[]>;
+
+    private readonly eu4ToVic3MappingSubject = new BehaviorSubject<Map<string, string>>(new Map());
+    public readonly eu4ToVic3Mapping$ = this.eu4ToVic3MappingSubject.asObservable();
+
+    private readonly scaledPopsByTagSubject = new BehaviorSubject<Map<string, number>>(new Map());
+    public readonly scaledPopsByTag$ = this.scaledPopsByTagSubject.asObservable();
+
+    private readonly scaledArableLandByTagSubject = new BehaviorSubject<Map<string, number>>(new Map());
+    public readonly scaledArableLandByTag$ = this.scaledArableLandByTagSubject.asObservable();
+
+    /**
+     * Derived observable: EU4 player tag (e.g., Z38) to population
+     * Combines eu4ToVic3Mapping$ and scaledPopsByTag$ to map player tags to their populations
+     */
+    public readonly eu4PlayerTagToPopulation$ = combineLatest([
+        this.eu4ToVic3Mapping$,
+        this.scaledPopsByTag$
+    ]).pipe(
+        map(([eu4ToVic3, vic3Populations]) => {
+            const playerTagPopulation = new Map<string, number>();
+            for (const [eu4Tag, vic3Tag] of eu4ToVic3.entries()) {
+                const population = vic3Populations.get(vic3Tag) || 0;
+                playerTagPopulation.set(eu4Tag, population);
+            }
+            return playerTagPopulation;
+        }),
+        shareReplay(1)
+    );
 
     private http = inject(HttpClient);
     private fileService = inject(PdxFileService);
@@ -298,5 +341,35 @@ export class MegaModderE2VService {
         }
 
         return aggregated;
+    }
+
+    /**
+     * Update the EU4 to VIC3 tag mapping (emitted via eu4ToVic3Mapping$ observable)
+     */
+    updateEu4ToVic3Mapping(mapping: Map<string, string>): void {
+        this.eu4ToVic3MappingSubject.next(new Map(mapping));
+    }
+
+    /**
+     * Update scaled population by country tag (emitted via scaledPopsByTag$ observable)
+     */
+    updateScaledPopsByTag(scaledPops: Map<string, number>): void {
+        this.scaledPopsByTagSubject.next(new Map(scaledPops));
+    }
+
+    /**
+     * Update scaled arable land by country tag (emitted via scaledArableLandByTag$ observable)
+     */
+    updateScaledArableLandByTag(scaledArableLand: Map<string, number>): void {
+        this.scaledArableLandByTagSubject.next(new Map(scaledArableLand));
+    }
+
+    /**
+     * Clear all mappings and metrics
+     */
+    clear(): void {
+        this.eu4ToVic3MappingSubject.next(new Map());
+        this.scaledPopsByTagSubject.next(new Map());
+        this.scaledArableLandByTagSubject.next(new Map());
     }
 }

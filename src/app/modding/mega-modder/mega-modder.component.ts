@@ -1,38 +1,21 @@
 
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { AfterViewInit, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { combineLatestWith } from 'rxjs/operators';
 import { Vic3GameFilesService } from '../../../model/vic/Vic3GameFilesService';
-import { D3JsService } from '../../../services/D3JsService';
 import { PdxFileService } from '../../../services/pdx-file.service';
 import { TableColumn } from '../../../util/table/TableColumn';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
-import { MegaModderE2VService } from './MegaModderE2VService';
+import { MegaModderE2VService, MappingTableRow } from './MegaModderE2VService';
 import { ModPop } from '../../../model/vic/game/ModPop';
 import { Eu4Save } from '../../../model/eu4/Eu4Save';
 import { PopScaleDiagramComponent } from './pop-scale-diagram.component';
 import { forkJoin } from 'rxjs';
 import { MapStateRegion } from '../../../model/vic/game/MapStateRegion';
 
-interface MappingTableRow {
-    eu4Tag: string;
-    eu4Name: string;
-    vic3Tag: string;
-    vic3Name: string;
-    eu4Dev: number;
-    vic3Pop: number;
-    adjustedVic3Pop: number;
-    scalingFactor: number;
-    initialArableLand: number;
-    scaledArableLand: number;
-    subjects?: MappingTableRow[];
-    vic3Subjects: string[];
-}
 
 @Component({
     selector: 'app-mega-modder',
@@ -73,7 +56,7 @@ export class MegaModderComponent implements AfterViewInit {
     }
 
     testGuessTagMapping(): void {
-        const eu4SaveURL = "http://localhost:5500/public/Convert.eu4";
+        const eu4SaveURL = "http://localhost:5500/public/Convert2_local.eu4";
         this.pdxFileService.loadEu4SaveFromUrl(eu4SaveURL)
             .then(save => this.processEu4Save(save))
             .catch(error => console.error('Failed to load EU4 save:', error));
@@ -124,14 +107,19 @@ export class MegaModderComponent implements AfterViewInit {
             const scalingFactors = this.buildScalingFactors();
             this.scaledPops = this.vic3GameFilesService.scalePopulationsByCountry(pops, scalingFactors);
             this.buildScaledPopsByTag(this.scaledPops);
-            
+
             const scaledRegions = this.service.scaleArableLandByCountry(historyRegions, mapStateRegions, scalingFactors);
             this.buildScaledArableLandByTag(scaledRegions);
             this.scaledMapStateRegions = scaledRegions;
-            
+
+            // Share mapping data with other components via observables
+            this.service.updateEu4ToVic3Mapping(refinedMapping);
+            this.service.updateScaledPopsByTag(this.scaledPopsByTag);
+            this.service.updateScaledArableLandByTag(this.scaledArableLandByTag);
+
             const metricsToAggregate = new Map<string, Map<string, number>>();
             metricsToAggregate.set('population', this.scaledPopsByTag);
-            
+
             const arableLandByCountry = new Map<string, number>();
             for (const scaledRegion of scaledRegions) {
                 const tiles = Array.from(scaledRegion.getTiles());

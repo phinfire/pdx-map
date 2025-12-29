@@ -11,6 +11,7 @@ import { ValueGradientColorConfig } from '../viewers/polygon-select/DynamicColor
 import { MatButtonModule, MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Good } from '../../model/vic/game/Good';
 
 const GOODS_ICON_PATH = '/goods_icons/';
 
@@ -29,33 +30,6 @@ const RESOURCE_GROUPS: Record<string, { members: string[], displayName: string }
 
 const RESOURCE_GROUP_CATEGORIES: Record<string, string> = {
     'gold': 'Discoverable',
-};
-
-const RESOURCE_ICON_MAP: Record<string, string> = {
-    'grains': 'grain.webp',
-    'gold': 'gold.webp',
-
-    'bg_banana_plantations': 'fruit.webp',
-    'bg_coffee_plantations': 'coffee.webp',
-    'bg_cotton_plantations': 'fabric.webp',
-    'bg_dye_plantations': 'dye.webp',
-    'bg_livestock_ranches': 'meat.webp',
-    'bg_opium_plantations': 'opium.webp',
-    'bg_silk_plantations': 'silk.webp',
-    'bg_sugar_plantations': 'sugar.webp',
-    'bg_tea_plantations': 'tea.webp',
-    'bg_tobacco_plantations': 'tobacco.webp',
-    'bg_vineyard_plantations': 'wine.webp',
-
-    'bg_coal_mining': 'coal.webp',
-    'bg_fishing': 'fish.webp',
-    'bg_iron_mining': 'iron.webp',
-    'bg_lead_mining': 'lead.webp',
-    'bg_logging': 'wood.webp',
-    'bg_oil_extraction': 'oil.webp',
-    'bg_rubber': 'rubber.webp',
-    'bg_sulfur_mining': 'sulfur.webp',
-    'bg_whaling': 'fish.webp',
 };
 
 @Component({
@@ -79,6 +53,7 @@ export class ResourcemapComponent implements OnInit {
     private resourceTypes: Map<string, ResourceType> = new Map();
     private resourceViewModes: Map<string, ViewMode<any>> = new Map();
     private resourceColorConfigs: Map<string, ColorConfigProvider> = new Map();
+    private resourceToGoodMap: Map<string, Good> = new Map();
 
     resourcesByCategory: Map<string, string[]> = new Map();
     categoryOrder = ['Arable', 'Capped', 'Discoverable', 'Other'];
@@ -86,6 +61,14 @@ export class ResourcemapComponent implements OnInit {
     ngOnInit() {
         this.vic3GameFilesService.getAllAvailableResources().subscribe(resources => {
             this.availableResources = resources;
+            // Map each resource to its corresponding good
+            for (const resource of resources) {
+                this.vic3GameFilesService.mapResourceToGood(resource).subscribe(good => {
+                    if (good) {
+                        this.resourceToGoodMap.set(resource, good);
+                    }
+                });
+            }
         });
 
         this.vic3GameFilesService.getResourceTypes().subscribe(types => {
@@ -142,11 +125,9 @@ export class ResourcemapComponent implements OnInit {
 
     private getDisplayedResources(): string[] {
         const displayed = new Set<string>();
-
         for (const groupKey of Object.keys(RESOURCE_GROUPS)) {
             displayed.add(groupKey);
         }
-
         for (const resource of this.availableResources) {
             if (EXCLUDED_RESOURCES.includes(resource)) {
                 continue;
@@ -162,7 +143,6 @@ export class ResourcemapComponent implements OnInit {
                 displayed.add(resource);
             }
         }
-
         return Array.from(displayed);
     }
 
@@ -203,8 +183,11 @@ export class ResourcemapComponent implements OnInit {
     }
 
     getIconPath(resource: string): string {
-        const iconName = RESOURCE_ICON_MAP[resource] || 'services.webp';
-        return GOODS_ICON_PATH + iconName;
+        const good = this.resourceToGoodMap.get(resource);
+        if (good) {
+            return good.getIconUrl();
+        }
+        return GOODS_ICON_PATH + 'services.webp';
     }
 
     toggleResource(resource: string) {

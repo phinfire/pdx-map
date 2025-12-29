@@ -32,32 +32,39 @@
                 </button>
             </div>
         </div>
-        <h2>Go to</h2>
         <div class="sidenav-content">
             <!--query_stats-->
+            <h3 class="nav-category">Mega Campaign</h3>
+            <div class="nav-buttons-container">
+                <button mat-button class="nav-button" (click)="navigate('mc')" [disabled]="isActiveRoute('mc')">
+                    <mat-icon class="nav-icon">menu_book</mat-icon>
+                    <span class="nav-label">Campaign</span>
+                </button>
+                <button mat-button class="nav-button" (click)="navigate('bloc')" [disabled]="isActiveRoute('bloc')">
+                    <mat-icon class="nav-icon">diversity_3</mat-icon>
+                    <span class="nav-label">Power Bloc Helper</span>
+                </button>
+                <button mat-button class="nav-button" (click)="navigate('mc/admin')"
+                    [disabled]="isActiveRoute('mc/admin')">
+                    <mat-icon class="nav-icon">admin_panel_settings</mat-icon>
+                    <span class="nav-label">Admin</span>
+                </button>
+                <button mat-button class="nav-button" (click)="navigate('mc/modder')"
+                    [disabled]="isActiveRoute('mc/modder')">
+                    <mat-icon class="nav-icon">build_circle</mat-icon>
+                    <span class="nav-label">Modder</span>
+                </button>
+            </div>
+
+            <h3 class="nav-category">Other</h3>
             <div class="nav-buttons-container">
                 <button mat-button class="nav-button" (click)="navigate('save')" [disabled]="isActiveRoute('save')">
                     <mat-icon class="nav-icon">file_open</mat-icon>
                     <span class="nav-label">Save Analyzer</span>
                 </button>
-                <button mat-button class="nav-button" (click)="navigate('mc')" [disabled]="isActiveRoute('mc')">
-                    <mat-icon class="nav-icon">menu_book</mat-icon>
-                    <span class="nav-label">Mega Campaign</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('mc/admin')"
-                    [disabled]="isActiveRoute('mc/admin')">
-                    <mat-icon class="nav-icon">admin_panel_settings</mat-icon>
-                    <span class="nav-label">Mega-Campaign Admin</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('stonks')"
-                    [disabled]="isActiveRoute('stonks')">
+                <button mat-button class="nav-button" (click)="navigate('stonks')" [disabled]="isActiveRoute('stonks')">
                     <mat-icon class="nav-icon">insights</mat-icon>
                     <span class="nav-label">Stonks</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('mc/modder')"
-                    [disabled]="isActiveRoute('mc/modder')">
-                    <mat-icon class="nav-icon">build_circle</mat-icon>
-                    <span class="nav-label">Mega Modder</span>
                 </button>
                 <button mat-button class="nav-button" (click)="navigate('map')" [disabled]="isActiveRoute('map')">
                     <mat-icon class="nav-icon">map</mat-icon>
