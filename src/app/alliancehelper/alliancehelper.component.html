@@ -1,48 +1,53 @@
 <div class="main">
-  <div class="population-summary">
-    <h2>Alliance Total Population</h2>
-    <div class="population-display" [class.over-threshold]="isOverThreshold()">
-      <span class="population-value">{{ formatPopulation(totalPopulation) }}</span>
-      <span class="population-threshold" matTooltip="Alliance population threshold"> / {{ formatPopulation(userThreshold) }}</span>
-    </div>
-    <div class="population-gauge-container">
-      <div class="gauge-row-wrapper">
-        <div class="gauge-bar-wrapper">
-          <div class="gauge-bar-container">
-            <div class="gauge-bar" [style.width.%]="getBarFillPercentage()" [class.over-threshold]="isOverThreshold()"></div>
-            <div *ngIf="getOverflowPercentage() > 0" class="overflow-bar" [style.width.%]="getOverflowPercentage()" [style.left.%]="getMarkerPercentage()" [class.delayed]="isOverThreshold()"></div>
-          </div>
-          <div class="threshold-marker" [style.left.%]="getMarkerPercentage()"></div>
+    <div class="population-summary">
+        <h2 matTooltip="Population of subject nations is weighted by a factor of 0.66">Total Power Bloc Population*</h2>
+        <div class="population-display" [class.over-threshold]="isOverThreshold()">
+            <span class="population-value">{{ formatPopulation(totalPopulation) }}</span>
+            <span class="population-threshold" matTooltip="Alliance population threshold"> / {{
+                formatPopulation(userThreshold) }}</span>
         </div>
-        <button mat-icon-button aria-label="Reset selection" (click)="resetSelection()">
-          <mat-icon>refresh</mat-icon>
-        </button>
-      </div>
+        <div class="population-gauge-container">
+            <div class="gauge-row-wrapper">
+                <div class="gauge-bar-wrapper">
+                    <button mat-icon-button aria-label="Reset selection" (click)="resetSelection()">
+                        <mat-icon>refresh</mat-icon>
+                    </button>
+                    <app-gauge [value]="totalPopulation" [threshold]="userThreshold" [max]="barMax"></app-gauge>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
+    @if (appReady) {
 
-  <div class="nations-grid">
-    <div *ngFor="let nation of nations" class="nation-item">
-      <button
-        class="flag-button"
-        [class.selected]="nation.selected"
-        [class.disabled]="nation.disabled"
-        [disabled]="nation.disabled"
-        (click)="toggleNation(nation)"
-      >
-        <img
-          [src]="getFlagUrl(nation.key)"
-          [alt]="nation.name"
-          class="flag-icon"
-          (error)="$event.target.style.display='none'"
-        />
-      </button>
-      <div class="nation-info">
-        <div class="nation-name">{{ nation.name }}</div>
-        <div class="nation-population">
-          {{ nation.selected && nation.countryShell ? formatPopulation(nation.countryShell.getPopulation()) : '' }}
+    <div class="nations-grid">
+        <div *ngFor="let nation of nations" class="nation-item">
+            <button class="flag-button" [class.selected]="nation.selected" [class.disabled]="nation.disabled"
+                [disabled]="nation.disabled" (click)="toggleNation(nation)">
+                <img [src]="getFlagUrl(nation.key)" [alt]="nation.name" class="flag-icon"
+                    (error)="$event.target.style.display='none'" />
+                @if (nation.disabled) {
+                <mat-icon fontSet="material-symbols-outlined" class="flag-disabled-icon flag-icon-overlay">
+                    skull
+                </mat-icon>
+                } @else if (nation.selected) {
+                    <mat-icon fontSet="material-symbols-outlined" class="flag-selected-icon flag-icon-overlay">
+                    check
+                </mat-icon>
+                }
+            </button>
+            <div class="nation-info">
+                <div class="nation-name">{{ nation.name }}</div>
+                <div class="nation-population" [matTooltip]="getPopulationTooltip(nation)">
+                    {{ nation.selected && nation.countryShell ? formatPopulation(nation.countryShell.getPopulation()) :
+                    '' }}
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+    } @else {
+    <div class="loading-indicator">
+        <mat-spinner></mat-spinner>
+        <div class="loading-text">Loading...</div>
+    </div>
+    }
 </div>

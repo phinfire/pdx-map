@@ -30,8 +30,6 @@ class ModBuilding {
 @Injectable({ providedIn: 'root' })
 export class Vic3GameFilesService {
 
-    private readonly PATH = "http://localhost:5500/public/"
-
     private readonly STATE_RESOURCE_NAME_TO_GOOD_REPRESENTATION: Record<string, string> = {
         'grains': 'grain',
         'bg_maize_farms': 'grain',
@@ -62,7 +60,36 @@ export class Vic3GameFilesService {
         'bg_rubber': 'rubber',
         'bg_sulfur_mining': 'sulfur',
         'bg_whaling': 'fish',
+
+        'building_dye_plantation': 'dye',
+        'building_gold_field': 'gold',
+        'building_gold_mine': 'gold',
+        'building_iron_mine': 'iron',
+        'building_lead_mine': 'lead',
+        'building_logging_camp': 'wood',
+        'building_maize_farm': 'grain',
+        'building_millet_farm': 'grain',
+        'building_oil_rig': 'oil',
+        'building_opium_plantation': 'opium',
+        'building_rice_farm': 'grain',
+        'building_rubber_plantation': 'rubber',
+        'building_rye_farm': 'grain',
+        'building_silk_plantation': 'silk',
+        'building_sugar_plantation': 'sugar',
+        'building_sulfur_mine': 'sulfur',
+        'building_tea_plantation': 'tea',
+        'building_tobacco_plantation': 'tobacco',
+        'building_vineyard': 'wine',
+        'building_whaling_station': 'fish',
+        'building_wheat_farm': 'grain',
+        'building_livestock_ranch': 'meat',
+        'building_fishing_wharf': 'fish',
+        'building_banana_plantation': 'fruit',
+        'building_coffee_plantation': 'coffee',
+        'building_cotton_plantation': 'fabric',
     };
+
+    private readonly ROOT = "https://codingafterdark.de/pdx-map-gamedata/vic3/";
 
     private readonly goods$: Observable<Good[]>;
     private readonly mapStateRegions$: Observable<MapStateRegion[]>;
@@ -73,8 +100,7 @@ export class Vic3GameFilesService {
     private diplomaticPacts$: Observable<{ overlordTag: string, vassalTag: string, type: string }[]>;
 
     constructor(private http: HttpClient, private fileService: PdxFileService) {
-        const dataUrl = "https://codingafterdark.de/pdx/vic3gamedata/00_goods.txt";
-        this.goods$ = this.http.get(dataUrl, { responseType: 'text' }).pipe(
+        this.goods$ = this.http.get(this.ROOT + "00_goods.txt", { responseType: 'text' }).pipe(
             switchMap(data => from(this.parseGoodsList(data))),
             shareReplay(1)
         );
@@ -82,35 +108,27 @@ export class Vic3GameFilesService {
             switchMap(jsons => from([this.parseMapStateRegions(jsons)])),
             shareReplay(1)
         );
-        this.historyStateRegions$ = this.http.get(this.PATH + "3633691719/common/history/states/99_converter_states.txt", { responseType: 'text' }).pipe(
+        this.historyStateRegions$ = this.http.get(this.ROOT + "3633691719/common/history/states/99_converter_states.txt", { responseType: 'text' }).pipe(
             switchMap(data => from(this.fileService.parseContentToJsonPromise(data))),
             map(json => this.buildHistoryStateRegions(json)),
             shareReplay(1)
         );
-        this.modPops$ = this.http.get(this.PATH + "3633691719/common/history/pops/99_converted_pops.txt", { responseType: 'text' }).pipe(
+        this.modPops$ = this.http.get(this.ROOT + "3633691719/common/history/pops/99_converted_pops.txt", { responseType: 'text' }).pipe(
             switchMap(data => from(this.fileService.parseContentToJsonPromise(data))),
             map((json: any) => this.parseModPops(json)),
             shareReplay(1)
         );
-        this.modBuildings$ = this.http.get(this.PATH + "3633691719/common/history/buildings/99_converted_buildings.txt", { responseType: 'text' }).pipe(
+        this.modBuildings$ = this.http.get(this.ROOT + "3633691719/common/history/buildings/99_converted_buildings.txt", { responseType: 'text' }).pipe(
             switchMap(data => from(this.fileService.parseContentToJsonPromise(data))),
             map((json: any) => this.parseModBuildings(json)),
             shareReplay(1)
         );
-        this.diplomaticPacts$ = this.http.get(this.PATH + "3633691719/common/history/diplomacy/00_subject_relationships.txt", { responseType: 'text' }).pipe(
+        this.diplomaticPacts$ = this.http.get(this.ROOT + "3633691719/common/history/diplomacy/00_subject_relationships.txt", { responseType: 'text' }).pipe(
             switchMap(data => from(this.fileService.parseContentToJsonPromise(data))),
             map((json) => this.parseDiplomaticPacts(json)),
             shareReplay(1)
         );
-        this.diplomaticPacts$.subscribe(pacts => {
-            console.log("Loaded diplomatic pacts:", pacts);
-        });
     }
-
-    getGoodIconPath(string: string): string {
-        return "/public/"
-    }
-
 
     parseDiplomaticPacts(json: JSON): { overlordTag: string, vassalTag: string, type: string }[] {
         const pacts: { overlordTag: string, vassalTag: string, type: string }[] = [];
@@ -177,11 +195,15 @@ export class Vic3GameFilesService {
 
     mapResourceToGood(resourceName: string): Observable<Good | null> {
         const goodName = this.STATE_RESOURCE_NAME_TO_GOOD_REPRESENTATION[resourceName];
+        console.log(`Mapping resource ${resourceName} to good name: ${goodName}`, this.STATE_RESOURCE_NAME_TO_GOOD_REPRESENTATION);
         if (!goodName) {
             return of(null);
         }
         return this.goods$.pipe(
-            map(goods => goods.find(g => g.key === goodName) || null)
+            map(goods => {
+                console.log(goods);
+                return goods.find(g => g.key === goodName) || null;
+            })
         );
     }
 
@@ -332,7 +354,7 @@ export class Vic3GameFilesService {
         ];
 
         const fileRequests = stateRegionFiles.map(filename =>
-            this.http.get(this.PATH + `hosted/map_data/${filename}`, { responseType: 'text' }).pipe(
+            this.http.get(this.ROOT + `map_data/state_regions/${filename}`, { responseType: 'text' }).pipe(
                 switchMap(data => from(this.fileService.parseContentToJsonPromise(data))),
                 map(json => ({ [filename]: json }))
             )

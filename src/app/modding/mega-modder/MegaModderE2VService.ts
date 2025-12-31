@@ -34,20 +34,13 @@ interface HistoryStateRegion {
 export class MegaModderE2VService {
 
     private readonly eu2vicProvinceMapping$: Observable<{ eu4: string[], vic3: string[] }[]>;
-
     private readonly eu4ToVic3MappingSubject = new BehaviorSubject<Map<string, string>>(new Map());
     public readonly eu4ToVic3Mapping$ = this.eu4ToVic3MappingSubject.asObservable();
-
     private readonly scaledPopsByTagSubject = new BehaviorSubject<Map<string, number>>(new Map());
     public readonly scaledPopsByTag$ = this.scaledPopsByTagSubject.asObservable();
-
     private readonly scaledArableLandByTagSubject = new BehaviorSubject<Map<string, number>>(new Map());
     public readonly scaledArableLandByTag$ = this.scaledArableLandByTagSubject.asObservable();
 
-    /**
-     * Derived observable: EU4 player tag (e.g., Z38) to population
-     * Combines eu4ToVic3Mapping$ and scaledPopsByTag$ to map player tags to their populations
-     */
     public readonly eu4PlayerTagToPopulation$ = combineLatest([
         this.eu4ToVic3Mapping$,
         this.scaledPopsByTag$
@@ -67,7 +60,7 @@ export class MegaModderE2VService {
     private fileService = inject(PdxFileService);
 
     constructor() {
-        this.eu2vicProvinceMapping$ = this.http.get("http://localhost:5500/public/province_mappings.txt", { responseType: 'text' }).pipe(
+        this.eu2vicProvinceMapping$ = this.http.get("https://codingafterdark.de/pdx-map-gamedata/converter/province_mappings.txt", { responseType: 'text' }).pipe(
             mergeMap(data => from(this.fileService.importFilePromise(new File([data], "province_mappings.txt")))),
             map(value => {
                 const mapping = value.json["1.37.0"].link;
@@ -154,7 +147,7 @@ export class MegaModderE2VService {
                 refined.set(eu4Tag, vic3Tag);
             }
         }
-        
+
         // Case: A is a vassal of B, both have been mapped to vic(B). vic(A) is unassigned.
         for (const [vic3Tag, eu4Tags] of conflictingMappings.entries()) {
             if (eu4Tags.length === 2) {
@@ -199,7 +192,7 @@ export class MegaModderE2VService {
                 conflictingMappings.set(vic3Tag, eu4Tags);
             }
         }
-        
+
         return conflictingMappings;
     }
 
@@ -214,7 +207,7 @@ export class MegaModderE2VService {
     }
 
     getInitialArableLandByCountry(
-        historyRegions: HistoryStateRegion[], 
+        historyRegions: HistoryStateRegion[],
         mapStateRegions: MapStateRegion[]
     ): Map<string, number> {
         const tileOwnerMap = this.buildTileOwnershipMap(historyRegions);
@@ -250,7 +243,7 @@ export class MegaModderE2VService {
     }
 
     scaleArableLandByCountry(
-        historyRegions: HistoryStateRegion[], 
+        historyRegions: HistoryStateRegion[],
         mapStateRegions: MapStateRegion[],
         scalingFactors: Map<string, number>
     ): MapStateRegion[] {

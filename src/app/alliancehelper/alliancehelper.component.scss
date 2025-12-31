@@ -5,6 +5,7 @@
     opacity: 0.7;
     text-align: center;
 }
+
 .overflow-bar {
     position: absolute;
     height: 100%;
@@ -15,6 +16,7 @@
     z-index: 1;
     pointer-events: none;
 }
+
 :host {
     width: 100%;
     height: 100%;
@@ -91,6 +93,7 @@
     gap: 8px;
 }
 
+
 .flag-button {
     background: none;
     border: 2px solid var(--border-color);
@@ -104,6 +107,8 @@
     border-radius: 8px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, border-width 0.15s ease;
     box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
 }
 
 .flag-button:hover {
@@ -124,18 +129,48 @@
     outline-offset: 2px;
 }
 
+// ...existing code...
 .flag-button.disabled {
     opacity: 0.4;
     cursor: not-allowed;
     border-color: var(--border-color);
     background-color: rgba(0, 0, 0, 0.1);
     filter: grayscale(100%);
+    position: relative;
 }
 
 .flag-button.disabled:hover {
     border-color: var(--border-color);
     transform: none;
     box-shadow: none;
+}
+
+.flag-icon-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 2;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flag-disabled-icon {
+    color: rgb(229, 57, 53);
+    font-size: 2.5rem;
+    opacity: 0.85;
+}
+
+.flag-selected-icon {
+    font-size: 5rem;
+    color: var(--mat-sys-primary);
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+    width: 5rem;
+    height: 5rem;
 }
 
 .population-gauge-container {
@@ -149,7 +184,8 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    /* smaller gap so button sits closer */
     justify-content: center;
     width: 100%;
 }
@@ -166,9 +202,12 @@
 .gauge-bar-wrapper {
     position: relative;
     width: 66%;
+    max-width: 66%;
+    /* don't grow beyond 2/3 */
     display: flex;
-    flex-direction: column;
-    gap: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .gauge-bar-container {
@@ -197,38 +236,9 @@
     background: #e53935;
 }
 
-.overflow-bar {
-    position: absolute;
-    height: 100%;
-    background: #e53935;
-    border-radius: 0 12px 12px 0;
-    top: 0;
-    transition: width 0.32s cubic-bezier(.2,.8,.2,1), left 0.32s cubic-bezier(.2,.8,.2,1);
-    z-index: 2;
-    pointer-events: none;
-}
-
-/* When showing overflow (entering over-threshold), delay slightly so the base fill reaches the marker first */
-.overflow-bar.delayed {
-    transition-delay: 0.09s;
-}
-
-/* When removing overflow (exiting over-threshold), no delay for snappy reset */
-.overflow-bar:not(.delayed) {
-    transition-delay: 0s;
-}
-
+/* threshold marker is drawn by D3 now */
 .threshold-marker {
-    position: absolute;
-    left: 80%;
-    top: -2px;
-    bottom: -2px;
-    width: 3px;
-    background-color: #ffffff;
-    border-left: 2px dashed rgba(255, 255, 255, 0.7);
-    border-right: 2px dashed rgba(255, 255, 255, 0.7);
-    z-index: 10;
-    pointer-events: none;
+    display: none;
 }
 
 .flag-icon {
@@ -261,9 +271,18 @@
     min-height: 1.1rem;
 }
 
-.flag-button.disabled + .nation-info .nation-name,
-.flag-button.disabled + .nation-info .nation-population {
+.flag-button.disabled+.nation-info .nation-name,
+.flag-button.disabled+.nation-info .nation-population {
     opacity: 0.45;
     color: var(--text-color);
 }
 
+.loading-indicator {
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    font-size: 1.2rem;
+}

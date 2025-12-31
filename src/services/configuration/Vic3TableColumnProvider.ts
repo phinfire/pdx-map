@@ -312,7 +312,7 @@ export class Vic3TableColumnProvider {
     locLookup = new Map<string, string>();
 
     constructor(http: HttpClient, private vic3GameFiles: Vic3GameFilesService) {
-        const dataUrl = "https://codingafterdark.de/pdx/vic3gamedata/"
+        const dataUrl = "https://codingafterdark.de/pdx/pdx-map-gamedata/vic/"
         http.get(dataUrl + 'converted_countries_l_english.yml', { responseType: 'text' }).subscribe((data) => {
             for (const line of data.split('\n')) {
                 if (line.trim().length > 0 && !line.startsWith('#')) {

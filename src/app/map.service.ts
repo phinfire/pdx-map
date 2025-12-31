@@ -10,7 +10,7 @@ export class MapService {
 
     private readonly eu4GeoJsonUrl = "https://codingafterdark.de/pdx/data/eu4_provinces.geojson";
     private readonly ck3GeoJsonUrl = "https://codingafterdark.de/pdx/data/counties.geojson"
-    private readonly vic3GeoJsonUrl = "http://localhost:5500/public/states.geojson";
+    private readonly vic3GeoJsonUrl = "https://codingafterdark.de/pdx-map-gamedata/states.geojson";
 
     constructor(private http: HttpClient) {
         

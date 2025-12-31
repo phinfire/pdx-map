@@ -15,6 +15,7 @@ import { Eu4Save } from '../../../model/eu4/Eu4Save';
 import { PopScaleDiagramComponent } from './pop-scale-diagram.component';
 import { forkJoin } from 'rxjs';
 import { MapStateRegion } from '../../../model/vic/game/MapStateRegion';
+import { MegaService } from '../../mc/MegaService';
 
 
 @Component({
@@ -25,7 +26,8 @@ import { MapStateRegion } from '../../../model/vic/game/MapStateRegion';
 })
 export class MegaModderComponent implements AfterViewInit {
 
-    private readonly service = inject(MegaModderE2VService);
+    private megaService = inject(MegaService);
+    private readonly modderService = inject(MegaModderE2VService);
     private vic3GameFilesService = inject(Vic3GameFilesService);
     private pdxFileService = inject(PdxFileService);
 
@@ -52,14 +54,10 @@ export class MegaModderComponent implements AfterViewInit {
     ];
 
     ngAfterViewInit(): void {
-        this.testGuessTagMapping();
-    }
+        this.megaService.getLastEu4Save().subscribe(save => {
+            this.processEu4Save(save);
+        });
 
-    testGuessTagMapping(): void {
-        const eu4SaveURL = "http://localhost:5500/public/Convert2_local.eu4";
-        this.pdxFileService.loadEu4SaveFromUrl(eu4SaveURL)
-            .then(save => this.processEu4Save(save))
-            .catch(error => console.error('Failed to load EU4 save:', error));
     }
 
     private processEu4Save(save: any): void {
@@ -71,7 +69,7 @@ export class MegaModderComponent implements AfterViewInit {
         }
         this.vic3GameFilesService.getHistoryStateRegions().subscribe(historyRegions => {
             const vic3OwnershipMap = this.buildVic3OwnershipMap(historyRegions);
-            this.service.guessTagMapping(provinces, vic3OwnershipMap).subscribe(mapping => {
+            this.modderService.guessTagMapping(provinces, vic3OwnershipMap).subscribe(mapping => {
                 this.processTagMapping(save, provinces, mapping);
             });
         });
@@ -97,25 +95,24 @@ export class MegaModderComponent implements AfterViewInit {
             const eu4DevLookup = (tag: string) => save.getTotalCountryDevelopment(tag);
             const eu4VassalLookup = (tag: string) => save.getVassalsOfOverlord(tag);
             const vic3VassalLookup = (tag: string) => pacts.filter(pact => pact.overlordTag === tag).map(pact => pact.vassalTag);
-            const refinedMapping = this.service.refineTagMapping(mapping, eu4DevLookup, eu4VassalLookup, vic3VassalLookup);
+            const refinedMapping = this.modderService.refineTagMapping(mapping, eu4DevLookup, eu4VassalLookup, vic3VassalLookup);
             const sortedLexByEu4Tags = Array.from(refinedMapping.entries()).sort((a, b) => a[0].localeCompare(b[0]));
             const eu4DevByTag = this.buildEu4DevByTag(provinces);
             const vic3PopByTag = this.buildVic3PopByTag(pops);
-            const initialArableLandByCountry = this.service.getInitialArableLandByCountry(historyRegions, mapStateRegions);
+            const initialArableLandByCountry = this.modderService.getInitialArableLandByCountry(historyRegions, mapStateRegions);
             this.mappingTableRows = this.buildMappingTableRows(save, sortedLexByEu4Tags, eu4DevByTag, vic3PopByTag, pacts, initialArableLandByCountry);
             this.hasNonUniqueMappings = new Set(this.mappingTableRows.map(r => r.vic3Tag)).size !== this.mappingTableRows.length;
             const scalingFactors = this.buildScalingFactors();
             this.scaledPops = this.vic3GameFilesService.scalePopulationsByCountry(pops, scalingFactors);
             this.buildScaledPopsByTag(this.scaledPops);
 
-            const scaledRegions = this.service.scaleArableLandByCountry(historyRegions, mapStateRegions, scalingFactors);
+            const scaledRegions = this.modderService.scaleArableLandByCountry(historyRegions, mapStateRegions, scalingFactors);
             this.buildScaledArableLandByTag(scaledRegions);
             this.scaledMapStateRegions = scaledRegions;
 
-            // Share mapping data with other components via observables
-            this.service.updateEu4ToVic3Mapping(refinedMapping);
-            this.service.updateScaledPopsByTag(this.scaledPopsByTag);
-            this.service.updateScaledArableLandByTag(this.scaledArableLandByTag);
+            this.modderService.updateEu4ToVic3Mapping(refinedMapping);
+            this.modderService.updateScaledPopsByTag(this.scaledPopsByTag);
+            this.modderService.updateScaledArableLandByTag(this.scaledArableLandByTag);
 
             const metricsToAggregate = new Map<string, Map<string, number>>();
             metricsToAggregate.set('population', this.scaledPopsByTag);
@@ -130,7 +127,7 @@ export class MegaModderComponent implements AfterViewInit {
                 }
             }
             metricsToAggregate.set('arableLand', arableLandByCountry);
-            this.countryResourceMetrics = this.service.aggregateCountryMetrics(metricsToAggregate);
+            this.countryResourceMetrics = this.modderService.aggregateCountryMetrics(metricsToAggregate);
             this.totalWorldPopulation = this.scaledPops.map(pop => pop.size).reduce((a, b) => a + b, 0);
             this.calculatePlayerCount();
         });
@@ -222,7 +219,7 @@ export class MegaModderComponent implements AfterViewInit {
                 const name = nation.getName();
                 const dev = eu4DevByTag.get(tag) || 0;
                 const overlordDev = eu4DevByTag.get(eu4Tag) || 0;
-                const overlordRatio = 1000000 * this.service.getDevelopmentToPopTransformation()(overlordDev) / overlordDev;
+                const overlordRatio = 1000000 * this.modderService.getDevelopmentToPopTransformation()(overlordDev) / overlordDev;
 
                 const adjustedPop = Math.ceil(overlordRatio * dev);
                 const vic3PopValue = vic3PopByTag.get(vic3MapTag) || 0;
@@ -372,7 +369,6 @@ export class MegaModderComponent implements AfterViewInit {
     }
 
     private async triggerFileDownload(content: string, filename: string): Promise<void> {
-        console.log('Attempting to save file:', filename);
         if ('showSaveFilePicker' in window) {
             try {
                 const handle = await (window as any).showSaveFilePicker({
@@ -408,7 +404,6 @@ export class MegaModderComponent implements AfterViewInit {
     }
 
     private async triggerBlobDownload(blob: Blob, filename: string): Promise<void> {
-        console.log('Attempting to save file:', filename);
         if ('showSaveFilePicker' in window) {
             try {
                 const handle = await (window as any).showSaveFilePicker({

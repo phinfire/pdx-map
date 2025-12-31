@@ -13,8 +13,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Good } from '../../model/vic/game/Good';
 
-const GOODS_ICON_PATH = '/goods_icons/';
-
 const EXCLUDED_RESOURCES = ['bg_monuments'];
 
 const RESOURCE_GROUPS: Record<string, { members: string[], displayName: string }> = {
@@ -61,10 +59,10 @@ export class ResourcemapComponent implements OnInit {
     ngOnInit() {
         this.vic3GameFilesService.getAllAvailableResources().subscribe(resources => {
             this.availableResources = resources;
-            // Map each resource to its corresponding good
             for (const resource of resources) {
                 this.vic3GameFilesService.mapResourceToGood(resource).subscribe(good => {
                     if (good) {
+                        console.log(`Mapped resource ${resource} to good ${good.key}`);
                         this.resourceToGoodMap.set(resource, good);
                     }
                 });
@@ -182,12 +180,12 @@ export class ResourcemapComponent implements OnInit {
         }
     }
 
-    getIconPath(resource: string): string {
+    getIconPath(resource: string) {
         const good = this.resourceToGoodMap.get(resource);
         if (good) {
             return good.getIconUrl();
         }
-        return GOODS_ICON_PATH + 'services.webp';
+        return null;
     }
 
     toggleResource(resource: string) {
@@ -221,10 +219,13 @@ export class ResourcemapComponent implements OnInit {
     }
 
     formatResourceName(resource: string): string {
+        const good = this.resourceToGoodMap.get(resource);
+        if (good) {
+            return good.key.charAt(0).toUpperCase() + good.key.slice(1);
+        }
         if (RESOURCE_GROUPS[resource]) {
             return RESOURCE_GROUPS[resource].displayName;
         }
-        const formatted = resource.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        return formatted.substring(3, formatted.length);
+        return resource.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
 }
