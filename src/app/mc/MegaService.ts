@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, of, catchError, from } from 'rxjs';
+import { map, Observable, of, catchError, from, shareReplay } from 'rxjs';
 import { MegaCampaign } from './MegaCampaign';
 import { CustomRulerFile } from '../../services/gamedata/CustomRulerFile';
 import { Trait } from '../../model/ck3/Trait';
@@ -22,6 +22,36 @@ export class MegaService {
     constructor(private http: HttpClient) {
         const eu4SaveURL = "https://codingafterdark.de/pdx-map-gamedata/Convert2_local.eu4";
         this.lastEu4Save$ = from(this.pdxFileService.loadEu4SaveFromUrl(eu4SaveURL));
+    }
+
+    private nations$?: Observable<any[]>;
+
+    getNations$(): Observable<any[]> {
+        if (!this.nations$) {
+            const url = "https://codingafterdark.de/mc/ideas/flags/nations.json?" + Date.now();
+            this.nations$ = from(fetch(url).then(r => r.json())).pipe(
+                shareReplay(1)
+            );
+        }
+        return this.nations$;
+    }
+
+    /**
+     * Returns a cached Observable that resolves to a Map of nation key -> nation name.
+     */
+    getNationNameMap$(): Observable<Map<string, string>> {
+        return this.getNations$().pipe(
+            map((arr: any[]) => {
+                const m = new Map<string, string>();
+                for (const n of arr || []) {
+                    if (n && n.key && n.name) {
+                        m.set(n.key, n.name);
+                    }
+                }
+                return m;
+            }),
+            shareReplay(1)
+        );
     }
 
     getAvailableCampaigns$(): Observable<MegaCampaign[]> {

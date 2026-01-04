@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, switchMap, from, shareReplay, map, forkJoin, of } from 'rxjs';
+import { Observable, switchMap, from, shareReplay, map, forkJoin } from 'rxjs';
 import { PdxFileService } from '../../services/pdx-file.service';
 import { GoodCategory } from './enum/GoodCategory';
 import { ResourceType } from './enum/ResourceType';
-import { Good } from './game/Good';
 import { MapStateRegion } from './game/MapStateRegion';
 import { ModPop } from './game/ModPop';
+import { Good } from './game/Good';
 
 interface HistoryStateRegion {
     stateKey: string;
@@ -30,63 +30,68 @@ class ModBuilding {
 @Injectable({ providedIn: 'root' })
 export class Vic3GameFilesService {
 
-    private readonly STATE_RESOURCE_NAME_TO_GOOD_REPRESENTATION: Record<string, string> = {
+    private readonly RESOURCE_TO_GOOD_MAP: Record<string, string> = {
+
         'grains': 'grain',
         'bg_maize_farms': 'grain',
         'bg_millet_farms': 'grain',
         'bg_rice_farms': 'grain',
         'bg_rye_farms': 'grain',
         'bg_wheat_farms': 'grain',
-        'gold': 'gold',
-
-        'bg_banana_plantations': 'fruit',
-        'bg_coffee_plantations': 'coffee',
-        'bg_cotton_plantations': 'fabric',
-        'bg_dye_plantations': 'dye',
-        'bg_livestock_ranches': 'meat',
-        'bg_opium_plantations': 'opium',
-        'bg_silk_plantations': 'silk',
-        'bg_sugar_plantations': 'sugar',
-        'bg_tea_plantations': 'tea',
-        'bg_tobacco_plantations': 'tobacco',
-        'bg_vineyard_plantations': 'wine',
-
-        'bg_coal_mining': 'coal',
-        'bg_fishing': 'fish',
-        'bg_iron_mining': 'iron',
-        'bg_lead_mining': 'lead',
-        'bg_logging': 'wood',
-        'bg_oil_extraction': 'oil',
-        'bg_rubber': 'rubber',
-        'bg_sulfur_mining': 'sulfur',
-        'bg_whaling': 'fish',
-
-        'building_dye_plantation': 'dye',
-        'building_gold_field': 'gold',
-        'building_gold_mine': 'gold',
-        'building_iron_mine': 'iron',
-        'building_lead_mine': 'lead',
-        'building_logging_camp': 'wood',
         'building_maize_farm': 'grain',
         'building_millet_farm': 'grain',
-        'building_oil_rig': 'oil',
-        'building_opium_plantation': 'opium',
         'building_rice_farm': 'grain',
-        'building_rubber_plantation': 'rubber',
         'building_rye_farm': 'grain',
-        'building_silk_plantation': 'silk',
-        'building_sugar_plantation': 'sugar',
-        'building_sulfur_mine': 'sulfur',
-        'building_tea_plantation': 'tea',
-        'building_tobacco_plantation': 'tobacco',
-        'building_vineyard': 'wine',
-        'building_whaling_station': 'fish',
         'building_wheat_farm': 'grain',
-        'building_livestock_ranch': 'meat',
-        'building_fishing_wharf': 'fish',
+
+        'gold': 'gold',
+        'bg_gold_mining': 'gold',
+        'bg_gold_fields': 'gold',
+        'building_gold_field': 'gold',
+        'building_gold_mine': 'gold',
+
+        'bg_banana_plantations': 'fruit',
         'building_banana_plantation': 'fruit',
+        'bg_coffee_plantations': 'coffee',
         'building_coffee_plantation': 'coffee',
+        'bg_cotton_plantations': 'fabric',
         'building_cotton_plantation': 'fabric',
+        'bg_dye_plantations': 'dye',
+        'building_dye_plantation': 'dye',
+        'bg_livestock_ranches': 'meat',
+        'building_livestock_ranch': 'meat',
+        'bg_opium_plantations': 'opium',
+        'building_opium_plantation': 'opium',
+        'bg_silk_plantations': 'silk',
+        'building_silk_plantation': 'silk',
+        'bg_sugar_plantations': 'sugar',
+        'building_sugar_plantation': 'sugar',
+        'bg_tea_plantations': 'tea',
+        'building_tea_plantation': 'tea',
+        'bg_tobacco_plantations': 'tobacco',
+        'building_tobacco_plantation': 'tobacco',
+        'bg_vineyard_plantations': 'wine',
+        'building_vineyard': 'wine',
+
+        'bg_coal_mining': 'coal',
+        'building_coal_mine': 'coal',
+        'bg_iron_mining': 'iron',
+        'building_iron_mine': 'iron',
+        'bg_lead_mining': 'lead',
+        'building_lead_mine': 'lead',
+        'bg_sulfur_mining': 'sulfur',
+        'building_sulfur_mine': 'sulfur',
+        'bg_oil_extraction': 'oil',
+        'building_oil_rig': 'oil',
+        'bg_rubber': 'rubber',
+        'building_rubber_plantation': 'rubber',
+
+        'bg_fishing': 'fish',
+        'building_fishing_wharf': 'fish',
+        'bg_whaling': 'fish',
+        'building_whaling_station': 'fish',
+        'bg_logging': 'wood',
+        'building_logging_camp': 'wood',
     };
 
     private readonly ROOT = "https://codingafterdark.de/pdx-map-gamedata/vic3/";
@@ -193,18 +198,8 @@ export class Vic3GameFilesService {
         return this.diplomaticPacts$;
     }
 
-    mapResourceToGood(resourceName: string): Observable<Good | null> {
-        const goodName = this.STATE_RESOURCE_NAME_TO_GOOD_REPRESENTATION[resourceName];
-        console.log(`Mapping resource ${resourceName} to good name: ${goodName}`, this.STATE_RESOURCE_NAME_TO_GOOD_REPRESENTATION);
-        if (!goodName) {
-            return of(null);
-        }
-        return this.goods$.pipe(
-            map(goods => {
-                console.log(goods);
-                return goods.find(g => g.key === goodName) || null;
-            })
-        );
+    mapResourceToGood(resourceName: string): string | null {
+        return this.RESOURCE_TO_GOOD_MAP[resourceName] || null;
     }
 
     getAllAvailableResources(): Observable<string[]> {

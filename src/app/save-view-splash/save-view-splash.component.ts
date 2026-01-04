@@ -82,10 +82,11 @@ export class SaveViewSplashComponent implements OnDestroy {
 
     constructor(private fileService: PdxFileService, private elementRef: ElementRef, http: HttpClient) {
         /*
+        const testURL = "http://localhost:5500/public/PALA2.v3";
         const firstExample = this.referenceSaves[0];
         if (firstExample) {
             this.startProcessing();
-            this.loadReferenceSave(firstExample.url, firstExample.type)
+            this.loadReferenceSave(testURL,  FileType.VIC3)
                 .then(result => this.handleSuccess(result.save, result.rawData))
                 .catch(error => this.handleError(this.getErrorMessage(error, firstExample.type)));
         }
@@ -361,7 +362,6 @@ export class SaveViewSplashComponent implements OnDestroy {
     }
 
     ngOnDestroy(): void {
-        // Clean up toolbar actions when component is destroyed
         if (this.clearSaveActionHandle) {
             this.sideNavContentProvider.removeToolbarAction(this.clearSaveActionHandle);
             this.clearSaveActionHandle = undefined;

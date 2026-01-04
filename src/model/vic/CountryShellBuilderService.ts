@@ -9,10 +9,6 @@ import { MegaModderE2VService } from '../../app/modding/mega-modder/MegaModderE2
 export class CountryShellBuilderService {
     constructor(private megaModderService: MegaModderE2VService) {}
 
-    /**
-     * Build CountryShell objects from EU4 save and VIC3 data.
-     * Creates an immutable map of player tags to CountryShell objects.
-     */
     buildCountryShells(
         eu4ToVic3Mapping: Map<string, string>,
         vic3PopByTag: Map<string, number>,
@@ -21,14 +17,12 @@ export class CountryShellBuilderService {
         const countryShells = new Map<string, CountryShell>();
         const vassalShells = new Map<string, CountryShell[]>();
 
-        // First pass: create all CountryShells without vassals
+
         for (const [eu4Tag, vic3Tag] of eu4ToVic3Mapping.entries()) {
             const population = vic3PopByTag.get(vic3Tag) || 0;
             const shell = new ImmutableCountryShell(eu4Tag, population);
             countryShells.set(eu4Tag, shell);
         }
-
-        // Second pass: build vassal relationships
         for (const [vic3Tag, vassalTags] of vic3Vassals.entries()) {
             const overlordTag = this.findEu4TagByVic3Tag(eu4ToVic3Mapping, vic3Tag);
             if (overlordTag && countryShells.has(overlordTag)) {
@@ -43,7 +37,6 @@ export class CountryShellBuilderService {
             }
         }
 
-        // Third pass: rebuild CountryShells with vassals
         const finalCountryShells = new Map<string, CountryShell>();
         for (const [eu4Tag, shell] of countryShells.entries()) {
             const vassals = vassalShells.get(eu4Tag) || [];
@@ -54,9 +47,6 @@ export class CountryShellBuilderService {
         return finalCountryShells;
     }
 
-    /**
-     * Find the EU4 tag that maps to a given VIC3 tag
-     */
     private findEu4TagByVic3Tag(eu4ToVic3Mapping: Map<string, string>, vic3Tag: string): string | null {
         for (const [eu4Tag, mappedVic3Tag] of eu4ToVic3Mapping.entries()) {
             if (mappedVic3Tag === vic3Tag) {

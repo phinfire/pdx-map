@@ -1,23 +1,26 @@
 import { Component, inject, Input, SimpleChanges } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { MatTabsModule } from '@angular/material/tabs';
-
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatRadioModule } from '@angular/material/radio';
 import { FormsModule } from '@angular/forms';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatTabsModule } from '@angular/material/tabs';
 import { Country } from '../../model/vic/Country';
 import { GoodCategory } from '../../model/vic/enum/GoodCategory';
-import { Vic3GameFilesService } from '../../model/vic/Vic3GameFilesService';
 import { Vic3Save } from '../../model/vic/Vic3Save';
 import { GoodsViewMode } from '../../services/configuration/GoodViewMode';
 import { Vic3TableColumnProvider } from '../../services/configuration/Vic3TableColumnProvider';
 import { PersistenceService } from '../../services/PersistanceService';
+import { MapService } from '../map.service';
+import { SlabMapViewComponent } from '../slab-map-view/slab-map-view.component';
+import { ViewMode } from '../slab-map-view/ViewMode';
 import { TableComponent } from '../vic3-country-table/vic3-country-table.component';
+import { BehaviorConfigProvider } from '../viewers/polygon-select/BehaviorConfigProvider';
+import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvider';
 
 @Component({
     selector: 'app-save-view',
-    imports: [MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule],
+    imports: [MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule, SlabMapViewComponent, MatIconModule],
     templateUrl: './save-view.component.html',
     styleUrl: './save-view.component.scss',
 })
@@ -27,6 +30,7 @@ export class SaveViewComponent {
 
     private persistence = inject(PersistenceService);
     protected columnProvider = inject(Vic3TableColumnProvider);
+    private mapService = inject(MapService);
 
     includeAi = true;
     selectedTabIndex = 0;
@@ -36,6 +40,11 @@ export class SaveViewComponent {
     goodsViewMode = GoodsViewMode.BALANCE;
     selectedGoodsCategory: GoodCategory = GoodCategory.INDUSTRIAL;
     availableGoodsCategories: GoodCategory[] = Object.values(GoodCategory);
+
+    geoJsonFetcher = () => this.mapService.fetchVic3GeoJson(true);
+    viewModes: ViewMode<any>[] = [];
+    colorConfigProviders: ColorConfigProvider[] = [];
+    behaviorConfig = new BehaviorConfigProvider(0.75);
 
     constructor() {
         this.selectedTabIndex = parseInt(this.persistence.getValue('saveViewTabIndex') || '0');
@@ -49,7 +58,22 @@ export class SaveViewComponent {
     ngOnChanges(changes: SimpleChanges) {
         if (changes['activeSave'] && this.activeSave) {
             this.onGoodsCategoryChange(this.selectedGoodsCategory);
+            this.initializeMapView();
         }
+    }
+
+    private initializeMapView() {
+        if (!this.activeSave) {
+            return;
+        }
+        const colorConfig = new ColorConfigProvider(new Map<string, number>(), true);
+        const viewMode: ViewMode<any> = {
+            getColorConfig: () => colorConfig,
+            getTooltip: () => (key: string) => `<b>${key}</b>`
+        };
+
+        this.viewModes = [viewMode];
+        this.colorConfigProviders = [colorConfig];
     }
 
     onTabChange(index: number) {

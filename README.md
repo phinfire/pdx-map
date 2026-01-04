@@ -13,3 +13,9 @@
 
 # Concepts
 ## CK3 - Country Ownership
+-
+
+## VIC3 - SAVE MODEL
+    - Save contains Countries
+    - Countries contain States
+    - States contain Buildings

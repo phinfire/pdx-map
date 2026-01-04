@@ -2,20 +2,6 @@
     <mat-tab-group>
         <mat-tab label="Tag Mapping">
             <div class="tab-content">
-                <table class="stats-table">
-                    <tr>
-                        <td class="label">Total World Population:</td>
-                        <td class="value">{{ (totalWorldPopulation / 1000000).toFixed(1) }}M</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Players:</td>
-                        <td class="value">{{ playerCount }}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Max. Power Bloc Population:</td>
-                        <td class="value">{{ (3.0 * (totalWorldPopulation / 1000000) / playerCount).toFixed(1) }}M</td>
-                    </tr>
-                </table>
                 <div class="button-row">
                     <button mat-raised-button (click)="downloadScaledPopulations()" class="download-button">Download
                         Scaled Populations</button>
@@ -31,7 +17,7 @@
         </mat-tab>
         <mat-tab label="Dev to Pop">
             <ng-template mat-tab-label>
-                Halberat Function
+                Scaling Function
             </ng-template>
             <div class="tab-content">
                 <app-pop-scale-diagram></app-pop-scale-diagram>

@@ -336,30 +336,28 @@ export class MegaModderE2VService {
         return aggregated;
     }
 
-    /**
-     * Update the EU4 to VIC3 tag mapping (emitted via eu4ToVic3Mapping$ observable)
-     */
-    updateEu4ToVic3Mapping(mapping: Map<string, string>): void {
+    updateMappingResults(
+        mapping: Map<string, string>,
+        scaledPops: Map<string, number>,
+        scaledArableLand: Map<string, number>
+    ): void {
         this.eu4ToVic3MappingSubject.next(new Map(mapping));
-    }
-
-    /**
-     * Update scaled population by country tag (emitted via scaledPopsByTag$ observable)
-     */
-    updateScaledPopsByTag(scaledPops: Map<string, number>): void {
         this.scaledPopsByTagSubject.next(new Map(scaledPops));
-    }
-
-    /**
-     * Update scaled arable land by country tag (emitted via scaledArableLandByTag$ observable)
-     */
-    updateScaledArableLandByTag(scaledArableLand: Map<string, number>): void {
         this.scaledArableLandByTagSubject.next(new Map(scaledArableLand));
     }
 
-    /**
-     * Clear all mappings and metrics
-     */
+    private updateEu4ToVic3Mapping(mapping: Map<string, string>): void {
+        this.eu4ToVic3MappingSubject.next(new Map(mapping));
+    }
+
+    private updateScaledPopsByTag(scaledPops: Map<string, number>): void {
+        this.scaledPopsByTagSubject.next(new Map(scaledPops));
+    }
+
+    private updateScaledArableLandByTag(scaledArableLand: Map<string, number>): void {
+        this.scaledArableLandByTagSubject.next(new Map(scaledArableLand));
+    }
+
     clear(): void {
         this.eu4ToVic3MappingSubject.next(new Map());
         this.scaledPopsByTagSubject.next(new Map());

@@ -4,13 +4,22 @@ import { Country } from "./Country";
 import { CountryBudget } from "./CountryBudget";
 import { Pop } from "./Pop";
 import { PowerBloc } from "./PowerBloc";
+import { StateRegion } from "./StateRegion";
 
 export class Vic3Save implements ParadoxSave {
 
     public static makeSaveFromRawData(saveData: any) {
         const state2ownerIndex = new Map<number, number>();
+        const countryIndex2StateRegions: Map<string, StateRegion[]> = new Map();
+        
         for (const stateEntryIndex in saveData.states.database) {
-            state2ownerIndex.set(parseInt(stateEntryIndex), saveData.states.database[stateEntryIndex]["country"]);
+            const index = parseInt(stateEntryIndex);
+            const stateEntry = saveData.states.database[index];
+            state2ownerIndex.set(index, stateEntry["country"]);
+            
+            const stateRegion = StateRegion.fromRawData(stateEntry, index);
+            const ownerIndex = stateRegion.getOwnerCountryIndex() + "";
+            countryIndex2StateRegions.set(stateRegion.getOwnerCountryIndex() + "", (countryIndex2StateRegions.get(ownerIndex) || []).concat([stateRegion]));
         }
 
         const countries: Country[] = [];
@@ -69,6 +78,7 @@ export class Vic3Save implements ParadoxSave {
                 const techEntry = countryIndex2TechEntry.get(countryKey) || {};
                 const playerName = country2playerName.get(countryKey) || null;
                 const taxLevel = countryEntry["tax_level"] || "medium";
+                const states = countryIndex2StateRegions.get(countryKey) || [];
                 const country = new Country(playerName, countryEntry.definition, countryEntry.pop_statistics, country2buildingEntries.get(countryKey) || [],
                     country2pops.get(countryKey) || [], techEntry, countryBudget, taxLevel);
                 countries.push(country);
@@ -103,6 +113,7 @@ export class Vic3Save implements ParadoxSave {
     }
 
     private cachedCountries: Country[];
+    private stateRegions: Map<string, StateRegion> = new Map<string, StateRegion>();
 
     private constructor(private nonBlocCountries: Country[], private blocs: PowerBloc[], private ingameDate: Date, private realDate: Date) {
         this.cachedCountries = this.nonBlocCountries.concat(this.blocs.flatMap(bloc => bloc.getCountries().getInternalElements()));
@@ -129,7 +140,8 @@ export class Vic3Save implements ParadoxSave {
             "countries": this.nonBlocCountries.map(c => c.toJson()),
             "blocs": this.blocs.map(b => b.toJson()),
             "ingameDate": this.ingameDate.toISOString(),
-            "realDate": this.realDate.toISOString()
+            "realDate": this.realDate.toISOString(),
+            "stateRegions": Array.from(this.stateRegions.values()).map(r => r.toJson())
         };
     }
 }

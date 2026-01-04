@@ -59,18 +59,14 @@ export class AlliancehelperComponent implements OnInit, OnDestroy {
     totalPopulation: number = 0;
 
     ngOnInit(): void {
-        const nations$ = fetch("https://codingafterdark.de/mc/ideas/flags/nations.json?" + Date.now())
-            .then(response => response.json())
-            .then((data: Nation[]) => data.map(nation => ({ ...nation, selected: false })).sort((a, b) => a.name.localeCompare(b.name)));
-
         this.megaService.getLastEu4Save().pipe(takeUntil(this.destroy$)).subscribe(save => {
             forkJoin({
-                nations: from(nations$),
+                nations: this.megaService.getNations$(),
                 historyRegions: this.vic3GameFilesService.getHistoryStateRegions(),
                 pops: this.vic3GameFilesService.getModPops(),
                 diplomaticPacts: this.vic3GameFilesService.getDiplomaticPacts()
             }).pipe(takeUntil(this.destroy$)).subscribe(({ nations, historyRegions, pops, diplomaticPacts }) => {
-                this.nations = nations;
+                this.nations = (nations || []).map(nation => ({ ...nation, selected: false })).sort((a, b) => a.name.localeCompare(b.name));
                 const provinces = new Map<string, any>();
                 for (const [key, prov] of save.getProvinces().entries()) {
                     if (prov.getOwner() != null) {

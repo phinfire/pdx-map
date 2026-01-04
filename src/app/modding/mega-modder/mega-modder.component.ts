@@ -34,6 +34,7 @@ export class MegaModderComponent implements AfterViewInit {
     selectedSaveId: string = '';
 
     mappingTableRows: MappingTableRow[] = [];
+    private eu4Names: Map<string, string> = new Map();
     private scaledPopsByTag: Map<string, number> = new Map();
     private scaledArableLandByTag: Map<string, number> = new Map();
     countryResourceMetrics: Map<string, { population: number; arableLand: number; populationPerArableLand: number }> = new Map();
@@ -50,7 +51,10 @@ export class MegaModderComponent implements AfterViewInit {
         new TableColumn('initialArableLand', 'Arable Land', null, true, (e) => e.initialArableLand, () => null),
         new TableColumn('scalingFactor', 'α', 'Scaling factor to apply', true, (e) => e.scalingFactor, () => null),
         new TableColumn('scaledArableLand', 'Scaled Arable', null, true, (e) => e.scaledArableLand, () => null),
-        new TableColumn('scaledVic3Pop', 'Scaled Pop Σ  ', "Nations and their vassals with actual scaled population", true, (e) => this.computeScaledTotal(e), (e) => this.buildScaledTooltip(e))
+        //new TableColumn('shallPop', 'Target Pop', 'Target population after scaling', true, (e) => Math.ceil(e.scalingFactor * e.vic3Pop), () => null),
+        new TableColumn('delta', 'Δ', 'Difference in ideally scaled and scaled population due to local scaling', true, (e) => Math.abs(this.scaledPopsByTag.get(e.vic3Tag)! - Math.ceil(e.scalingFactor * e.vic3Pop)), () => null),
+        new TableColumn("scaledVic3Pop", "Scaled Pop", "Scaled population", true, (e) => this.scaledPopsByTag.get(e.vic3Tag) || 0, () => null),
+        new TableColumn('scaledVic3PopTotal', 'Scaled Pop Σ  ', "Nations and their vassals with actual scaled population", true, (e) => this.computeScaledTotal(e), (e) => this.buildScaledTooltip(e))
     ];
 
     ngAfterViewInit(): void {
@@ -101,6 +105,16 @@ export class MegaModderComponent implements AfterViewInit {
             const vic3PopByTag = this.buildVic3PopByTag(pops);
             const initialArableLandByCountry = this.modderService.getInitialArableLandByCountry(historyRegions, mapStateRegions);
             this.mappingTableRows = this.buildMappingTableRows(save, sortedLexByEu4Tags, eu4DevByTag, vic3PopByTag, pacts, initialArableLandByCountry);
+            this.megaService.getNationNameMap$().subscribe(nameMap => {
+                this.eu4Names = nameMap;
+                for (const r of this.mappingTableRows) {
+                    if (r.eu4Tag && nameMap.has(r.eu4Tag)) {
+                        r.eu4Name = nameMap.get(r.eu4Tag)!;
+                    }
+                }
+            }, () => {
+                // ignore errors, keep existing names
+            });
             this.hasNonUniqueMappings = new Set(this.mappingTableRows.map(r => r.vic3Tag)).size !== this.mappingTableRows.length;
             const scalingFactors = this.buildScalingFactors();
             this.scaledPops = this.vic3GameFilesService.scalePopulationsByCountry(pops, scalingFactors);
@@ -110,9 +124,7 @@ export class MegaModderComponent implements AfterViewInit {
             this.buildScaledArableLandByTag(scaledRegions);
             this.scaledMapStateRegions = scaledRegions;
 
-            this.modderService.updateEu4ToVic3Mapping(refinedMapping);
-            this.modderService.updateScaledPopsByTag(this.scaledPopsByTag);
-            this.modderService.updateScaledArableLandByTag(this.scaledArableLandByTag);
+            this.modderService.updateMappingResults(refinedMapping, this.scaledPopsByTag, this.scaledArableLandByTag);
 
             const metricsToAggregate = new Map<string, Map<string, number>>();
             metricsToAggregate.set('population', this.scaledPopsByTag);

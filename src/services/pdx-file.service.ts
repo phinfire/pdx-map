@@ -30,6 +30,16 @@ export class PdxFileService {
                 if (errorCallback) {
                     const message = `Error parsing file: ${file.name}`;
                     console.error(message, error);
+                    // Try to extract offset from error message
+                    const errorString = JSON.stringify(error);
+                    console.log("Full error object:", errorString);
+                    const offsetMatch = errorString.match(/offset:\s*(\d+)/);
+                    if (offsetMatch && offsetMatch[1]) {
+                        const offset = parseInt(offsetMatch[1], 10);
+                        console.error(this.debugOffsetContext(content, offset));
+                    } else {
+                        console.warn("Could not extract offset from error. Error was:", errorString);
+                    }
                     errorCallback(error, message);
                 }
             }
@@ -47,10 +57,12 @@ export class PdxFileService {
                     callback(file.name, json);
                 });
             } else if (file.name.endsWith('.v3')) {
-                Jomini.initialize().then((parser) => {
-                    reader.onload = (e) => handleFileRead(file, e.target?.result as string);
-                    reader.readAsText(file);
-                });
+                reader.onload = (e) => {
+                    const content = e.target?.result as string;
+                    const preprocessed = this.preprocessVic3Content(content);
+                    handleFileRead(file, preprocessed);
+                };
+                reader.readAsText(file);
             } else {
                 reader.onload = (e) => handleFileRead(file, e.target?.result as string);
                 reader.readAsText(file);
@@ -76,6 +88,16 @@ export class PdxFileService {
                     } catch (error) {
                         const message = `Error parsing file: ${file.name}`;
                         console.error(message, error);
+                        // Try to extract offset from error message
+                        const errorString = JSON.stringify(error);
+                        console.log("Full error object:", errorString);
+                        const offsetMatch = errorString.match(/offset:\s*(\d+)/);
+                        if (offsetMatch && offsetMatch[1]) {
+                            const offset = parseInt(offsetMatch[1], 10);
+                            console.error(this.debugOffsetContext(content, offset));
+                        } else {
+                            console.warn("Could not extract offset from error. Error was:", errorString);
+                        }
                         reject({ error, message });
                     }
                 };
@@ -100,10 +122,24 @@ export class PdxFileService {
                         reject({ error, message: `Failed to detect EU4 save type: ${file.name}` })
                     );
                 } else if (file.name.endsWith('.v3')) {
-                    Jomini.initialize().then(parser => {
-                        reader.onload = e => handleFileRead(e.target?.result as string);
-                        reader.readAsText(file);
-                    }).catch(error => reject({ error, message: `Error initializing Jomini for file: ${file.name}` }));
+                    this.isZipFile(file).then(isZip => {
+                        if (isZip) {
+                            console.log("Importing V3 ZIP save:", file.name);
+                            this.importZip(file, json =>
+                                resolve({ name: file.name, json })
+                            );
+                        } else {
+                            console.log("Importing V3 plain text save:", file.name);
+                            reader.onload = e => {
+                                const content = e.target?.result as string;
+                                const preprocessed = this.preprocessVic3Content(content);
+                                handleFileRead(preprocessed);
+                            };
+                            reader.readAsText(file);
+                        }
+                    }).catch(error =>
+                        reject({ error, message: `Failed to detect V3 save type: ${file.name}` })
+                    );
                 } else {
                     reader.onload = e => handleFileRead(e.target?.result as string);
                     reader.readAsText(file);
@@ -127,10 +163,13 @@ export class PdxFileService {
         });
     }
 
-    private importGamestate(gamestateData: string) {
-        const fixedData = gamestateData + "}"
+    private importGamestate(gamestateData: string, isVic3: boolean = false) {
+        let processedData = gamestateData;
+        if (isVic3) {
+            processedData = this.preprocessVic3Content(gamestateData);
+        }
         return Jomini.initialize().then((parser) => {
-            const out = parser.parseText(gamestateData, {}, (q) => q.json());
+            const out = parser.parseText(processedData, {}, (q) => q.json());
             const j = JSON.parse(out);
             return j;
         });
@@ -168,7 +207,8 @@ export class PdxFileService {
                 throw new Error("ZIP save missing 'gamestate' entry");
             }
             const gamestateText = await gamestateFile.async("string");
-            const json = await this.importGamestate(gamestateText);
+            const isVic3 = file.name.endsWith('.v3');
+            const json = await this.importGamestate(gamestateText, isVic3);
 
             callback(json);
         } catch (error) {
@@ -189,5 +229,74 @@ export class PdxFileService {
         } catch (error) {
             throw new Error(`Failed to load EU4 save from URL: ${error}`);
         }
+    }
+
+    private preprocessVic3Content(content: string): string {
+        const parts: string[] = [];
+        let i = 0;
+        let removed = false;
+        const pattern = 'migration_buckets';
+        const patternLen = pattern.length;
+        while (i < content.length) {
+            if (i + patternLen + 2 <= content.length && 
+                content.substring(i, i + patternLen) === pattern && 
+                content[i + patternLen] === '=' &&
+                content[i + patternLen + 1] === '{') {
+                i += patternLen + 2;
+                let braceCount = 1;
+                while (i < content.length && braceCount > 0) {
+                    if (content[i] === '{') braceCount++;
+                    else if (content[i] === '}') braceCount--;
+                    i++;
+                }
+                removed = true;
+            } else {
+                parts.push(content[i]);
+                i++;
+            }
+        }
+        if (removed) {
+            console.log("Removed migration_buckets section from V3 save");
+        }
+        return parts.join('');
+    }
+
+    /**
+     * Debug helper to display content around a specific offset
+     * @param content The string content to debug
+     * @param offset The offset position to highlight
+     * @returns A formatted debug string showing context around the offset
+     */
+    private debugOffsetContext(content: string, offset: number): string {
+        const contextLength = 100;
+        const start = Math.max(0, offset - contextLength);
+        const end = Math.min(content.length, offset + contextLength);
+
+        const before = content.substring(start, offset);
+        const after = content.substring(offset, end);
+        const charAtOffset = content[offset] || 'EOF';
+
+        // Escape special characters for display
+        const displayBefore = before.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+        const displayAfter = after.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+
+        const debugOutput = `
+════════════════════════════════════════════════════════════
+DEBUG: Parsing Error Context at Offset ${offset}
+════════════════════════════════════════════════════════════
+Character at offset: '${charAtOffset}' (charCode: ${charAtOffset.charCodeAt(0) || 'N/A'})
+
+CONTEXT (100 chars before | HERE | 100 chars after):
+${displayBefore}[HERE]${displayAfter}
+
+POINTER:
+${' '.repeat(displayBefore.length)}^^^
+
+Line and column estimation:
+  Line: ${content.substring(0, offset).split('\n').length}
+  Column: ${offset - content.lastIndexOf('\n', offset - 1)}
+════════════════════════════════════════════════════════════`;
+
+        return debugOutput;
     }
 }

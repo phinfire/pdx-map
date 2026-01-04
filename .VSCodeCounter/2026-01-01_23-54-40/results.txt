@@ -1,0 +1,270 @@
+Date : 2026-01-01 23:54:40
+Directory : c:\Code\angular\pdx-map\src
+Total : 182 files,  16046 codes, 562 comments, 2193 blanks, all 18801 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| TypeScript |        131 |     12,787 |        507 |      1,812 |     15,106 |
+| SCSS       |         26 |      2,297 |         35 |        351 |      2,683 |
+| HTML       |         25 |        962 |         20 |         30 |      1,012 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                 | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                    |        182 |     16,046 |        562 |      2,193 |     18,801 |
+| . (Files)                                                                            |          5 |        150 |         18 |         20 |        188 |
+| app                                                                                  |        107 |     10,680 |        153 |      1,425 |     12,258 |
+| app (Files)                                                                          |          7 |        153 |          0 |         26 |        179 |
+| app\alliancehelper                                                                   |          4 |        536 |          5 |         66 |        607 |
+| app\discord-field                                                                    |          3 |         87 |          0 |         16 |        103 |
+| app\discord-login                                                                    |          3 |         92 |          0 |         16 |        108 |
+| app\gauge                                                                            |          4 |        208 |          2 |         38 |        248 |
+| app\jomini-kiosk                                                                     |          3 |        221 |          1 |         32 |        254 |
+| app\lab                                                                              |          4 |         27 |          0 |         13 |         40 |
+| app\lineviewer                                                                       |          9 |        792 |          3 |        131 |        926 |
+| app\lineviewer (Files)                                                               |          4 |        549 |          3 |         87 |        639 |
+| app\lineviewer\model                                                                 |          5 |        243 |          0 |         44 |        287 |
+| app\map                                                                              |          4 |        398 |         10 |         47 |        455 |
+| app\map\config                                                                       |          1 |        107 |          9 |         14 |        130 |
+| app\map\map                                                                          |          3 |        291 |          1 |         33 |        325 |
+| app\mc                                                                               |         20 |      2,794 |         25 |        312 |      3,131 |
+| app\mc (Files)                                                                       |          7 |        859 |         13 |        100 |        972 |
+| app\mc\mcadmin                                                                       |          3 |        531 |         10 |         51 |        592 |
+| app\mc\mcsignup                                                                      |          4 |        514 |          2 |         70 |        586 |
+| app\mc\mcstartselect                                                                 |          3 |        555 |          0 |         59 |        614 |
+| app\mc\mega-campaign                                                                 |          3 |        335 |          0 |         32 |        367 |
+| app\modding                                                                          |          5 |      1,274 |          5 |        164 |      1,443 |
+| app\modding\mega-modder                                                              |          5 |      1,274 |          5 |        164 |      1,443 |
+| app\paradox                                                                          |          3 |        409 |         19 |         57 |        485 |
+| app\plot-view                                                                        |          6 |        743 |         39 |         99 |        881 |
+| app\plot-view (Files)                                                                |          5 |        732 |         39 |         98 |        869 |
+| app\plot-view\plot                                                                   |          1 |         11 |          0 |          1 |         12 |
+| app\resourcemap                                                                      |          4 |        345 |          0 |         48 |        393 |
+| app\save-view                                                                        |          3 |        226 |          1 |         27 |        254 |
+| app\save-view-splash                                                                 |          3 |        471 |         10 |         68 |        549 |
+| app\saveana                                                                          |          3 |        113 |          6 |         15 |        134 |
+| app\saveana\ck3-save-view                                                            |          3 |        113 |          6 |         15 |        134 |
+| app\slab-map-view                                                                    |          5 |        270 |          0 |         34 |        304 |
+| app\timer                                                                            |          3 |         78 |          0 |         11 |         89 |
+| app\vic3-country-table                                                               |          3 |        354 |          1 |         47 |        402 |
+| app\viewers                                                                          |          8 |      1,089 |         26 |        158 |      1,273 |
+| app\viewers\polygon-select                                                           |          8 |      1,089 |         26 |        158 |      1,273 |
+| model                                                                                |         46 |      2,943 |        375 |        503 |      3,821 |
+| model (Files)                                                                        |          2 |        174 |          5 |         32 |        211 |
+| model\ck3                                                                            |         20 |      1,003 |        323 |        195 |      1,521 |
+| model\ck3 (Files)                                                                    |         13 |        664 |        311 |        143 |      1,118 |
+| model\ck3\enum                                                                       |          2 |         19 |          0 |          0 |         19 |
+| model\ck3\save                                                                       |          2 |        188 |         12 |         26 |        226 |
+| model\ck3\title                                                                      |          3 |        132 |          0 |         26 |        158 |
+| model\common                                                                         |          2 |         33 |          0 |          5 |         38 |
+| model\eu4                                                                            |          3 |        143 |          0 |         30 |        173 |
+| model\social                                                                         |          1 |         27 |          0 |          4 |         31 |
+| model\vic                                                                            |         18 |      1,563 |         47 |        237 |      1,847 |
+| model\vic (Files)                                                                    |         13 |      1,398 |         47 |        203 |      1,648 |
+| model\vic\enum                                                                       |          2 |         13 |          0 |          4 |         17 |
+| model\vic\game                                                                       |          3 |        152 |          0 |         30 |        182 |
+| saveana                                                                              |          1 |        119 |          2 |          7 |        128 |
+| services                                                                             |          9 |      1,257 |          6 |        129 |      1,392 |
+| services (Files)                                                                     |          4 |        496 |          5 |         68 |        569 |
+| services\api                                                                         |          1 |         31 |          0 |          5 |         36 |
+| services\configuration                                                               |          2 |        419 |          0 |         29 |        448 |
+| services\gamedata                                                                    |          2 |        311 |          1 |         27 |        339 |
+| styles                                                                               |          1 |        105 |          2 |         20 |        127 |
+| util                                                                                 |         13 |        792 |          6 |         89 |        887 |
+| util (Files)                                                                         |          4 |        169 |          5 |         26 |        200 |
+| util\geometry                                                                        |          1 |        446 |          1 |         44 |        491 |
+| util\table                                                                           |          8 |        177 |          0 |         19 |        196 |
++--------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                             | language   | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Code\angular\pdx-map\src\app\SideNavContentProvider.ts                            | TypeScript |         38 |          0 |         11 |         49 |
+| c:\Code\angular\pdx-map\src\app\alliancehelper\alliancehelper.component.html         | HTML       |         52 |          0 |          1 |         53 |
+| c:\Code\angular\pdx-map\src\app\alliancehelper\alliancehelper.component.scss         | SCSS       |        249 |          4 |         35 |        288 |
+| c:\Code\angular\pdx-map\src\app\alliancehelper\alliancehelper.component.spec.ts      | TypeScript |         18 |          0 |          6 |         24 |
+| c:\Code\angular\pdx-map\src\app\alliancehelper\alliancehelper.component.ts           | TypeScript |        217 |          1 |         24 |        242 |
+| c:\Code\angular\pdx-map\src\app\app.component.html                                   | HTML       |          1 |          0 |          0 |          1 |
+| c:\Code\angular\pdx-map\src\app\app.component.scss                                   | SCSS       |          5 |          0 |          0 |          5 |
+| c:\Code\angular\pdx-map\src\app\app.component.ts                                     | TypeScript |         21 |          0 |          4 |         25 |
+| c:\Code\angular\pdx-map\src\app\app.config.ts                                        | TypeScript |         13 |          0 |          2 |         15 |
+| c:\Code\angular\pdx-map\src\app\app.routes.ts                                        | TypeScript |         28 |          0 |          1 |         29 |
+| c:\Code\angular\pdx-map\src\app\discord-field\discord-field.component.html           | HTML       |         12 |          0 |          1 |         13 |
+| c:\Code\angular\pdx-map\src\app\discord-field\discord-field.component.scss           | SCSS       |         41 |          0 |          8 |         49 |
+| c:\Code\angular\pdx-map\src\app\discord-field\discord-field.component.ts             | TypeScript |         34 |          0 |          7 |         41 |
+| c:\Code\angular\pdx-map\src\app\discord-login\discord-login.component.html           | HTML       |         12 |          0 |          0 |         12 |
+| c:\Code\angular\pdx-map\src\app\discord-login\discord-login.component.scss           | SCSS       |         45 |          0 |          8 |         53 |
+| c:\Code\angular\pdx-map\src\app\discord-login\discord-login.component.ts             | TypeScript |         35 |          0 |          8 |         43 |
+| c:\Code\angular\pdx-map\src\app\gauge\gauge.component.html                           | HTML       |          3 |          0 |          1 |          4 |
+| c:\Code\angular\pdx-map\src\app\gauge\gauge.component.scss                           | SCSS       |         13 |          0 |          1 |         14 |
+| c:\Code\angular\pdx-map\src\app\gauge\gauge.component.spec.ts                        | TypeScript |         18 |          0 |          6 |         24 |
+| c:\Code\angular\pdx-map\src\app\gauge\gauge.component.ts                             | TypeScript |        174 |          2 |         30 |        206 |
+| c:\Code\angular\pdx-map\src\app\jomini-kiosk\jomini-kiosk.component.html             | HTML       |         40 |          0 |          2 |         42 |
+| c:\Code\angular\pdx-map\src\app\jomini-kiosk\jomini-kiosk.component.scss             | SCSS       |         98 |          0 |         16 |        114 |
+| c:\Code\angular\pdx-map\src\app\jomini-kiosk\jomini-kiosk.component.ts               | TypeScript |         83 |          1 |         14 |         98 |
+| c:\Code\angular\pdx-map\src\app\lab\lab.component.html                               | HTML       |          0 |          0 |          1 |          1 |
+| c:\Code\angular\pdx-map\src\app\lab\lab.component.scss                               | SCSS       |          0 |          0 |          1 |          1 |
+| c:\Code\angular\pdx-map\src\app\lab\lab.component.spec.ts                            | TypeScript |         18 |          0 |          6 |         24 |
+| c:\Code\angular\pdx-map\src\app\lab\lab.component.ts                                 | TypeScript |          9 |          0 |          5 |         14 |
+| c:\Code\angular\pdx-map\src\app\lineviewer\LinePlotterService.ts                     | TypeScript |        283 |          3 |         53 |        339 |
+| c:\Code\angular\pdx-map\src\app\lineviewer\lineviewer.component.html                 | HTML       |         59 |          0 |          1 |         60 |
+| c:\Code\angular\pdx-map\src\app\lineviewer\lineviewer.component.scss                 | SCSS       |         78 |          0 |         11 |         89 |
+| c:\Code\angular\pdx-map\src\app\lineviewer\lineviewer.component.ts                   | TypeScript |        129 |          0 |         22 |        151 |
+| c:\Code\angular\pdx-map\src\app\lineviewer\model\Eu4SaveDataFacade.ts                | TypeScript |        117 |          0 |         22 |        139 |
+| c:\Code\angular\pdx-map\src\app\lineviewer\model\Eu4SaveSeriesData.ts                | TypeScript |        108 |          0 |         17 |        125 |
+| c:\Code\angular\pdx-map\src\app\lineviewer\model\LineAccessor.ts                     | TypeScript |          6 |          0 |          1 |          7 |
+| c:\Code\angular\pdx-map\src\app\lineviewer\model\LineViewerData.ts                   | TypeScript |          6 |          0 |          4 |         10 |
+| c:\Code\angular\pdx-map\src\app\lineviewer\model\LineableEntity.ts                   | TypeScript |          6 |          0 |          0 |          6 |
+| c:\Code\angular\pdx-map\src\app\map.service.ts                                       | TypeScript |         47 |          0 |          8 |         55 |
+| c:\Code\angular\pdx-map\src\app\map\config\MapDataProvider.ts                        | TypeScript |        107 |          9 |         14 |        130 |
+| c:\Code\angular\pdx-map\src\app\map\map\map.component.html                           | HTML       |          1 |          0 |          0 |          1 |
+| c:\Code\angular\pdx-map\src\app\map\map\map.component.scss                           | SCSS       |         69 |          0 |         10 |         79 |
+| c:\Code\angular\pdx-map\src\app\map\map\map.component.ts                             | TypeScript |        221 |          1 |         23 |        245 |
+| c:\Code\angular\pdx-map\src\app\mc\AssignmentService.ts                              | TypeScript |        145 |          3 |         20 |        168 |
+| c:\Code\angular\pdx-map\src\app\mc\MCSignupService.ts                                | TypeScript |        188 |          1 |         24 |        213 |
+| c:\Code\angular\pdx-map\src\app\mc\MegaCampaign.ts                                   | TypeScript |         31 |          0 |          8 |         39 |
+| c:\Code\angular\pdx-map\src\app\mc\MegaPlotService.ts                                | TypeScript |         69 |          0 |          4 |         73 |
+| c:\Code\angular\pdx-map\src\app\mc\MegaService.ts                                    | TypeScript |        104 |          3 |         15 |        122 |
+| c:\Code\angular\pdx-map\src\app\mc\SignupAssetsService.ts                            | TypeScript |        315 |          6 |         29 |        350 |
+| c:\Code\angular\pdx-map\src\app\mc\StartAssignment.ts                                | TypeScript |          7 |          0 |          0 |          7 |
+| c:\Code\angular\pdx-map\src\app\mc\mcadmin\mcadmin.component.html                    | HTML       |        105 |          1 |          3 |        109 |
+| c:\Code\angular\pdx-map\src\app\mc\mcadmin\mcadmin.component.scss                    | SCSS       |        116 |          1 |         18 |        135 |
+| c:\Code\angular\pdx-map\src\app\mc\mcadmin\mcadmin.component.ts                      | TypeScript |        310 |          8 |         30 |        348 |
+| c:\Code\angular\pdx-map\src\app\mc\mcsignup\ClusterManager.ts                        | TypeScript |         32 |          0 |          9 |         41 |
+| c:\Code\angular\pdx-map\src\app\mc\mcsignup\mcsignup.component.html                  | HTML       |         75 |          0 |          3 |         78 |
+| c:\Code\angular\pdx-map\src\app\mc\mcsignup\mcsignup.component.scss                  | SCSS       |        169 |          0 |         26 |        195 |
+| c:\Code\angular\pdx-map\src\app\mc\mcsignup\mcsignup.component.ts                    | TypeScript |        238 |          2 |         32 |        272 |
+| c:\Code\angular\pdx-map\src\app\mc\mcstartselect\mcstartselect.component.html        | HTML       |        109 |          0 |          2 |        111 |
+| c:\Code\angular\pdx-map\src\app\mc\mcstartselect\mcstartselect.component.scss        | SCSS       |        233 |          0 |         35 |        268 |
+| c:\Code\angular\pdx-map\src\app\mc\mcstartselect\mcstartselect.component.ts          | TypeScript |        213 |          0 |         22 |        235 |
+| c:\Code\angular\pdx-map\src\app\mc\mega-campaign\mega-campaign.component.html        | HTML       |         76 |          0 |          1 |         77 |
+| c:\Code\angular\pdx-map\src\app\mc\mega-campaign\mega-campaign.component.scss        | SCSS       |         98 |          0 |         10 |        108 |
+| c:\Code\angular\pdx-map\src\app\mc\mega-campaign\mega-campaign.component.ts          | TypeScript |        161 |          0 |         21 |        182 |
+| c:\Code\angular\pdx-map\src\app\modding\mega-modder\MegaModderE2VService.ts          | TypeScript |        319 |          3 |         44 |        366 |
+| c:\Code\angular\pdx-map\src\app\modding\mega-modder\mega-modder.component.html       | HTML       |         27 |          0 |          1 |         28 |
+| c:\Code\angular\pdx-map\src\app\modding\mega-modder\mega-modder.component.scss       | SCSS       |        105 |          0 |         17 |        122 |
+| c:\Code\angular\pdx-map\src\app\modding\mega-modder\mega-modder.component.ts         | TypeScript |        406 |          2 |         43 |        451 |
+| c:\Code\angular\pdx-map\src\app\modding\mega-modder\pop-scale-diagram.component.ts   | TypeScript |        417 |          0 |         59 |        476 |
+| c:\Code\angular\pdx-map\src\app\paradox\paradox.component.html                       | HTML       |         86 |          1 |          5 |         92 |
+| c:\Code\angular\pdx-map\src\app\paradox\paradox.component.scss                       | SCSS       |        160 |         17 |         28 |        205 |
+| c:\Code\angular\pdx-map\src\app\paradox\paradox.component.ts                         | TypeScript |        163 |          1 |         24 |        188 |
+| c:\Code\angular\pdx-map\src\app\plot-view\PlotExportService.ts                       | TypeScript |        196 |          0 |         48 |        244 |
+| c:\Code\angular\pdx-map\src\app\plot-view\PlottingService.ts                         | TypeScript |        369 |         36 |         21 |        426 |
+| c:\Code\angular\pdx-map\src\app\plot-view\plot-view.component.html                   | HTML       |         17 |          0 |          0 |         17 |
+| c:\Code\angular\pdx-map\src\app\plot-view\plot-view.component.scss                   | SCSS       |         47 |          0 |          8 |         55 |
+| c:\Code\angular\pdx-map\src\app\plot-view\plot-view.component.ts                     | TypeScript |        103 |          3 |         21 |        127 |
+| c:\Code\angular\pdx-map\src\app\plot-view\plot\Plotable.ts                           | TypeScript |         11 |          0 |          1 |         12 |
+| c:\Code\angular\pdx-map\src\app\resourcemap\resourcemap.component.html               | HTML       |         32 |          0 |          1 |         33 |
+| c:\Code\angular\pdx-map\src\app\resourcemap\resourcemap.component.scss               | SCSS       |         89 |          0 |         15 |        104 |
+| c:\Code\angular\pdx-map\src\app\resourcemap\resourcemap.component.spec.ts            | TypeScript |         18 |          0 |          6 |         24 |
+| c:\Code\angular\pdx-map\src\app\resourcemap\resourcemap.component.ts                 | TypeScript |        206 |          0 |         26 |        232 |
+| c:\Code\angular\pdx-map\src\app\save-view-splash\save-view-splash.component.html     | HTML       |         51 |          0 |          0 |         51 |
+| c:\Code\angular\pdx-map\src\app\save-view-splash\save-view-splash.component.scss     | SCSS       |        102 |          0 |         20 |        122 |
+| c:\Code\angular\pdx-map\src\app\save-view-splash\save-view-splash.component.ts       | TypeScript |        318 |         10 |         48 |        376 |
+| c:\Code\angular\pdx-map\src\app\save-view\save-view.component.html                   | HTML       |         75 |          1 |          0 |         76 |
+| c:\Code\angular\pdx-map\src\app\save-view\save-view.component.scss                   | SCSS       |         79 |          0 |         11 |         90 |
+| c:\Code\angular\pdx-map\src\app\save-view\save-view.component.ts                     | TypeScript |         72 |          0 |         16 |         88 |
+| c:\Code\angular\pdx-map\src\app\saveana\ck3-save-view\ck3-save-view.component.html   | HTML       |         11 |          6 |          0 |         17 |
+| c:\Code\angular\pdx-map\src\app\saveana\ck3-save-view\ck3-save-view.component.scss   | SCSS       |         57 |          0 |          8 |         65 |
+| c:\Code\angular\pdx-map\src\app\saveana\ck3-save-view\ck3-save-view.component.ts     | TypeScript |         45 |          0 |          7 |         52 |
+| c:\Code\angular\pdx-map\src\app\slab-map-view\ViewMode.ts                            | TypeScript |         72 |          0 |         14 |         86 |
+| c:\Code\angular\pdx-map\src\app\slab-map-view\ViewModeProvider.ts                    | TypeScript |        121 |          0 |          9 |        130 |
+| c:\Code\angular\pdx-map\src\app\slab-map-view\slab-map-view.component.html           | HTML       |          3 |          0 |          0 |          3 |
+| c:\Code\angular\pdx-map\src\app\slab-map-view\slab-map-view.component.scss           | SCSS       |         13 |          0 |          0 |         13 |
+| c:\Code\angular\pdx-map\src\app\slab-map-view\slab-map-view.component.ts             | TypeScript |         61 |          0 |         11 |         72 |
+| c:\Code\angular\pdx-map\src\app\timer\timer.component.html                           | HTML       |         11 |          0 |          0 |         11 |
+| c:\Code\angular\pdx-map\src\app\timer\timer.component.scss                           | SCSS       |         26 |          0 |          4 |         30 |
+| c:\Code\angular\pdx-map\src\app\timer\timer.component.ts                             | TypeScript |         41 |          0 |          7 |         48 |
+| c:\Code\angular\pdx-map\src\app\vic3-country-table\vic3-country-table.component.html | HTML       |         48 |          0 |          2 |         50 |
+| c:\Code\angular\pdx-map\src\app\vic3-country-table\vic3-country-table.component.scss | SCSS       |        114 |          1 |         20 |        135 |
+| c:\Code\angular\pdx-map\src\app\vic3-country-table\vic3-country-table.component.ts   | TypeScript |        192 |          0 |         25 |        217 |
+| c:\Code\angular\pdx-map\src\app\viewers\polygon-select\BehaviorConfigProvider.ts     | TypeScript |         31 |          0 |          7 |         38 |
+| c:\Code\angular\pdx-map\src\app\viewers\polygon-select\CameraMovementManager.ts      | TypeScript |        282 |         11 |         49 |        342 |
+| c:\Code\angular\pdx-map\src\app\viewers\polygon-select\ColorConfigProvider.ts        | TypeScript |         65 |          2 |         15 |         82 |
+| c:\Code\angular\pdx-map\src\app\viewers\polygon-select\DynamicColorConfig.ts         | TypeScript |         27 |          0 |          6 |         33 |
+| c:\Code\angular\pdx-map\src\app\viewers\polygon-select\TooltipManager.ts             | TypeScript |         62 |          0 |         10 |         72 |
+| c:\Code\angular\pdx-map\src\app\viewers\polygon-select\polygon-select.component.html | HTML       |         36 |         11 |          2 |         49 |
+| c:\Code\angular\pdx-map\src\app\viewers\polygon-select\polygon-select.component.scss | SCSS       |        131 |          0 |         16 |        147 |
+| c:\Code\angular\pdx-map\src\app\viewers\polygon-select\polygon-select.component.ts   | TypeScript |        455 |          2 |         53 |        510 |
+| c:\Code\angular\pdx-map\src\index.html                                               | HTML       |         20 |          0 |          3 |         23 |
+| c:\Code\angular\pdx-map\src\main.ts                                                  | TypeScript |         18 |          1 |          4 |         23 |
+| c:\Code\angular\pdx-map\src\model\Ck3Save.ts                                         | TypeScript |        171 |          5 |         30 |        206 |
+| c:\Code\angular\pdx-map\src\model\ParadoxSave.ts                                     | TypeScript |          3 |          0 |          2 |          5 |
+| c:\Code\angular\pdx-map\src\model\ck3\AccumulatableCurrency.ts                       | TypeScript |         11 |          0 |          5 |         16 |
+| c:\Code\angular\pdx-map\src\model\ck3\Building.ts                                    | TypeScript |          8 |          0 |          4 |         12 |
+| c:\Code\angular\pdx-map\src\model\ck3\CK3.ts                                         | TypeScript |        124 |          1 |         21 |        146 |
+| c:\Code\angular\pdx-map\src\model\ck3\Character.ts                                   | TypeScript |        214 |          1 |         44 |        259 |
+| c:\Code\angular\pdx-map\src\model\ck3\County.ts                                      | TypeScript |         58 |          0 |         11 |         69 |
+| c:\Code\angular\pdx-map\src\model\ck3\Culture.ts                                     | TypeScript |         18 |          0 |          5 |         23 |
+| c:\Code\angular\pdx-map\src\model\ck3\DynastyHouse.ts                                | TypeScript |         22 |          0 |          9 |         31 |
+| c:\Code\angular\pdx-map\src\model\ck3\Faith.ts                                       | TypeScript |         10 |          0 |          4 |         14 |
+| c:\Code\angular\pdx-map\src\model\ck3\Holding.ts                                     | TypeScript |         31 |          0 |         11 |         42 |
+| c:\Code\angular\pdx-map\src\model\ck3\LegacyCk3Save.ts                               | TypeScript |         14 |        304 |          1 |        319 |
+| c:\Code\angular\pdx-map\src\model\ck3\Player.ts                                      | TypeScript |         35 |          5 |          7 |         47 |
+| c:\Code\angular\pdx-map\src\model\ck3\RulerTier.ts                                   | TypeScript |         57 |          0 |         11 |         68 |
+| c:\Code\angular\pdx-map\src\model\ck3\Trait.ts                                       | TypeScript |         62 |          0 |         10 |         72 |
+| c:\Code\angular\pdx-map\src\model\ck3\enum\Skill.ts                                  | TypeScript |          8 |          0 |          0 |          8 |
+| c:\Code\angular\pdx-map\src\model\ck3\enum\TraitType.ts                              | TypeScript |         11 |          0 |          0 |         11 |
+| c:\Code\angular\pdx-map\src\model\ck3\save\ICk3Save.ts                               | TypeScript |         27 |          0 |         17 |         44 |
+| c:\Code\angular\pdx-map\src\model\ck3\save\Parse.ts                                  | TypeScript |        161 |         12 |          9 |        182 |
+| c:\Code\angular\pdx-map\src\model\ck3\title\AbstractLandedTitle.ts                   | TypeScript |         78 |          0 |         15 |         93 |
+| c:\Code\angular\pdx-map\src\model\ck3\title\CustomLandedTitle.ts                     | TypeScript |         32 |          0 |          6 |         38 |
+| c:\Code\angular\pdx-map\src\model\ck3\title\LandedTitle.ts                           | TypeScript |         22 |          0 |          5 |         27 |
+| c:\Code\angular\pdx-map\src\model\common\OwnershipChange.ts                          | TypeScript |          6 |          0 |          1 |          7 |
+| c:\Code\angular\pdx-map\src\model\common\SimplifiedDate.ts                           | TypeScript |         27 |          0 |          4 |         31 |
+| c:\Code\angular\pdx-map\src\model\eu4\Eu4Save.ts                                     | TypeScript |         65 |          0 |         11 |         76 |
+| c:\Code\angular\pdx-map\src\model\eu4\Eu4SaveCountry.ts                              | TypeScript |         26 |          0 |         10 |         36 |
+| c:\Code\angular\pdx-map\src\model\eu4\Eu4SaveProvince.ts                             | TypeScript |         52 |          0 |          9 |         61 |
+| c:\Code\angular\pdx-map\src\model\social\DiscordUser.ts                              | TypeScript |         27 |          0 |          4 |         31 |
+| c:\Code\angular\pdx-map\src\model\vic\Building.ts                                    | TypeScript |        178 |          0 |         24 |        202 |
+| c:\Code\angular\pdx-map\src\model\vic\Country.ts                                     | TypeScript |         85 |          0 |         18 |        103 |
+| c:\Code\angular\pdx-map\src\model\vic\CountryBudget.ts                               | TypeScript |         98 |         28 |         20 |        146 |
+| c:\Code\angular\pdx-map\src\model\vic\CountryShell.ts                                | TypeScript |          5 |          0 |          3 |          8 |
+| c:\Code\angular\pdx-map\src\model\vic\CountryShellBuilderService.ts                  | TypeScript |         51 |         10 |          8 |         69 |
+| c:\Code\angular\pdx-map\src\model\vic\ImmutableCountryShell.ts                       | TypeScript |         27 |          7 |          7 |         41 |
+| c:\Code\angular\pdx-map\src\model\vic\ModelElementList.ts                            | TypeScript |         33 |          0 |          9 |         42 |
+| c:\Code\angular\pdx-map\src\model\vic\Ownership.ts                                   | TypeScript |          7 |          0 |          0 |          7 |
+| c:\Code\angular\pdx-map\src\model\vic\Pop.ts                                         | TypeScript |         37 |          0 |          7 |         44 |
+| c:\Code\angular\pdx-map\src\model\vic\PowerBloc.ts                                   | TypeScript |         68 |          0 |         10 |         78 |
+| c:\Code\angular\pdx-map\src\model\vic\Vic3GameFilesService.spec.ts                   | TypeScript |        106 |          0 |         17 |        123 |
+| c:\Code\angular\pdx-map\src\model\vic\Vic3GameFilesService.ts                        | TypeScript |        580 |          0 |         70 |        650 |
+| c:\Code\angular\pdx-map\src\model\vic\Vic3Save.ts                                    | TypeScript |        123 |          2 |         10 |        135 |
+| c:\Code\angular\pdx-map\src\model\vic\enum\GoodCategory.ts                           | TypeScript |          8 |          0 |          3 |         11 |
+| c:\Code\angular\pdx-map\src\model\vic\enum\ResourceType.ts                           | TypeScript |          5 |          0 |          1 |          6 |
+| c:\Code\angular\pdx-map\src\model\vic\game\Good.ts                                   | TypeScript |         10 |          0 |          4 |         14 |
+| c:\Code\angular\pdx-map\src\model\vic\game\MapStateRegion.ts                         | TypeScript |        124 |          0 |         25 |        149 |
+| c:\Code\angular\pdx-map\src\model\vic\game\ModPop.ts                                 | TypeScript |         18 |          0 |          1 |         19 |
+| c:\Code\angular\pdx-map\src\saveana\CK3TableColumnProvider.ts                        | TypeScript |        119 |          2 |          7 |        128 |
+| c:\Code\angular\pdx-map\src\services\D3JsService.ts                                  | TypeScript |         98 |          0 |         13 |        111 |
+| c:\Code\angular\pdx-map\src\services\PersistanceService.ts                           | TypeScript |         21 |          0 |          5 |         26 |
+| c:\Code\angular\pdx-map\src\services\api\SkanderbegProxyService.ts                   | TypeScript |         31 |          0 |          5 |         36 |
+| c:\Code\angular\pdx-map\src\services\configuration\GoodViewMode.ts                   | TypeScript |          5 |          0 |          0 |          5 |
+| c:\Code\angular\pdx-map\src\services\configuration\Vic3TableColumnProvider.ts        | TypeScript |        414 |          0 |         29 |        443 |
+| c:\Code\angular\pdx-map\src\services\discord-auth.service.ts                         | TypeScript |        205 |          1 |         33 |        239 |
+| c:\Code\angular\pdx-map\src\services\gamedata\CK3Service.ts                          | TypeScript |        298 |          1 |         23 |        322 |
+| c:\Code\angular\pdx-map\src\services\gamedata\CustomRulerFile.ts                     | TypeScript |         13 |          0 |          4 |         17 |
+| c:\Code\angular\pdx-map\src\services\pdx-file.service.ts                             | TypeScript |        172 |          4 |         17 |        193 |
+| c:\Code\angular\pdx-map\src\styles.scss                                              | SCSS       |         55 |         10 |          5 |         70 |
+| c:\Code\angular\pdx-map\src\styles\theme.scss                                        | SCSS       |        105 |          2 |         20 |        127 |
+| c:\Code\angular\pdx-map\src\test-setup.ts                                            | TypeScript |         49 |          7 |          8 |         64 |
+| c:\Code\angular\pdx-map\src\util\Mouse.ts                                            | TypeScript |         35 |          0 |          9 |         44 |
+| c:\Code\angular\pdx-map\src\util\Point2D.ts                                          | TypeScript |          4 |          0 |          1 |          5 |
+| c:\Code\angular\pdx-map\src\util\RGB.ts                                              | TypeScript |         40 |          0 |          7 |         47 |
+| c:\Code\angular\pdx-map\src\util\geometry\threeGeometry.ts                           | TypeScript |        446 |          1 |         44 |        491 |
+| c:\Code\angular\pdx-map\src\util\lobby.ts                                            | TypeScript |         90 |          5 |          9 |        104 |
+| c:\Code\angular\pdx-map\src\util\table\AggregatingTableColumn.ts                     | TypeScript |         35 |          0 |          4 |         39 |
+| c:\Code\angular\pdx-map\src\util\table\BuildingAggregatingTableColumn.ts             | TypeScript |          8 |          0 |          2 |         10 |
+| c:\Code\angular\pdx-map\src\util\table\HasAggregation.ts                             | TypeScript |          4 |          0 |          0 |          4 |
+| c:\Code\angular\pdx-map\src\util\table\HasElements.ts                                | TypeScript |          4 |          0 |          1 |          5 |
+| c:\Code\angular\pdx-map\src\util\table\HasName.ts                                    | TypeScript |          3 |          0 |          0 |          3 |
+| c:\Code\angular\pdx-map\src\util\table\ITableColumn.ts                               | TypeScript |         10 |          0 |          0 |         10 |
+| c:\Code\angular\pdx-map\src\util\table\SimpleTableColumn.ts                          | TypeScript |         23 |          0 |          2 |         25 |
+| c:\Code\angular\pdx-map\src\util\table\TableColumn.ts                                | TypeScript |         90 |          0 |         10 |        100 |
+| c:\Code\angular\pdx-map\src\utils.ts                                                 | TypeScript |          8 |          0 |          0 |          8 |
+| Total                                                                                |            |     16,046 |        562 |      2,193 |     18,801 |
++--------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+

@@ -14,7 +14,6 @@ import { ParadoxSave } from "./ParadoxSave";
 
 export class Ck3Save implements ICk3Save, ParadoxSave {
 
-    // pre-created character collections
     private livingCharacters: Map<string, Character> = new Map();
     private deadUnprunableCharacters: Map<string, Character> = new Map();
     private deadPrunableCharacters: Map<string, Character> = new Map();

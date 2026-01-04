@@ -72,5 +72,18 @@
       }
       <!-- <app-table *ngIf="selectedTabIndex === 6" [rowElements]="getCountries()" [columns]="goodColumns"></app-table> -->
     </mat-tab>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>map</mat-icon>
+      </ng-template>
+      @if (selectedTabIndex === 7) {
+        <app-slab-map-view 
+          [geoJsonFetcher]="geoJsonFetcher"
+          [viewModes]="viewModes"
+          [colorConfigProviders]="colorConfigProviders"
+          [behaviorConfig]="behaviorConfig">
+        </app-slab-map-view>
+      }
+    </mat-tab>
   </mat-tab-group>
 }

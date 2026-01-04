@@ -27,7 +27,7 @@ export class Country implements HasElements<Building> {
 
     constructor(private playerName: string | null, private tag: string, private popStatistics: any, buildings: any[], pops: Pop[], private techEntry: any, private budget: CountryBudget, private taxLevel: string) {
         this.buildings = new ModelElementList<Building>(buildings);
-        this.pops = new ModelElementList<Pop>(pops);
+        this.pops = new ModelElementList<Pop>(pops);    
     }
 
     getBudget(): CountryBudget {
