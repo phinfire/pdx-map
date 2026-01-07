@@ -17,6 +17,7 @@ import { ViewMode } from '../slab-map-view/ViewMode';
 import { TableComponent } from '../vic3-country-table/vic3-country-table.component';
 import { BehaviorConfigProvider } from '../viewers/polygon-select/BehaviorConfigProvider';
 import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvider';
+import { SideNavContentProvider } from '../SideNavContentProvider';
 
 @Component({
     selector: 'app-save-view',
@@ -31,6 +32,7 @@ export class SaveViewComponent {
     private persistence = inject(PersistenceService);
     protected columnProvider = inject(Vic3TableColumnProvider);
     private mapService = inject(MapService);
+    sideNavContentProvider = inject(SideNavContentProvider);
 
     includeAi = true;
     selectedTabIndex = 0;
@@ -45,6 +47,8 @@ export class SaveViewComponent {
     viewModes: ViewMode<any>[] = [];
     colorConfigProviders: ColorConfigProvider[] = [];
     behaviorConfig = new BehaviorConfigProvider(0.75);
+    
+    private downloadActionHandle?: string;
 
     constructor() {
         this.selectedTabIndex = parseInt(this.persistence.getValue('saveViewTabIndex') || '0');
@@ -59,6 +63,7 @@ export class SaveViewComponent {
         if (changes['activeSave'] && this.activeSave) {
             this.onGoodsCategoryChange(this.selectedGoodsCategory);
             this.initializeMapView();
+            this.addDownloadDemographicsAction();
         }
     }
 
@@ -107,5 +112,41 @@ export class SaveViewComponent {
             this.cachedCountries = this.activeSave.getCountries(this.includeAi);
         }
         return this.cachedCountries;
+    }
+
+    private addDownloadDemographicsAction(): void {
+        if (this.downloadActionHandle) {
+            this.sideNavContentProvider.removeToolbarAction(this.downloadActionHandle);
+        }
+        this.downloadActionHandle = this.sideNavContentProvider.addToolbarAction(
+            'groups',
+            'Download demographics',
+            () => this.downloadDemographics()
+        );
+    }
+
+    private downloadDemographics(): void {
+        if (!this.activeSave) return;
+
+        const countries = this.getCountries();
+        const demographics = {
+            populationByCountry: countries.map(c => ({
+                name: c.getTag(),
+                tag: c.getTag(),
+                population: c.getPopulation(),
+                playerName: c.getPlayerName() || null,
+                vassalTags: c.getVassalTags()
+            }))
+        };
+        const jsonStr = JSON.stringify(demographics, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'demographics.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 }

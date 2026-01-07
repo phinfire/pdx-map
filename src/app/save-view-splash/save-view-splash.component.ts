@@ -81,8 +81,8 @@ export class SaveViewSplashComponent implements OnDestroy {
     @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
     constructor(private fileService: PdxFileService, private elementRef: ElementRef, http: HttpClient) {
-        /*
-        const testURL = "http://localhost:5500/public/PALA2.v3";
+        
+        const testURL = "http://localhost:5500/public/palatinate_1858_03_03.v3";
         const firstExample = this.referenceSaves[0];
         if (firstExample) {
             this.startProcessing();
@@ -90,7 +90,7 @@ export class SaveViewSplashComponent implements OnDestroy {
                 .then(result => this.handleSuccess(result.save, result.rawData))
                 .catch(error => this.handleError(this.getErrorMessage(error, firstExample.type)));
         }
-        */
+        
     }
 
     activeSaveIsVic3() {

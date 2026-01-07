@@ -1,0 +1,78 @@
+<div class="main">
+    <div class="sidelist">
+        <div class="sidebar-toolbar">
+            <input type="file" #fileInput hidden (change)="onUploadFile($event)">
+            <button mat-icon-button (click)="onAddNew()" matTooltip="Upload save file" [disabled]="isUploading">
+                <mat-icon>add</mat-icon>
+            </button>
+        </div>
+        <div class="sidebar-content">
+            @if (isLoading) {
+                <div class="loading-container">
+                    <mat-spinner diameter="40"></mat-spinner>
+                </div>
+            } @else if (saveFiles.length === 0) {
+                <div class="empty-state">No save files found</div>
+            } @else {
+                <mat-list>
+                    @for (save of saveFiles; track save.id) {
+                        <mat-list-item
+                            [class.selected]="selectedSaveId === save.id"
+                            (click)="selectSave(save)"
+                            class="save-item">
+                            <div matListItemTitle>{{ save.metadata['fileName'] ? save.metadata['fileName'] : formatDate(save.id) }}</div>
+                            <div matListItemLine>{{ formatDate(save.updated_at) }}</div>
+                            <div matListItemLine>{{ formatSize(save.size) }}</div>
+                            <button mat-icon-button matListItemMeta (click)="onDelete(save.id, $event)" class="delete-button">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </mat-list-item>
+                    }
+                </mat-list>
+            }
+        </div>
+    </div>
+    <div class="right">
+        @if (selectedSave) {
+            <div class="metadata-container">
+                <h2 (click)="copyIdToClipboard(selectedSave.id)" class="clickable-id">{{ selectedSave.id }}</h2>
+                <div class="info-section">
+                    <h3>File Info</h3>
+                    <div class="info-row">
+                        <span class="label">Created:</span>
+                        <span class="value">{{ formatDate(selectedSave.created_at) }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Updated:</span>
+                        <span class="value">{{ formatDate(selectedSave.updated_at) }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Size:</span>
+                        <span class="value">{{ formatSize(selectedSave.size) }}</span>
+                    </div>
+                </div>
+                @if (selectedSave.metadata && (selectedSave.metadata | keyvalue).length > 0) {
+                    <div class="info-section">
+                        <h3>Metadata</h3>
+                        <div class="metadata-grid">
+                            @for (item of selectedSave.metadata | keyvalue; track item.key) {
+                                <div class="metadata-item">
+                                    <span class="label">{{ item.key }}:</span>
+                                    <span class="value">{{ item.value }}</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                } @else {
+                    <div class="info-section">
+                        <p class="no-metadata">No metadata</p>
+                    </div>
+                }
+            </div>
+        } @else {
+            <div class="empty-state">
+                <div>Select a save file to view details</div>
+            </div>
+        }
+    </div>
+</div>

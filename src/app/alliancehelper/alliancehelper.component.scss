@@ -1,3 +1,11 @@
+:host {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .gauge-explanation {
     margin-top: 0.5rem;
     font-size: 0.95rem;
@@ -15,14 +23,6 @@
     transition: width 0.3s ease, left 0.3s ease;
     z-index: 1;
     pointer-events: none;
-}
-
-:host {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .main {

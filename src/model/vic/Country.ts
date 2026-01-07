@@ -9,6 +9,7 @@ export class Country implements HasElements<Building> {
     public static fromJson(json: any) {
         return new Country(
             json.playerName,
+            json.vassalIndices,
             json.tag,
             json.popStatistics,
             json.buildings.map((b: any) => Building.fromJson(b)),
@@ -25,7 +26,7 @@ export class Country implements HasElements<Building> {
     private cachedGoodIn: Map<number, number> = new Map();
     private cachedGoodOut: Map<number, number> = new Map();
 
-    constructor(private playerName: string | null, private tag: string, private popStatistics: any, buildings: any[], pops: Pop[], private techEntry: any, private budget: CountryBudget, private taxLevel: string) {
+    constructor(private playerName: string | null, private vassalTags: string[], private tag: string, private popStatistics: any, buildings: any[], pops: Pop[], private techEntry: any, private budget: CountryBudget, private taxLevel: string) {
         this.buildings = new ModelElementList<Building>(buildings);
         this.pops = new ModelElementList<Pop>(pops);    
     }
@@ -54,7 +55,7 @@ export class Country implements HasElements<Building> {
         return this.cachedGoodOut.get(goodId)!;
     }
 
-    getName(): string {
+    getTag(): string {
         return this.tag
     }
 
@@ -87,10 +88,15 @@ export class Country implements HasElements<Building> {
     getPlayerName(): string | null {
         return this.playerName;
     }
+    
+    getVassalTags(): string[] {
+        return this.vassalTags;
+    }
 
     toJson() {
         return {
             playerName: this.playerName,
+            vassalTags: this.vassalTags,
             tag: this.tag,
             popStatistics: this.popStatistics,
             buildings: this.buildings.getInternalElements().map(b => b.toJson()),

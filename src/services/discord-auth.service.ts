@@ -34,6 +34,8 @@ export class DiscordAuthenticationService {
     private static readonly CONFIG = {
         API_URL: "https://codingafterdark.de/mc-signup",
         //API_URL: "http://localhost:3000/api",
+        AUTH_SERVICE_URL: "https://codingafterdark.de/authentication",
+        //AUTH_SERVICE_URL: "http://localhost:8001",
         CLIENT_ID: "1403891748371038462",
         JWT_STORAGE_KEY: "discordToken",
         HEALTH_CHECK_INTERVAL: 3000,
@@ -42,7 +44,7 @@ export class DiscordAuthenticationService {
 
     private readonly endpoints = {
         health: `${DiscordAuthenticationService.CONFIG.API_URL}/health`,
-        auth: `${DiscordAuthenticationService.CONFIG.API_URL}/auth`,
+        auth: `${DiscordAuthenticationService.CONFIG.AUTH_SERVICE_URL}/`,
         user: `${DiscordAuthenticationService.CONFIG.API_URL}/user`
     };
 
@@ -160,11 +162,9 @@ export class DiscordAuthenticationService {
 
     loginOnDiscord(redirectUri: string): void {
         if (this.jwt == null) {
-            console.log("Not logged in, redirecting to Discord OAuth2");
             const discordAuthUrl = `${DiscordAuthenticationService.CONFIG.DISCORD_OAUTH_URL}?client_id=${DiscordAuthenticationService.CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify`;
             window.location.href = discordAuthUrl;
         } else {
-            console.log("Already logged in, fetching user info");
             this.getUserViaJWT(redirectUri).subscribe(user => {
                 this.updateUserState(user);
             });
@@ -179,8 +179,9 @@ export class DiscordAuthenticationService {
             url.searchParams.delete('code');
             window.history.replaceState({}, document.title, url.toString());
         }
-        if (!code) return of(null);
-
+        if (!code) {
+            return of(null);
+        }
         const headers = new HttpHeaders({
             'Content-Type': 'application/json'
         });
@@ -195,7 +196,8 @@ export class DiscordAuthenticationService {
                 this.updateUserState(user);
                 return user;
             }),
-            catchError(() => {
+            catchError((error: any) => {
+                console.error('JWT exchange failed:', error);
                 this.updateUserState(null);
                 return of(null);
             })
@@ -208,9 +210,9 @@ export class DiscordAuthenticationService {
         }
         
         if (!this.jwt) {
+            console.error("JWT is null, cannot fetch user");
             throw new Error("JWT is null");
         }
-
         const authHeader = this.getAuthenticationHeader();
         const headers = new HttpHeaders({
             'Content-Type': 'application/json',
@@ -224,6 +226,7 @@ export class DiscordAuthenticationService {
                 return user;
             }),
             catchError((error: any) => {
+                console.error('User fetch failed:', error);
                 if (error.status === 401) {
                     this.jwt = null;
                     localStorage.removeItem(DiscordAuthenticationService.CONFIG.JWT_STORAGE_KEY);

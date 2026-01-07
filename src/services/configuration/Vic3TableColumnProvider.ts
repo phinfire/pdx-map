@@ -41,7 +41,7 @@ export class Vic3TableColumnProvider {
             'Country',
             null,
             true,
-            (element: Country) => this.getCountryName(element.getName()),
+            (element: Country) => this.getCountryName(element.getTag()),
             (element: Country) => null
         ),
         new TableColumn<Country>(
@@ -189,7 +189,7 @@ export class Vic3TableColumnProvider {
             'Eco Buildings',
             'Total levels buildings excluding subsistence, governmental or infrastructure buildings',
             true,
-            building => !building.isSubsistence() && !building.isGovernment() && !building.isInfrastructure() && !building.isCapitalistDen(),
+            building => !building.isSubsistence() && !building.isGovernment() && !building.isInfrastructure() && !building.isCapitalistDen() && !building.isCompany(),
             b => b.getLevels()
         ),
         new BuildingAggregatingTableColumn(
@@ -237,7 +237,7 @@ export class Vic3TableColumnProvider {
             'Capital',
             'Number of capitalist den buildings',
             true,
-            b => b.isCapitalistDen(),
+            b => b.isCapitalistDen() || b.isCompany(),
             b => b.getLevels()
         ),
     ];
@@ -255,7 +255,7 @@ export class Vic3TableColumnProvider {
         new SimpleTableColumn<PowerBloc>(
             "leader",
             "Leader",
-            (element: PowerBloc) => this.getCountryName(element.getLeader().getName())
+            (element: PowerBloc) => this.getCountryName(element.getLeader().getTag())
         ),
         Vic3TableColumnProvider.tableColumnfromModelElementList<PowerBloc, Country>(
             "members",
@@ -264,7 +264,7 @@ export class Vic3TableColumnProvider {
             element => element.getCountries(),
             _ => true,
             _ => 1,
-            (country: Country) => country.getName()
+            (country: Country) => country.getTag()
         ),
         Vic3TableColumnProvider.tableColumnfromModelElementList<PowerBloc, Country>(
             "population",
@@ -273,7 +273,7 @@ export class Vic3TableColumnProvider {
             element => element.getCountries(),
             _ => true,
             (country: Country) => country.getPopulation(),
-            (country: Country) => this.getCountryName(country.getName())
+            (country: Country) => this.getCountryName(country.getTag())
         )
     ];
 

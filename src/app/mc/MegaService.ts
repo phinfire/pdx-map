@@ -36,9 +36,6 @@ export class MegaService {
         return this.nations$;
     }
 
-    /**
-     * Returns a cached Observable that resolves to a Map of nation key -> nation name.
-     */
     getNationNameMap$(): Observable<Map<string, string>> {
         return this.getNations$().pipe(
             map((arr: any[]) => {

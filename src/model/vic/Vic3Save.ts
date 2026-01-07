@@ -9,6 +9,7 @@ import { StateRegion } from "./StateRegion";
 export class Vic3Save implements ParadoxSave {
 
     public static makeSaveFromRawData(saveData: any) {
+        const overlordToVassals = Vic3Save.getOverlordToVassals(saveData.pacts.database);
         const state2ownerIndex = new Map<number, number>();
         const countryIndex2StateRegions: Map<string, StateRegion[]> = new Map();
         
@@ -70,21 +71,25 @@ export class Vic3Save implements ParadoxSave {
         }
         const countryName2BlocIndex = new Map<string, string>();
         const index2Country = new Map<string, Country>();
-        for (const countryKey in saveData.country_manager.database) {
-            const countryEntry = saveData.country_manager.database[countryKey];
+        for (const countryIndex in saveData.country_manager.database) {
+            const countryEntry = saveData.country_manager.database[countryIndex];
             const countryBudget = countryEntry["budget"] ? CountryBudget.fromRawData(countryEntry["budget"]) : CountryBudget.NONE;
             //if (true || countryEntry["country_type"] && countryEntry["country_type"] == "recognized") {
             if (countryEntry["country_type"] != undefined) {
-                const techEntry = countryIndex2TechEntry.get(countryKey) || {};
-                const playerName = country2playerName.get(countryKey) || null;
+                const techEntry = countryIndex2TechEntry.get(countryIndex) || {};
+                const playerName = country2playerName.get(countryIndex) || null;
                 const taxLevel = countryEntry["tax_level"] || "medium";
-                const states = countryIndex2StateRegions.get(countryKey) || [];
-                const country = new Country(playerName, countryEntry.definition, countryEntry.pop_statistics, country2buildingEntries.get(countryKey) || [],
-                    country2pops.get(countryKey) || [], techEntry, countryBudget, taxLevel);
+                const states = countryIndex2StateRegions.get(countryIndex) || [];
+                const vassalTags = (overlordToVassals.get(countryIndex) || []).map(v => {
+                    const vassalCountryEntry = saveData.country_manager.database[v];
+                    return vassalCountryEntry ? vassalCountryEntry.definition : v;
+                });
+                const country = new Country(playerName, vassalTags, countryEntry.definition, countryEntry.pop_statistics, country2buildingEntries.get(countryIndex) || [],
+                    country2pops.get(countryIndex) || [], techEntry, countryBudget, taxLevel);
                 countries.push(country);
-                index2Country.set(countryKey, country);
+                index2Country.set(countryIndex, country);
                 if (countryEntry["power_bloc_as_core"]) {
-                    countryName2BlocIndex.set(country.getName(), countryEntry["power_bloc_as_core"] + "");
+                    countryName2BlocIndex.set(country.getTag(), countryEntry["power_bloc_as_core"] + "");
                 }
             }
         }
@@ -93,7 +98,7 @@ export class Vic3Save implements ParadoxSave {
         for (const blocIndex in saveData.power_bloc_manager.database) {
             const blocData = saveData.power_bloc_manager.database[blocIndex];
             const blocMemberNames = Array.from(countryName2BlocIndex.keys()).filter(name => countryName2BlocIndex.get(name) === blocIndex);
-            const blocMembers: Country[] = blocMemberNames.map(name => existingCountries.find(c => c.getName() === name)).filter(c => c !== undefined) as Country[];
+            const blocMembers: Country[] = blocMemberNames.map(name => existingCountries.find(c => c.getTag() === name)).filter(c => c !== undefined) as Country[];
             const bloc = PowerBloc.fromRawData(blocData, blocMembers, index2Country);
             if (bloc) {
                 blocs.push(bloc);
@@ -110,6 +115,22 @@ export class Vic3Save implements ParadoxSave {
         const realDate = new Date(parseInt(realDateParts[0]), parseInt(realDateParts[1]) - 1, parseInt(realDateParts[2]));
         realDate.setFullYear(realDate.getFullYear() + 1900);
         return new Vic3Save(nonBlocCountries, blocs, ingameDate, realDate);
+    }
+
+    private static getOverlordToVassals(pactData: any): Map<string, string[]> {
+        return Object.values(pactData)
+            .filter((pact: any) => pact["action"] === "colony")
+            .reduce((overlordToVassals: Map<string, string[]>, pact: any) => {
+                const overlord = String(pact["targets"]["first"]);
+                const vassal = String(pact["targets"]["second"]);
+                
+                if (!overlordToVassals.has(overlord)) {
+                    overlordToVassals.set(overlord, []);
+                }
+                overlordToVassals.get(overlord)!.push(vassal);
+                
+                return overlordToVassals;
+            }, new Map<string, string[]>());
     }
 
     private cachedCountries: Country[];

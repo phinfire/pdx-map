@@ -9,11 +9,12 @@ import { Vic3GameFilesService } from '../../model/vic/Vic3GameFilesService';
 import { CountryShellBuilderService } from '../../model/vic/CountryShellBuilderService';
 import { CountryShell } from '../../model/vic/CountryShell';
 import { Vic3Save } from '../../model/vic/Vic3Save';
-import { Subject, forkJoin, from } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, forkJoin, from, of } from 'rxjs';
+import { takeUntil, switchMap, catchError, map } from 'rxjs/operators';
 import { MegaService } from '../mc/MegaService';
 import { TableColumn } from '../../util/table/TableColumn';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SaveDatabaseService } from '../savedatabase.service';
 
 interface Nation {
     key: string;
@@ -32,12 +33,14 @@ interface Nation {
 export class AlliancehelperComponent implements OnInit, OnDestroy {
 
     @Input() vic3SaveFile?: Vic3Save;
+    saveFileId: string = "f9396abb-f48e-4f80-8d83-355d0ed59dc3"; // TODO: Don't hardcode this, needs to depend on MegaCampaign's last V3 session
     private nationsLoaded = false;
     private countriesLoaded = false;
     private megaService = inject(MegaService);
     private service = inject(MegaModderE2VService);
     private vic3GameFilesService = inject(Vic3GameFilesService);
     private countryShellBuilder = inject(CountryShellBuilderService);
+    private saveDatabase = inject(SaveDatabaseService);
     private destroy$ = new Subject<void>();
     protected appReady = false;
     private LOCAL_STORAGE_KEY = 'alliancehelper.selectedNations';
@@ -60,12 +63,26 @@ export class AlliancehelperComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.megaService.getLastEu4Save().pipe(takeUntil(this.destroy$)).subscribe(save => {
+            const demographicsObservable = this.saveFileId
+                ? this.saveDatabase.downloadSaveFile(this.saveFileId).pipe(
+                    map(data => {
+                        const jsonStr = new TextDecoder().decode(data);
+                        return JSON.parse(jsonStr);
+                    }),
+                    catchError(error => {
+                        console.warn('Failed to fetch demographics:', error);
+                        return of(null);
+                    })
+                )
+                : of(null);
+
             forkJoin({
                 nations: this.megaService.getNations$(),
                 historyRegions: this.vic3GameFilesService.getHistoryStateRegions(),
                 pops: this.vic3GameFilesService.getModPops(),
-                diplomaticPacts: this.vic3GameFilesService.getDiplomaticPacts()
-            }).pipe(takeUntil(this.destroy$)).subscribe(({ nations, historyRegions, pops, diplomaticPacts }) => {
+                diplomaticPacts: this.vic3GameFilesService.getDiplomaticPacts(),
+                demographics: demographicsObservable
+            }).pipe(takeUntil(this.destroy$)).subscribe(({ nations, historyRegions, pops, diplomaticPacts, demographics }) => {
                 this.nations = (nations || []).map(nation => ({ ...nation, selected: false })).sort((a, b) => a.name.localeCompare(b.name));
                 const provinces = new Map<string, any>();
                 for (const [key, prov] of save.getProvinces().entries()) {
@@ -75,7 +92,7 @@ export class AlliancehelperComponent implements OnInit, OnDestroy {
                 }
                 const vic3OwnershipMap = this.buildVic3OwnershipMap(historyRegions);
                 this.service.guessTagMapping(provinces, vic3OwnershipMap).pipe(takeUntil(this.destroy$)).subscribe(mapping => {
-                    this.buildCountries(mapping, pops, diplomaticPacts);
+                    this.buildCountries(mapping, pops, diplomaticPacts, demographics);
                     this.nationsLoaded = true;
                     this.countriesLoaded = true;
                     this.tryRestoreSelectionAndRecalc();
@@ -104,16 +121,24 @@ export class AlliancehelperComponent implements OnInit, OnDestroy {
     private buildCountries(
         mapping: Map<string, string>,
         pops: any[],
-        diplomaticPacts: { overlordTag: string; vassalTag: string; type: string }[]
+        diplomaticPacts: { overlordTag: string; vassalTag: string; type: string }[],
+        demographics?: any
     ): void {
         let vic3PopByTag = new Map<string, number>();
         let worldPop = 0;
         if (this.vic3SaveFile) {
             for (const country of this.vic3SaveFile.getCountries(true)) {
-                vic3PopByTag.set(country.getName(), country.getPopulation());
+                vic3PopByTag.set(country.getTag(), country.getPopulation());
                 worldPop += country.getPopulation();
             }
+        } else if (demographics && demographics.populationByCountry) {
+            // Use demographics from SaveDatabaseService if available
+            for (const countryData of demographics.populationByCountry) {
+                vic3PopByTag.set(countryData.tag, countryData.population);
+                worldPop += countryData.population;
+            }
         } else {
+            // Fall back to mod pops if neither save file nor demographics are available
             for (const pop of pops) {
                 if (!vic3PopByTag.has(pop.countryTag)) {
                     vic3PopByTag.set(pop.countryTag, 0);

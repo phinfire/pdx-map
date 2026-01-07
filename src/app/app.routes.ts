@@ -10,6 +10,7 @@ import { JominiKioskComponent } from './jomini-kiosk/jomini-kiosk.component';
 import { LabComponent } from './lab/lab.component';
 import { ResourcemapComponent } from './resourcemap/resourcemap.component';
 import { AlliancehelperComponent } from './alliancehelper/alliancehelper.component';
+import { SavefileadminComponent } from './savefileadmin/savefileadmin.component';
 
 export const routes: Routes = [
     {
@@ -23,7 +24,8 @@ export const routes: Routes = [
             { path: 'mc/admin', component: MCAdminComponent },
             { path: 'mc/modder', component: MegaModderComponent },
             { path: 'jomini', component: JominiKioskComponent },
-            {path: 'bloc', component: AlliancehelperComponent},
+            { path: 'bloc', component: AlliancehelperComponent },
+            { path: 'db', component: SavefileadminComponent },
         ]
     }
 ];
