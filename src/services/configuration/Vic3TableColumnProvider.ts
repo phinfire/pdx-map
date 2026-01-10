@@ -1,8 +1,5 @@
-import { Injectable } from "@angular/core";
-import { TableColumn } from "../../util/table/TableColumn";
-import { SimpleTableColumn } from "../../util/table/SimpleTableColumn";
 import { HttpClient } from "@angular/common/http";
-import { GoodsViewMode } from "./GoodViewMode";
+import { Injectable } from "@angular/core";
 import { map } from "rxjs";
 import { Country } from "../../model/vic/Country";
 import { GoodCategory } from "../../model/vic/enum/GoodCategory";
@@ -12,16 +9,11 @@ import { Ownership } from "../../model/vic/Ownership";
 import { Pop } from "../../model/vic/Pop";
 import { PowerBloc } from "../../model/vic/PowerBloc";
 import { Vic3GameFilesService } from "../../model/vic/Vic3GameFilesService";
-import { AggregatingTableColumn } from "../../util/table/AggregatingTableColumn";
-import { Building } from "../../model/vic/Building";
+import { BuildingAggregatingTableColumnBuilder } from "../../util/table/BuildingAggregatingTableColumnBuilder";
 import { ImageIconType } from "../../util/table/ImageIconType";
-
-class BuildingAggregatingTableColumn extends AggregatingTableColumn<Country, Building> {
-
-    constructor(def: string, header: string, tooltip: string, sortable: boolean, predicate: (building: Building) => boolean, valueExtractor: (building: Building) => number, predicateForNormalization: ((building: Building) => boolean) | null = null) {
-        super(def, header, tooltip, sortable, predicate, valueExtractor, (building: Building) => building.getName(), predicateForNormalization);
-    }
-}
+import { TableColumn } from "../../util/table/TableColumn";
+import { TableColumnBuilder } from "../../util/table/TableColumnBuilder";
+import { GoodsViewMode } from "./GoodViewMode";
 
 @Injectable({
     providedIn: 'root'
@@ -29,239 +21,206 @@ class BuildingAggregatingTableColumn extends AggregatingTableColumn<Country, Bui
 export class Vic3TableColumnProvider {
 
     baseColumns: TableColumn<Country>[] = [
-        new TableColumn<Country>(
-            'position',
-            '',
-            null,
-            false,
-            (element: Country, index: number) => index + 1,
-            (element: Country, index: number) => null
-        ),
-        new TableColumn<Country>(
-            'name',
-            'Country',
-            null,
-            true,
-            (element: Country) => this.getCountryName(element.getTag()),
-            (element: Country) => null
-        ),
-        new TableColumn<Country>(
-            "player",
-            "Player",
-            null,
-            true,
-            (element: Country) => element.getPlayerName() || "",
-            (element: Country) => null
-        ),
+        new TableColumnBuilder<Country>("position", "")
+            .isSortable(false)
+            .withCellValue((element: Country, index: number) => index + 1)
+            .withCellTooltip((_: Country) => null)
+            .build(),
+        new TableColumnBuilder<Country>("name", "Country")
+            .withCellValue((element: Country) => this.getCountryName(element.getTag()))
+            .withCellTooltip((_: Country) => null)
+            .build(),
+        new TableColumnBuilder<Country>("player", "Player")
+            .withCellValue((element: Country) => element.getPlayerName() || "")
+            .withCellTooltip((_: Country) => null)
+            .build(),
     ];
 
     countryColumns: TableColumn<Country>[] = [
-        new TableColumn<Country>(
-            "pops",
-            "Pop.",
-            "Population",
-            true,
-            (element: Country) => element.getPops().getTotal("pops", (pop: Pop) => true, (pop: Pop) => pop.getSize()),
-            (element: Country) => Array.from(element.getPops().getTotalExplanation("pops", (pop: Pop) => true, (pop: Pop) => pop.getSize(), (pop: Pop) => pop.getType()).entries())
+        new TableColumnBuilder<Country>("pops", "Pop.")
+            .withTooltip("Population")
+            .withCellValue((element: Country) => element.getPops().getTotal("pops", (pop: Pop) => true, (pop: Pop) => pop.getSize()))
+            .withCellTooltip((element: Country) => Array.from(element.getPops().getTotalExplanation("pops", (pop: Pop) => true, (pop: Pop) => pop.getSize(), (pop: Pop) => pop.getType()).entries())
                 .map(([name, val]) => `${TableColumn.formatNumber(val).padStart(15, ' ')}  ${name}`)
-                .join('\n'),
-            null,
-            false,
-            "groups",
-            ImageIconType.MATERIAL_ICON
-        ),
-        new TableColumn<Country>(
-            'employed',
-            'Employees',
-            null,
-            true,
-            (element: Country) => element.getNumberOfEmployed(),
-            (element: Country) => element.getNumberOfEmployed().toLocaleString()
-        ),
-        new TableColumn<Country>(
-            "technologies",
-            "Techs",
-            null,
-            true,
-            (element: Country) => element.getAcquiredTechs().length,
-            (element: Country) => element.getAcquiredTechs().sort().join('\n')
-        ),
-        new SimpleTableColumn<Country>(
-            "netincome",
-            "Net Income",
-            (element: Country) => element.getBudget().getNetIncome()
-        ),
-        new BuildingAggregatingTableColumn(
+                .join('\n'))
+            .withHeaderImage("groups", ImageIconType.MATERIAL_SYMBOL)
+            .build(),
+        new TableColumnBuilder<Country>("employed", "Employees")
+            .withCellValue((element: Country) => element.getNumberOfEmployed())
+            .withCellTooltip((element: Country) => element.getNumberOfEmployed().toLocaleString())
+            .build(),
+        new TableColumnBuilder<Country>("technologies", "Techs")
+            .withCellValue((element: Country) => element.getAcquiredTechs().length)
+            .withCellTooltip((element: Country) => element.getAcquiredTechs().sort().join('\n'))
+            .withHeaderImage("experiment", ImageIconType.MATERIAL_SYMBOL)
+            .build(),
+        new TableColumnBuilder<Country>("netincome", "Net Income")
+            .withCellValue((element: Country) => element.getBudget().getNetIncome())
+            .withCellTooltip((_: Country) => null)
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
             "construction_sectors",
-            "Construction Sectors",
-            "Total levels of all construction sector buildings owned by this country",
-            true,
-            b => b.isConstructionSector(),
-            b => b.getLevels()
+            "Construction Sectors"
         )
+            .withTooltip("Total levels of all construction sector buildings owned by this country")
+            .isSortable(true)
+            .withPredicate(b => b.isConstructionSector())
+            .withValueExtractor(b => b.getLevels())
+            .build()
     ];
 
     countryFinancialColumns: TableColumn<Country>[] = [
-        new TableColumn<Country>(
-            "cash",
-            "Cash",
-            null,
-            true,
-            (element: Country) => element.getBudget().getNetCash(),
-            (element: Country) => null
-        ),
-        new TableColumn<Country>(
-            "credit",
-            "Credit",
-            null,
-            true,
-            (element: Country) => element.getBudget().getCredit(),
-            (element: Country) => null
-        ),
-        new TableColumn<Country>(
-            "investmentPool",
-            "I. Pool",
-            null,
-            true,
-            (element: Country) => element.getBudget().getInvestmentPool(),
-            (element: Country) => null
-        ),
-        new SimpleTableColumn<Country>(
-            "tax",
-            "Tax",
-            (element: Country) => element.getBudget().getTaxIncome(),
-            (element: Country) => element.getTaxLevel().toUpperCase()
-        ),
-        new SimpleTableColumn<Country>(
-            "minting",
-            "Minting",
-            (element: Country) => element.getBudget().getMintingIncome()),
-        new TableColumn<Country>(
-            "investmentPoolGrowth",
-            "I. Pool Growth",
-            null,
-            true,
-            (element: Country) => {
+        new TableColumnBuilder<Country>("cash", "Cash")
+            .withCellValue((element: Country) => element.getBudget().getNetCash())
+            .withCellTooltip((_: Country) => null)
+            .build(),
+        new TableColumnBuilder<Country>("credit", "Credit")
+            .withCellValue((element: Country) => element.getBudget().getCredit())
+            .withCellTooltip((_: Country) => null)
+            .build(),
+        new TableColumnBuilder<Country>("investmentPool", "I. Pool")
+            .withCellValue((element: Country) => element.getBudget().getInvestmentPool())
+            .withCellTooltip((_: Country) => null)
+            .build(),
+        new TableColumnBuilder<Country>("tax", "Tax")
+            .withCellValue((element: Country) => element.getBudget().getTaxIncome())
+            .withCellTooltip((element: Country) => element.getTaxLevel().toUpperCase())
+            .build(),
+        new TableColumnBuilder<Country>("minting", "Minting")
+            .withCellValue((element: Country) => element.getBudget().getMintingIncome())
+            .withCellTooltip((_: Country) => null)
+            .build(),
+        new TableColumnBuilder<Country>("investmentPoolGrowth", "I. Pool Growth")
+            .withCellValue((element: Country) => {
                 const growth = element.getBudget().getInvestmentPoolGrowth();
                 return Array.from(growth.values()).reduce((a, b) => a + b, 0);
-            },
-            (element: Country) => {
+            })
+            .withCellTooltip((element: Country) => {
                 const growth = element.getBudget().getInvestmentPoolGrowth();
                 return Array.from(growth.entries()).sort((a, b) => b[1] - a[1])
                     .map(([key, value]) => `${TableColumn.formatNumber(value)} ${this.localiseBuildingName(key) || key}`).join('\n');
-            }
-        ),
+            })
+            .build(),
     ];
 
     buildingFinancialsColumns: TableColumn<Country>[] = [
-        new BuildingAggregatingTableColumn(
+        new BuildingAggregatingTableColumnBuilder(
             "cashReserves",
-            "£ Reserves",
-            "Total cash reserve of all buildings",
-            true,
-            b => true,
-            b => Math.floor(b.getCashReserves())
-        ),
-        new BuildingAggregatingTableColumn(
-            "dividends",
-            "Dividends",
-            "Total dividends paid by all buildings",
-            true,
-            b => true,
-            b => Math.floor(b.getDividends())
-        ),
-        new BuildingAggregatingTableColumn(
-            "valueGoodsSold",
-            "Goods Sold",
-            "",
-            true,
-            b => true,
-            b => Math.floor(b.getMarketValueOfGoodSold())
-        ),
-        new BuildingAggregatingTableColumn(
-            "valueAdded",
-            "Value Added",
-            "",
-            true,
-            b => true,
-            b => Math.floor(Math.max(0, b.getNetValueAdded()))
+            "£ Reserves"
         )
+            .withTooltip("Total cash reserve of all buildings")
+            .isSortable(true)
+            .withPredicate(b => true)
+            .withValueExtractor(b => Math.floor(b.getCashReserves()))
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
+            "dividends",
+            "Dividends"
+        )
+            .withTooltip("Total dividends paid by all buildings")
+            .isSortable(true)
+            .withPredicate(b => true)
+            .withValueExtractor(b => Math.floor(b.getDividends()))
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
+            "valueGoodsSold",
+            "Goods Sold"
+        )
+            .withTooltip("")
+            .isSortable(true)
+            .withPredicate(b => true)
+            .withValueExtractor(b => Math.floor(b.getMarketValueOfGoodSold()))
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
+            "valueAdded",
+            "Value Added"
+        )
+            .withTooltip("")
+            .isSortable(true)
+            .withPredicate(b => true)
+            .withValueExtractor(b => Math.floor(Math.max(0, b.getNetValueAdded())))
+            .build()
     ];
 
     buildingTableColumns: TableColumn<Country>[] = [
-        new BuildingAggregatingTableColumn(
+        new BuildingAggregatingTableColumnBuilder(
             'buildings',
-            'Eco Buildings',
-            'Total levels buildings excluding subsistence, governmental or infrastructure buildings',
-            true,
-            building => !building.isSubsistence() && !building.isGovernment() && !building.isInfrastructure() && !building.isCapitalistDen() && !building.isCompany(),
-            b => b.getLevels()
-        ),
-        new BuildingAggregatingTableColumn(
+            'Eco Buildings'
+        )
+            .withTooltip('Total levels buildings excluding subsistence, governmental or infrastructure buildings')
+            .isSortable(true)
+            .withPredicate(building => !building.isSubsistence() && !building.isGovernment() && !building.isInfrastructure() && !building.isCapitalistDen() && !building.isCompany())
+            .withValueExtractor(b => b.getLevels())
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
             'factories',
-            'Factories',
-            'Number of factories',
-            true,
-            b => b.isFactory(),
-            b => b.getLevels()
-        ),
-        new BuildingAggregatingTableColumn(
+            'Factories'
+        )
+            .withTooltip('Number of factories')
+            .isSortable(true)
+            .withPredicate(b => b.isFactory())
+            .withValueExtractor(b => b.getLevels())
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
             'agricultural',
-            'Agricultural',
-            'Number of agricultural buildings',
-            true,
-            b => b.isAgricultural(),
-            b => b.getLevels()
-        ),
-        new BuildingAggregatingTableColumn(
+            'Agricultural'
+        )
+            .withTooltip('Number of agricultural buildings')
+            .isSortable(true)
+            .withPredicate(b => b.isAgricultural())
+            .withValueExtractor(b => b.getLevels())
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
             'mine',
-            'Mines',
-            'Number of mine buildings',
-            true,
-            b => b.isMine(),
-            b => b.getLevels()
-        ),
-        new BuildingAggregatingTableColumn(
+            'Mines'
+        )
+            .withTooltip('Number of mine buildings')
+            .isSortable(true)
+            .withPredicate(b => b.isMine())
+            .withValueExtractor(b => b.getLevels())
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
             'government',
-            'Government',
-            'Number of government buildings',
-            true,
-            b => b.isGovernment(),
-            b => b.getLevels()
-        ),
-        new BuildingAggregatingTableColumn(
+            'Government'
+        )
+            .withTooltip('Number of government buildings')
+            .isSortable(true)
+            .withPredicate(b => b.isGovernment())
+            .withValueExtractor(b => b.getLevels())
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
             'infrastructure',
-            'Infrastructure',
-            'Number of infrastructure buildings',
-            true,
-            b => b.isInfrastructure(),
-            b => b.getLevels()
-        ),
-        new BuildingAggregatingTableColumn(
+            'Infrastructure'
+        )
+            .withTooltip('Number of infrastructure buildings')
+            .isSortable(true)
+            .withPredicate(b => b.isInfrastructure())
+            .withValueExtractor(b => b.getLevels())
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
             'capital',
-            'Capital',
-            'Number of capitalist den buildings',
-            true,
-            b => b.isCapitalistDen() || b.isCompany(),
-            b => b.getLevels()
-        ),
+            'Capital'
+        )
+            .withTooltip('Number of capitalist den buildings')
+            .isSortable(true)
+            .withPredicate(b => b.isCapitalistDen() || b.isCompany())
+            .withValueExtractor(b => b.getLevels())
+            .build(),
     ];
 
     powerBlocColumns: TableColumn<PowerBloc>[] = [
-        new SimpleTableColumn<PowerBloc>(
-            'position',
-            '',
-            (_, index: number) => index + 1
-        ),
-        new SimpleTableColumn<PowerBloc>(
-            "name",
-            "Name",
-            (element: PowerBloc) => element.getName()),
-        new SimpleTableColumn<PowerBloc>(
-            "leader",
-            "Leader",
-            (element: PowerBloc) => this.getCountryName(element.getLeader().getTag())
-        ),
+        new TableColumnBuilder<PowerBloc>("position", "")
+            .withCellValue((_, index: number) => index + 1)
+            .withCellTooltip((_: PowerBloc) => null)
+            .build(),
+        new TableColumnBuilder<PowerBloc>("name", "Name")
+            .withCellValue((element: PowerBloc) => element.getName())
+            .withCellTooltip((_: PowerBloc) => null)
+            .build(),
+        new TableColumnBuilder<PowerBloc>("leader", "Leader")
+            .withCellValue((element: PowerBloc) => this.getCountryName(element.getLeader().getTag()))
+            .withCellTooltip((_: PowerBloc) => null)
+            .build(),
         Vic3TableColumnProvider.tableColumnfromModelElementList<PowerBloc, Country>(
             "members",
             "Members",
@@ -283,33 +242,36 @@ export class Vic3TableColumnProvider {
     ];
 
     ecoConnectionsColumns: TableColumn<Country>[] = [
-        new BuildingAggregatingTableColumn(
+        new BuildingAggregatingTableColumnBuilder(
             "localOwnedBuildings",
-            "Public",
-            "",
-            true,
-            b => b.getOwnership() == Ownership.LOCAL_GOVERNMENT,
-            b => b.getLevels(),
-            b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence()
-        ),
-        new BuildingAggregatingTableColumn(
-            "localPrivateBuildingsFraction",
-            "Private",
-            "",
-            true,
-            b => b.getOwnership() == Ownership.LOCAL_CAPITALISTS,
-            b => b.getLevels(),
-            b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence()
-        ),
-        new BuildingAggregatingTableColumn(
-            "foreignOwnedBuildings",
-            "Foreign Owned",
-            "",
-            true,
-            b => b.getOwnership() == Ownership.FOREIGN_CAPITALISTS || b.getOwnership() == Ownership.FOREIGN_GOVERNMENT,
-            b => b.getLevels(),
-            b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence()
+            "Public"
         )
+            .withTooltip("")
+            .isSortable(true)
+            .withPredicate(b => b.getOwnership() == Ownership.LOCAL_GOVERNMENT)
+            .withValueExtractor(b => b.getLevels())
+            .withPredicateForNormalization(b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence())
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
+            "localPrivateBuildingsFraction",
+            "Private"
+        )
+            .withTooltip("")
+            .isSortable(true)
+            .withPredicate(b => b.getOwnership() == Ownership.LOCAL_CAPITALISTS)
+            .withValueExtractor(b => b.getLevels())
+            .withPredicateForNormalization(b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence())
+            .build(),
+        new BuildingAggregatingTableColumnBuilder(
+            "foreignOwnedBuildings",
+            "Foreign Owned"
+        )
+            .withTooltip("")
+            .isSortable(true)
+            .withPredicate(b => b.getOwnership() == Ownership.FOREIGN_CAPITALISTS || b.getOwnership() == Ownership.FOREIGN_GOVERNMENT)
+            .withValueExtractor(b => b.getLevels())
+            .withPredicateForNormalization(b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence())
+            .build()
     ];
 
     goodColumns: TableColumn<Country>[] = [];
@@ -372,25 +334,25 @@ export class Vic3TableColumnProvider {
 
     private sharedGoodColumnTooltipFunction(good: Good) {
         return (element: Country) => {
-                const outVal = Math.floor(element.getGoodOut(good.index)).toString();
-                const inVal = Math.floor(element.getGoodIn(good.index)).toString();
-                const maxValueLength = Math.max(
-                    outVal.length,
-                    inVal.length
-                );
-                const outPadding = ' '.repeat(Math.max(1, maxValueLength - outVal.length));
-                const inPadding = ' '.repeat(Math.max(1, maxValueLength - inVal.length));
-                if (outVal === "0" && inVal === "0") {
-                    return null;
-                }
-                if (outVal === "0") {
-                    return "- " + inVal;
-                }
-                if (inVal === "0") {
-                    return "+ " + outVal;
-                }
-                return "+" + outPadding + outVal + "\n-" + inPadding + inVal;
+            const outVal = Math.floor(element.getGoodOut(good.index)).toString();
+            const inVal = Math.floor(element.getGoodIn(good.index)).toString();
+            const maxValueLength = Math.max(
+                outVal.length,
+                inVal.length
+            );
+            const outPadding = ' '.repeat(Math.max(1, maxValueLength - outVal.length));
+            const inPadding = ' '.repeat(Math.max(1, maxValueLength - inVal.length));
+            if (outVal === "0" && inVal === "0") {
+                return null;
             }
+            if (outVal === "0") {
+                return "- " + inVal;
+            }
+            if (inVal === "0") {
+                return "+ " + outVal;
+            }
+            return "+" + outPadding + outVal + "\n-" + inPadding + inVal;
+        }
     }
 
     refreshGoodColumnList(countries: Country[], viewMode: GoodsViewMode, selectedGoodsCategory: GoodCategory) {
@@ -420,7 +382,11 @@ export class Vic3TableColumnProvider {
 
                             return Math.floor(value);
                         },
-                        this.sharedGoodColumnTooltipFunction(good)
+                        this.sharedGoodColumnTooltipFunction(good),
+                        null,
+                        false,
+                        good.getIconUrl(),
+                        ImageIconType.IMAGE_URL
                     ));
 
                 return this.getBaseColumnList().concat(cols);

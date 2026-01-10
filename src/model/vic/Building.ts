@@ -2,9 +2,9 @@ import { Ownership } from "./Ownership";
 
 export class Building {
 
-    public static fromRawData(rawData: any, allBuildingsData: any[], allOwnershipsData: any[], state2OwnerCountry: Map<number, number>): Building[] {
+    public static fromRawData(rawData: any, allBuildingsData: any[], allOwnershipsData: any[], state2OwnerCountry: Map<number, number>) {
         const { goodsIn, goodsOut } = this.setupGoodMaps(rawData);
-        console.log("Building goodsIn:", goodsIn, "goodsOut:", goodsOut, rawData);
+
         const location = rawData["state"];
         const locationCountryIndex = state2OwnerCountry.get(location);
         const buildings = [];
@@ -39,8 +39,10 @@ export class Building {
                         }
                     } else if (Building.isGovernmentBuildingName(cleanName)) {
                         ownershipType = Ownership.LOCAL_GOVERNMENT;
+                    } else if (Building.isSubsistenceBuildingName(cleanName) || Building.isCapitalistDenName(cleanName)) {
+                        ownershipType = Ownership.WORKERS;
                     } else {
-                        console.log("Unknown ownership identity for building " + rawData["building"] + " in state " + location + ": " + JSON.stringify(ownershipEntry["identity"]), rawData);
+                        console.warn("Unknown ownership identity for building " + rawData["building"] + " in state " + location + ": ", ownershipEntry, rawData);
                     }
                 }
                 const fraction = levels / totalLevels;
@@ -68,7 +70,7 @@ export class Building {
                 Building.getScaledMap(goodsOut, remainingFraction)
             ));
         }
-        return buildings;
+        return {locationIndex: location, buildings: buildings};
     }
 
     private static setupGoodMaps(rawData: any): { goodsIn: Map<number, number>, goodsOut: Map<number, number> } {
@@ -78,7 +80,7 @@ export class Building {
             const inputGoodsData = rawData["input_goods"]["goods"];
             for (const good in inputGoodsData) {
                 const goodId = parseInt(good);
-                const amount = inputGoodsData[good];
+                const amount = inputGoodsData[good].value;
                 goodsIn.set(goodId, amount);
             }
         }
@@ -86,7 +88,7 @@ export class Building {
             const outputGoodsData = rawData["output_goods"]["goods"];
             for (const good in outputGoodsData) {
                 const goodId = parseInt(good);
-                const amount = outputGoodsData[good];
+                const amount = outputGoodsData[good].value;
                 goodsOut.set(goodId, amount);
             }
         }
@@ -102,7 +104,7 @@ export class Building {
     }
 
     private static createBuilding(rawData: any, location: number, levels: number, fraction: number, ownership: Ownership, goodsIn: Map<number, number>, goodsOut: Map<number, number>): Building {
-        return new Building(
+        const b = new Building(
             this.cleanUpBuildingName(rawData["building"]),
             location,
             levels,
@@ -114,6 +116,10 @@ export class Building {
             goodsIn,
             goodsOut
         );
+        if (rawData["building"] === "building_arms_industry") {
+            console.log("Created building", b);
+        }
+        return b;
     }
 
     private static cleanUpBuildingName(rawName: string): string {
@@ -137,12 +143,19 @@ export class Building {
 
     constructor(private name: string, private state: number, private levels: number, private valueGoodsBought: number,
         private valueGoodsSold: number, private cashReserves: number, private dividends: number, private ownership: Ownership, private goodsIn: Map<number, number>, private goodsOut: Map<number, number>) {
-
     }
 
     private static isGovernmentBuildingName(buildingName: string): boolean {
         return ["urban_center", "government_administration",
             "university", "barracks", "conscription_center", "naval_base", "construction_sector", "trade_center"].some((govBuildingName) => buildingName == govBuildingName);
+    }
+    
+    private static isSubsistenceBuildingName(buildingName: string): boolean {
+        return buildingName.startsWith("subsistence_");
+    }
+
+    private static isCapitalistDenName(buildingName: string) {
+        return ["manor_house", "financial_district"].some((capitalistBuildingName) => buildingName == capitalistBuildingName);
     }
 
     getGoodsIn(): Map<number, number> {
@@ -182,7 +195,7 @@ export class Building {
     }
 
     isSubsistence(): boolean {
-        return this.getName().startsWith("subsistence_");
+        return Building.isSubsistenceBuildingName(this.getName());
     }
 
     isGovernment(): boolean {
@@ -207,7 +220,7 @@ export class Building {
     }
 
     isCapitalistDen() {
-        return ["manor_house", "financial_district"].some((capitalistBuildingName) => this.getName() == capitalistBuildingName);
+        return Building.isCapitalistDenName(this.getName());
     }
 
     isCompany() {

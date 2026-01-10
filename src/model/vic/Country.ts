@@ -58,10 +58,7 @@ export class Country implements HasElements<Building> {
 
     getGoodIn(goodId: number): number {
         if (!this.cachedGoodIn.has(goodId)) {
-            const val = this.buildings.getTotal("goodIn" + goodId, _ => true, building => {
-
-                return building.getGoodsIn().get(goodId) || 0;
-            });
+            const val = this.buildings.getTotal("goodIn" + goodId, _ => true, building => building.getGoodsIn().get(goodId) || 0);
             this.cachedGoodIn.set(goodId, val);
         }
         return this.cachedGoodIn.get(goodId)!;

@@ -33,7 +33,6 @@ export class SideNavContentProvider {
     }
 
     clearToolbarActions() {
-        console.log("Clearing toolbar actions");
         this.toolbarActions = [];
     }
 

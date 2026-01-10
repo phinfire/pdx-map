@@ -132,13 +132,11 @@ export class AlliancehelperComponent implements OnInit, OnDestroy {
                 worldPop += country.getPopulation();
             }
         } else if (demographics && demographics.populationByCountry) {
-            // Use demographics from SaveDatabaseService if available
             for (const countryData of demographics.populationByCountry) {
                 vic3PopByTag.set(countryData.tag, countryData.population);
                 worldPop += countryData.population;
             }
         } else {
-            // Fall back to mod pops if neither save file nor demographics are available
             for (const pop of pops) {
                 if (!vic3PopByTag.has(pop.countryTag)) {
                     vic3PopByTag.set(pop.countryTag, 0);
@@ -262,5 +260,9 @@ export class AlliancehelperComponent implements OnInit, OnDestroy {
 
     isOverThreshold(): boolean {
         return this.totalPopulation > this.userThreshold;
+    }
+
+    getFormulaExplanationTooltip() {
+        return "3.0 × "+ this.formatPopulation(this.totalWorldPopulation) + "  (Total World Population) / " + this.playerCount + " (Player Count)";
     }
 }

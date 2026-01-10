@@ -74,7 +74,8 @@ export class SaveViewSplashComponent implements OnDestroy {
     private fileService = inject(PdxFileService);
 
     constructor(private elementRef: ElementRef) {
-        const testURL = "http://localhost:5500/public/palatinate_1858_03_03.v3";
+        //const testURL = "http://localhost:5500/public/palatinate_1858_03_03.v3";
+        const testURL = "http://localhost:5500/public/palatinate_1836_01_01.v3";
         const firstExample = this.referenceSaves[0];
         if (firstExample) {
             this.startProcessing();

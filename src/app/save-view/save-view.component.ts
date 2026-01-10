@@ -1,4 +1,5 @@
 import { Component, inject, Input, SimpleChanges, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
@@ -27,7 +28,7 @@ import { SideNavContentProvider } from '../../ui/SideNavContentProvider';
 
 @Component({
     selector: 'app-save-view',
-    imports: [MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule, SlabMapViewComponent, MatIconModule],
+    imports: [CommonModule, MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule, SlabMapViewComponent, MatIconModule],
     templateUrl: './save-view.component.html',
     styleUrl: './save-view.component.scss',
 })

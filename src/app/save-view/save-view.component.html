@@ -10,39 +10,43 @@
     </span>
     }
 </div>
+
+<ng-template #tableWrapper let-rowElements="rowElements" let-columns="columns">
+    <div class="table-wrapper">
+        <app-table [rowElements]="rowElements" [columns]="columns"></app-table>
+    </div>
+</ng-template>
+
 @if (activeSave != null) {
 <mat-tab-group [selectedIndex]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)" style="width: 100%;">
     <mat-tab label="Countries">
         @if (selectedTabIndex === 0) {
-        <app-table [rowElements]="getCountries()" [columns]="columnProvider.getCountryColumnList()"></app-table>
+        <ng-container *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getCountryColumnList()}"></ng-container>
         }
     </mat-tab>
     <mat-tab label="Country Budgets">
         @if (selectedTabIndex === 1) {
-        <app-table [rowElements]="getCountries()"
-            [columns]="columnProvider.getCountryFinancialColumnList()"></app-table>
+        <ng-container *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getCountryFinancialColumnList()}"></ng-container>
         }
     </mat-tab>
-    <mat-tab label="Blocs">
+    <mat-tab label="Blocs" [disabled]="!activeSave || activeSave.getPowerBlocs().length === 0">
         @if (selectedTabIndex === 2) {
-        <app-table [rowElements]="activeSave.getPowerBlocs()"
-            [columns]="columnProvider.getPowerBlocColumnList()"></app-table>
+        <ng-container *ngTemplateOutlet="tableWrapper; context: {rowElements: activeSave.getPowerBlocs(), columns: columnProvider.getPowerBlocColumnList()}"></ng-container>
         }
     </mat-tab>
     <mat-tab label="Building Financials">
         @if (selectedTabIndex === 3) {
-        <app-table [rowElements]="getCountries()"
-            [columns]="columnProvider.getBuildingFinancialColumnList()"></app-table>
+        <ng-container *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getBuildingFinancialColumnList()}"></ng-container>
         }
     </mat-tab>
     <mat-tab label="Buildings">
         @if (selectedTabIndex === 4) {
-        <app-table [rowElements]="getCountries()" [columns]="columnProvider.getBuildingTableColumnList()"></app-table>
+        <ng-container *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getBuildingTableColumnList()}"></ng-container>
         }
     </mat-tab>
     <mat-tab label="Links">
         @if (selectedTabIndex === 5) {
-        <app-table [rowElements]="getCountries()" [columns]="columnProvider.getEcoConnectionsColumnList()"></app-table>
+        <ng-container *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getEcoConnectionsColumnList()}"></ng-container>
         }
     </mat-tab>
     <mat-tab label="Goods">
@@ -66,8 +70,7 @@
         </div>
         }
         @if (selectedTabIndex === 6) {
-        <app-table [rowElements]="getCountries()"
-            [columns]="columnProvider.getGoodColumns()"></app-table>
+        <ng-container *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getGoodColumns()}"></ng-container>
         }
     </mat-tab>
     <mat-tab>

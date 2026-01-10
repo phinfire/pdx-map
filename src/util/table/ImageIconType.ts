@@ -1,5 +1,5 @@
 export enum ImageIconType {
-    IMG,
+    IMAGE_URL,
     MATERIAL_ICON,
     MATERIAL_SYMBOL
 }

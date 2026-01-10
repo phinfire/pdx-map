@@ -13,9 +13,7 @@
     width: 100%;
     max-height: 100%;
 
-    @include mat.tabs-overrides((divider-color: var(--text-color),
-            active-label-text-color: var(--text-color),
-            inactive-label-text-color: var(--text-color),
+    @include mat.tabs-overrides((
             label-text-size: 2em,
             label-text-font: var(--font-family),
             container-height: 2em,
@@ -87,4 +85,12 @@
     min-height: 0;
     overflow: auto;
     padding: 1em 2em 2em 2em;
+}
+
+.table-wrapper {
+    flex: 1 1 auto;
+    padding: 0.5rem;
+    margin: 2rem 5%;
+    border-radius: 0.5rem;
+    background-color: var(--background-color);
 }

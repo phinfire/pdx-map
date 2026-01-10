@@ -128,7 +128,8 @@ export class Vic3Save implements ParadoxSave {
                 country2Buildings.set(country, []);
             }
             const buildingsFromEntry = Building.fromRawData(buildingEntry, saveData.building_manager.database, saveData.building_ownership_manager.database, state2ownerIndex);
-            country2Buildings.get(country)!.push(...buildingsFromEntry);
+            const {locationIndex, buildings} = buildingsFromEntry;
+            country2Buildings.get(country)!.push(...buildings);
         }
         return country2Buildings;
     }
