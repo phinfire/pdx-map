@@ -1,6 +1,6 @@
 import { RGB } from "../../util/RGB";
 import { ColorConfigProvider } from "../viewers/polygon-select/ColorConfigProvider";
-import { ValueGradientColorConfig } from "../viewers/polygon-select/DynamicColorConfig";
+import { ValueGradientColorConfig } from "../viewers/polygon-select/ValueGradientColorConfig";
 
 export interface ViewMode<T> {
     getColorConfig(): ColorConfigProvider;

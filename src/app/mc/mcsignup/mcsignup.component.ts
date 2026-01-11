@@ -1,5 +1,5 @@
 import { Router } from '@angular/router';
-import { Component, inject, ViewChild, OnInit, HostListener, AfterViewInit, Input } from '@angular/core';
+import { Component, inject, ViewChild, OnInit, HostListener, Input } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,13 +13,13 @@ import { DiscordFieldComponent } from '../../discord-field/discord-field.compone
 import { DiscordLoginComponent } from '../../discord-login/discord-login.component';
 import { combineLatest } from 'rxjs';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
-import { ValueGradientColorConfig } from '../../viewers/polygon-select/DynamicColorConfig';
 import { PolygonSelectComponent } from '../../viewers/polygon-select/polygon-select.component';
 import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
 import { TimerComponent } from '../../timer/timer.component';
 import { MegaCampaign } from '../MegaCampaign';
 import { MegaService } from '../MegaService';
 import { MCSignupService } from '../MCSignupService';
+import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
 
 export interface TableItem {
     key: string;
@@ -32,7 +32,7 @@ export interface TableItem {
     templateUrl: './mcsignup.component.html',
     styleUrl: './mcsignup.component.scss'
 })
-export class MCSignupComponent implements OnInit, AfterViewInit {
+export class MCSignupComponent implements OnInit {
 
     @ViewChild(PolygonSelectComponent) polygonSelectComponent!: PolygonSelectComponent;
 
@@ -160,10 +160,6 @@ export class MCSignupComponent implements OnInit, AfterViewInit {
         for (const sub of this.subsToUnsubFromOnDestroy) {
             sub.unsubscribe();
         }
-    }
-
-    ngAfterViewInit() {
-        // Initialization moved to ngOnInit to avoid ExpressionChangedAfterItHasBeenCheckedError
     }
 
     private launchPolygonSelect(data: SignupAssetsData) {

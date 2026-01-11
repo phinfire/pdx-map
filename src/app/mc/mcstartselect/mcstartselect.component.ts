@@ -9,7 +9,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SignupAssetsService, SignupAssetsData } from '../SignupAssetsService';
 import { StartAssignment } from '../StartAssignment';
-import { ValueGradientColorConfig } from '../../viewers/polygon-select/DynamicColorConfig';
 import { combineLatest } from 'rxjs';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
 import { PdxFileService } from '../../../services/pdx-file.service';
@@ -20,6 +19,7 @@ import { MCSignupService } from '../MCSignupService';
 import { AssignmentService } from '../AssignmentService';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
 
 @Component({
     selector: 'app-mcstartselect',
