@@ -251,7 +251,7 @@ export class MegaModderE2VService {
         const scaledRegionsByName = new Map<string, { region: MapStateRegion; arableLand: number }>();
 
         for (const mapState of mapStateRegions) {
-            const stateKey = mapState.getName();
+            const stateKey = mapState.getIdentifier();
             const tiles = Array.from(mapState.getTiles());
 
             if (tiles.length === 0 || mapState.getArableLand() === 0) {

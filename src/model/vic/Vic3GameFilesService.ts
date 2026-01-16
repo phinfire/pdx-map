@@ -220,7 +220,11 @@ export class Vic3GameFilesService {
                         }
                     }
                 }
-                return Array.from(resources).sort();
+                return Array.from(resources).sort((a, b) => {
+                    const aLast = a.split('_').pop() || a;
+                    const bLast = b.split('_').pop() || b;
+                    return aLast.localeCompare(bLast);
+                });
             })
         );
     }
@@ -257,7 +261,7 @@ export class Vic3GameFilesService {
                     throw new Error(`Unknown good category: ${entry.category} for good ${key}`);
                 }
                 return new Good(key, index++, category, entry.locKey);
-            });
+            }).sort((a, b) => a.name.localeCompare(b.name));
         });
     }
 
@@ -304,7 +308,6 @@ export class Vic3GameFilesService {
                 const traits = new Set<string>(entry.traits ? normalizeToArray(entry.traits) : []);
 
                 regions.push(new MapStateRegion(
-                    key,
                     key,
                     tiles,
                     arableLand,
@@ -566,7 +569,7 @@ export class Vic3GameFilesService {
     private buildStateRegionContent(regions: MapStateRegion[]): string {
         const lines: string[] = [];
         for (const region of regions) {
-            const name = region.getName();
+            const name = region.getIdentifier();
 
             lines.push(`${name} = {`);
 

@@ -1,24 +1,28 @@
 <div #rendererContainer class="map-container">
     @if (!isReady()) {
-        <div class="loading-indicator">
-            <mat-spinner diameter="40"></mat-spinner>
-            <p>Loading map...</p>
-        </div>
+    <div class="loading-indicator">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading map...</p>
+    </div>
     }
-    
-    <div class="button-group">
-        <button class="corner-button" (click)="fitCameraToPolygons(0); $event.stopPropagation()" title="Fit camera to view all polygons">
+    <div class="button-group-left">
+        @for (btn of customButtons; track $index) {
+        <button class="corner-button custom" (click)="buttonClicked.emit(btn); btn.action(); $event.stopPropagation()" [title]="btn.title"
+            [class.active]="btn.canBeToggled && btn.isToggled" [class.image-button]="btn.isImage">
+            @if (btn.isImage) {
+            <img [src]="btn.icon" [alt]="btn.title" class="button-icon">
+            } @else {
+            <mat-icon>{{ btn.icon }}</mat-icon>
+            }
+        </button>
+        }
+    </div>
+
+    <div class="button-group-right">
+        <button class="corner-button" (click)="fitCameraToPolygons(0); $event.stopPropagation()"
+            title="Fit camera to view all polygons">
             <mat-icon>home</mat-icon>
         </button>
-        <!--<button class="corner-button" (click)="refreshButtonClicked(); $event.stopPropagation()" title="Reset to initial selection">
-            <mat-icon>refresh</mat-icon>
-        </button>
-    -->
-        @if (colorConfigProviders.length > 1) {
-            <button class="corner-button" (click)="toggleColorConfigProvider(); $event.stopPropagation()" title="Toggle color scheme">
-                <mat-icon>palette</mat-icon>
-            </button>
-        }
         <button class="corner-button" (click)="exportMapImage(); $event.stopPropagation()" title="Export map as image">
             <mat-icon>camera_alt</mat-icon>
         </button>
@@ -28,22 +32,16 @@
                 [title]="tooltipManager.isTooltipEnabled() ? 'Disable tooltips' : 'Enable tooltips'">
             <mat-icon>{{ tooltipManager.isTooltipEnabled() ? 'chat_bubble' : 'chat_bubble_outline' }}</mat-icon>
         </button>
-    -->
-        @if (customButtons.length > 0) {
-            <span class="button-separator"></span>
-        }
-        @for (btn of customButtons; track $index) {
-            <button class="corner-button custom" (click)="btn.action(); $event.stopPropagation()" [title]="btn.title" [class.active]="btn.active">
-                <mat-icon>{{ btn.icon }}</mat-icon>
-            </button>
-        }
-    </div>
     
-    <div class="mesh-tooltip" 
-         [class.visible]="tooltipManager.isTooltipVisible()"
-         [class.above]="tooltipManager.getTooltipPosition().above"
-         [style.left.px]="tooltipManager.getTooltipPosition().x" 
-         [style.top.px]="tooltipManager.getTooltipPosition().y"
-         [innerHTML]="tooltipManager.getTooltipContent()">
+        @if (customButtons.length > 0) {
+        <span class="button-separator"></span>
+        }
+            -->
+    </div>
+
+    <div class="mesh-tooltip" [class.visible]="tooltipManager.isTooltipVisible()"
+        [class.above]="tooltipManager.getTooltipPosition().above"
+        [style.left.px]="tooltipManager.getTooltipPosition().x" [style.top.px]="tooltipManager.getTooltipPosition().y"
+        [innerHTML]="tooltipManager.getTooltipContent()">
     </div>
 </div>

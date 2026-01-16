@@ -2,12 +2,12 @@ import { RGB } from "../../util/RGB";
 import { ColorConfigProvider } from "../viewers/polygon-select/ColorConfigProvider";
 import { ValueGradientColorConfig } from "../viewers/polygon-select/ValueGradientColorConfig";
 
-export interface ViewMode<T> {
+export interface ViewMode {
     getColorConfig(): ColorConfigProvider;
     getTooltip(): (key: string) => string;
 }
 
-export class CategoryViewMode<T, R> implements ViewMode<T> {
+export class CategoryViewMode<T, R> implements ViewMode {
 
     private colorConfig: ColorConfigProvider;
     private key2Category: Map<string, R>;
@@ -45,7 +45,7 @@ export class CategoryViewMode<T, R> implements ViewMode<T> {
 
 }
 
-export class ValueViewMode<T> implements ViewMode<T> {
+export class ValueViewMode<T> implements ViewMode {
 
     private colorConfig: ColorConfigProvider;
 

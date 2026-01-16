@@ -27,6 +27,31 @@ export class SaveSaverService {
 
     private saveDatabaseService = inject(DataStorageService);
 
+    public getAvailableSaveIdentifiers(): Observable<string[]> {
+        return this.saveDatabaseService.listFiles().pipe(
+            map(files => files.filter(file => file.metadata && file.metadata["kind"] === 'save').map(file => file.id))
+        );
+    }
+
+    public getAvailableSavesAndMetadata(): Observable<Array<{ id: string; metadata: any }>> {
+        return this.saveDatabaseService.listFiles().pipe(
+            map(files => files
+                .filter(file => file.metadata && file.metadata["kind"] === 'save')
+                .map(file => ({ id: file.id, metadata: file.metadata }))
+            )
+        );
+    }
+
+    public getSaveFileByIdentifier(saveId: string): Observable<any> {
+        return this.saveDatabaseService.downloadFile(saveId).pipe(
+            map(data => {
+                const decodedString = new TextDecoder().decode(data);
+                const parsed = JSON.parse(decodedString);
+                return Vic3Save.fromJSON(parsed);
+            })
+        );
+    }
+
     public getSaveFileIdentifierIfHasAlreadyBeenUploaded(save: Vic3Save): Observable<string | null> {
         const serialized = JSON.stringify(save.toJson());
         return this.hashData(serialized).pipe(
@@ -181,7 +206,6 @@ export class SaveSaverService {
                         }),
                         catchError((error) => {
                             console.error(`Error uploading ${context}: ${file.kind}:`, error);
-                            // Delete previously uploaded files on failure
                             const deleteOperations = uploaded.map(u =>
                                 this.saveDatabaseService.deleteFile(u.id).pipe(
                                     tap(() => console.log(`Cleaned up ${u.kind} file (id: ${u.id})`)),

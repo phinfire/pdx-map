@@ -16,6 +16,7 @@ export const routes: Routes = [
         component: ParadoxComponent,
         children: [
             { path: 'save', component: SaveViewSplashComponent },
+            { path: 'save/:saveId', component: SaveViewSplashComponent },
             { path: 'map', component: ResourcemapComponent },
             { path: 'stonks', component: CampaignLinesComponent },
             { path: 'mc', component: MegaCampaignComponent },

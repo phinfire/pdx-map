@@ -5,8 +5,8 @@ import { ICk3Save } from "../../model/ck3/save/ICk3Save";
 import { Eu4Save } from '../../model/eu4/Eu4Save';
 import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvider';
 import { RGB } from '../../util/RGB';
-import { ValueGradientColorConfig } from "../viewers/polygon-select/DynamicColorConfig";
 import { AbstractLandedTitle } from "../../model/ck3/title/AbstractLandedTitle";
+import { ValueGradientColorConfig } from "../viewers/polygon-select/ValueGradientColorConfig";
 
 @Injectable({
     providedIn: 'root'

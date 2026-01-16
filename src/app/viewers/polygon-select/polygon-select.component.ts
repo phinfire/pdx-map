@@ -1,12 +1,13 @@
-import { Component, ElementRef, Input, SimpleChanges, ViewChild, NgZone, AfterViewInit } from '@angular/core';
-
-import * as THREE from 'three';
+import { Component, ElementRef, EventEmitter, Input, NgZone, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ColorConfigProvider } from './ColorConfigProvider';
-import { TooltipManager } from './TooltipManager';
-import { CameraMovementManager } from './CameraMovementManager';
+import * as THREE from 'three';
 import { BehaviorConfigProvider } from './BehaviorConfigProvider';
+import { CameraMovementManager } from './CameraMovementManager';
+import { ColorConfigProvider } from './ColorConfigProvider';
+import { CustomButton } from './CustomButton';
+import { TooltipManager } from './TooltipManager';
+
 @Component({
     selector: 'app-polygon-select',
     imports: [MatIconModule, MatProgressSpinnerModule],
@@ -25,7 +26,8 @@ export class PolygonSelectComponent {
     };
     @Input() meshBuddiesProvider: (key: string) => string[] = (key: string) => [key];
     @Input() tooltipProvider: (key: string) => string = (key: string) => key;
-    @Input() customButtons: Array<{ icon: string, title: string, action: () => void, active?: boolean }> = [];
+    @Input() customButtons: CustomButton[] = [];
+    @Output() buttonClicked = new EventEmitter<CustomButton>();
 
     private readonly LIGHT_INTENSITY = 3;
     private readonly RAYCAST_THROTTLE_MS = 16;
@@ -116,6 +118,9 @@ export class PolygonSelectComponent {
             for (const poly of this.polygons.values()) {
                 this.refreshPolyColor(poly);
             }
+        }
+        if (changes['clearColor'] && this.renderer) {
+            this.renderer.setClearColor(this.clearColor);
         }
     }
 
@@ -247,6 +252,7 @@ export class PolygonSelectComponent {
         this.camera.lookAt(0, 0, 0);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setClearColor(this.clearColor);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(container.clientWidth, container.clientHeight);
         container.appendChild(this.renderer.domElement);
 
@@ -314,6 +320,12 @@ export class PolygonSelectComponent {
     private onMouseMoveForRaycasting = (event: MouseEvent) => {
         const container = this.containerRef.nativeElement;
         this.tooltipManager.updateMousePosition(event.clientX, event.clientY);
+        const isOverButton = (event.target as Element).closest('.button-group, .corner-button');
+        if (isOverButton) {
+            this.tooltipManager.setTooltipVisibility(false);
+            return;
+        }
+
         this.tooltipManager.updateTooltipPosition();
 
         const rect = container.getBoundingClientRect();

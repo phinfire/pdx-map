@@ -93,10 +93,9 @@
         <ng-template mat-tab-label>
             <mat-icon>map</mat-icon>
         </ng-template>
-        @if (selectedTabIndex === 8) {
-        <app-slab-map-view [geoJsonFetcher]="geoJsonFetcher" [viewModes]="viewModes" [behaviorConfig]="behaviorConfig">
+        <app-slab-map-view [geoJsonFetcher]="geoJsonFetcher" [viewModes]="availableMapViewModes"
+            [behaviorConfig]="behaviorConfig">
         </app-slab-map-view>
-        }
     </mat-tab>
 </mat-tab-group>
 }

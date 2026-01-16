@@ -1,3 +1,4 @@
 <app-polygon-select #polygonSelect [colorConfigProviders]="colorConfigProviders"
     [selectionCallback]="selectionCallback" [tooltipProvider]="currentTooltipProvider"
-    [meshBuddiesProvider]="meshBuddiesProvider" [customButtons]="getCustomButtons()"></app-polygon-select>
+    [meshBuddiesProvider]="meshBuddiesProvider" [customButtons]="customButtonsForPolySelect"
+    (buttonClicked)="onCustomButtonClick($event)"></app-polygon-select>

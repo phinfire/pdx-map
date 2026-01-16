@@ -1,18 +1,17 @@
-import { Good } from "./Good";
 import { ResourceType } from "../enum/ResourceType";
+import { ResourceHaver } from "./ResourceHaver";
 
-export class MapStateRegion {
+export class MapStateRegion extends ResourceHaver {
 
     private readonly tiles: Set<string>;
 
     constructor(
-        private name: string,
-        private identifier: string,
+        identifier: string,
         tiles: Set<string>,
-        private arableLand: number,
-        private possibleFarmTypes: Set<string>,
-        private arableResources: Map<string, number>,
-        private otherResources: Map<string, number>,
+        arableLand: number,
+        possibleFarmTypes: Set<string>,
+        arableResources: Map<string, number>,
+        otherResources: Map<string, number>,
         private filename: string,
         private id?: number,
         private subsistence_building?: string,
@@ -26,32 +25,12 @@ export class MapStateRegion {
         private naval_exit_id?: number,
         private uncappedResources: Array<{ type: string; undiscovered_amount: number }> = []
     ) {
+        super(identifier, arableLand, possibleFarmTypes, arableResources, otherResources);
         this.tiles = Object.freeze(tiles);
-        this.arableLand = Math.round(arableLand);
-    }
-
-    getIdentifier(): string {
-        return this.identifier;
     }
 
     getTiles(): ReadonlySet<string> {
         return this.tiles;
-    }
-
-    getArableLand(): number {
-        return this.arableLand;
-    }
-
-    getPossibleFarmTypes(): ReadonlySet<string> {
-        return this.possibleFarmTypes;
-    }
-
-    getArableResources(): ReadonlyMap<string, number> {
-        return new Map(this.arableResources);
-    }
-
-    getOtherResources(): ReadonlyMap<string, number> {
-        return new Map(this.otherResources);
     }
 
     getCappedResources(): ReadonlyMap<string, number> {
@@ -95,7 +74,7 @@ export class MapStateRegion {
     }
 
     getResourceType(resourceName: string): ResourceType | null {
-        if (this.arableResources.has(resourceName)) {
+        if (this.getArableResources().has(resourceName)) {
             return ResourceType.ARABLE;
         }
         if (this.cappedResources.has(resourceName)) {
@@ -112,26 +91,32 @@ export class MapStateRegion {
     }
 
     getMineralResourceSlot(resource: string): number {
-        return this.arableResources.get(resource) ?? this.otherResources.get(resource) ?? 0;
+        return this.getArableResources().get(resource) ?? this.getOtherResources().get(resource) ?? 0;
     }
 
     getFilename(): string {
         return this.filename;
     }
 
-    getName(): string {
-        return this.name;
+    getMaxAvailableResourceSlots(resource: string) {
+        if (this.getArableResources().has(resource)) {
+            return this.getArableLand();
+        } else if (this.cappedResources.has(resource)) {
+            return this.cappedResources.get(resource)!;
+        } else if (this.uncappedResources.some(r => r.type === resource)) {
+            return this.uncappedResources.find(r => r.type === resource)!.undiscovered_amount;
+        }
+        return 0;
     }
 
     withArableLand(arableLand: number): MapStateRegion {
         return new MapStateRegion(
-            this.name,
-            this.identifier,
+            this.getIdentifier(),
             this.tiles,
             arableLand,
-            this.possibleFarmTypes,
-            this.arableResources,
-            this.otherResources,
+            new Set(this.getPossibleFarmTypes()),
+            new Map(this.getArableResources()),
+            new Map(this.getOtherResources()),
             this.filename,
             this.id,
             this.subsistence_building,
@@ -145,5 +130,9 @@ export class MapStateRegion {
             this.naval_exit_id,
             this.uncappedResources
         );
+    }
+
+    getHumanReadableName(): string {
+        return this.getIdentifier().replace("STATE_", "").toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
 }

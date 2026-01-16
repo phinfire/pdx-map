@@ -2,12 +2,14 @@ import { ParadoxSave } from "../ParadoxSave";
 import { Building } from "./Building";
 import { Country } from "./Country";
 import { CountryBudget } from "./CountryBudget";
+import { ResourceHaver } from "./game/ResourceHaver";
 import { Pop } from "./Pop";
 import { PowerBloc } from "./PowerBloc";
 import { StateRegion } from "./StateRegion";
 
 interface RawSaveData {
     states: any;
+    state_region_manager: any;
     pops: any;
     technology: any;
     player_manager: any;
@@ -27,8 +29,7 @@ export class Vic3Save implements ParadoxSave {
     public static makeSaveFromRawData(saveData: RawSaveData) {
         const overlordToVassals = Vic3Save.getOverlordToVassals(saveData.pacts.database);
         const stateRegion2Buildings = Vic3Save.assembleStateRegion2BuildingsMap(saveData);
-        const stateRegion2State = Vic3Save.assembleStateRegion2StateMap(saveData);
-        console.log(stateRegion2State);
+        const parsedStateTemplates = Vic3Save.parseStateRegionEntries(saveData);
         const state2ownerIndex = new Map<number, number>();
         const countryIndex2StateRegions: Map<string, StateRegion[]> = new Map();
         for (const stateEntryIndex in saveData.states.database) {
@@ -75,7 +76,7 @@ export class Vic3Save implements ParadoxSave {
         for (const countryIndex in saveData.country_manager.database) {
             const countryEntry = saveData.country_manager.database[countryIndex];
             const countryBudget = countryEntry["budget"] ? CountryBudget.fromRawData(countryEntry["budget"]) : CountryBudget.NONE;
-            if (countryEntry["country_type"] != undefined) {
+            if (countryEntry["country_type"] !== undefined && countryEntry["country_type"] !== "decentralized") {
                 const techEntry = countryIndex2TechEntry.get(countryIndex) || {};
                 const playerName = country2playerName.get(countryIndex) || null;
                 const taxLevel = countryEntry["tax_level"] || "medium";
@@ -116,6 +117,60 @@ export class Vic3Save implements ParadoxSave {
         return new Vic3Save(nonBlocCountries, blocs, ingameDate, realDate);
     }
 
+    private static parseStateRegionEntries(saveData: RawSaveData): Map<string, ResourceHaver> {
+        const stateRegionMap = new Map<string, ResourceHaver>();
+        
+        const arableResourceTypes = new Set([
+            'bg_maize_farms', 'bg_millet_farms', 'bg_rice_farms', 'bg_rye_farms', 'bg_wheat_farms',
+            'bg_banana_plantations', 'bg_coffee_plantations', 'bg_cotton_plantations', 'bg_dye_plantations',
+            'bg_livestock_ranches', 'bg_opium_plantations', 'bg_silk_plantations', 'bg_sugar_plantations',
+            'bg_tea_plantations', 'bg_tobacco_plantations', 'bg_vineyard_plantations'
+        ]);
+        
+        for (const stateIndex in saveData.state_region_manager.database) {
+            const stateEntry = saveData.state_region_manager.database[stateIndex];
+            const identifier = stateEntry["template"];
+            const arableLand = stateEntry["arable_land"] || 0;
+            
+            const arableResources = new Map<string, number>();
+            const otherResources = new Map<string, number>();
+            const uncappedResources: Array<{ type: string; undiscovered_amount: number }> = [];
+            
+            const resources = stateEntry.persistent_resources?.resources || [];
+            for (const resource of resources) {
+                const resourceType = resource.type;
+                
+                if (arableResourceTypes.has(resourceType)) {
+                    const amount = resource.amount || 0;
+                    arableResources.set(resourceType, amount);
+                } else {
+                    if (resource.amount !== undefined) {
+                        otherResources.set(resourceType, resource.amount);
+                    } else if (resource.discovered_amount !== undefined) {
+                        otherResources.set(resourceType, resource.discovered_amount);
+                    }
+                }
+                if (resource.undiscovered_amount !== undefined) {
+                    uncappedResources.push({
+                        type: resourceType,
+                        undiscovered_amount: resource.undiscovered_amount
+                    });
+                }
+            }
+            
+            const resourceHaver = new ResourceHaver(
+                identifier,
+                arableLand,
+                new Set(arableResources.keys()),
+                arableResources,
+                otherResources
+            );
+            
+            stateRegionMap.set(identifier, resourceHaver);
+        }
+        return stateRegionMap;
+    }
+
     private static assembleStateRegion2BuildingsMap(saveData: RawSaveData): Map<number, Building[]> {
         const stateRegion2Buildings = new Map<number, Building[]>();
         for (const buildingIndex in saveData.building_manager.database) {
@@ -127,15 +182,6 @@ export class Vic3Save implements ParadoxSave {
             stateRegion2Buildings.get(locationIndex)!.push(...buildings);
         }
         return stateRegion2Buildings;
-    }
-
-    private static assembleStateRegion2StateMap(saveData: RawSaveData) {
-        const stateRegion2State = new Map<number, number>();
-        //saveData.state_region_to_state_array = new Map<number, number>();
-        for (const stateRegionIndex in saveData.states.state_region_to_state_array) {
-            stateRegion2State.set(parseInt(stateRegionIndex), saveData.states.state_region_to_state_array[stateRegionIndex]);
-        }
-        return stateRegion2State;
     }
 
     private static getOverlordToVassals(pactData: any): Map<string, string[]> {

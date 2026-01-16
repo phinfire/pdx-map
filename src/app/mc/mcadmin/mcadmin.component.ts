@@ -15,9 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { calculateAssignments } from '../../../util/lobby';
 import { SignupAssetsService } from '../SignupAssetsService';
-import { StartAssignment } from '../StartAssignment';
 import { AssignmentService } from '../AssignmentService';
-import { combineLatest } from 'rxjs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
@@ -31,20 +29,14 @@ import { MCSignupService } from '../MCSignupService';
 })
 export class MCAdminComponent {
 
-    // For swapping assignments
     protected swapUser1: string = '';
     protected swapUser2: string = '';
 
-    /**
-     * Swaps the assignments of two users in the calculatedRegion2Player map.
-     * Shows a snackbar on success or error.
-     */
     swapAssignments() {
         if (!this.swapUser1 || !this.swapUser2 || this.swapUser1 === this.swapUser2) {
             this.openSnackBar('Please select two different users to swap.', 'OK');
             return;
         }
-        // Find the regions assigned to each user
         let region1: string | undefined = undefined;
         let region2: string | undefined = undefined;
         for (const [region, user] of this.calculatedRegion2Player.entries()) {

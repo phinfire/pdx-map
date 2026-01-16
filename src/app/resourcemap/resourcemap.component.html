@@ -1,33 +1,7 @@
 <div class="lab-container">
-    <div class="selection-box-wrapper">
-        <div class="icon-row">
-            @for (category of categoryOrder; track category) {
-            @if ((resourcesByCategory.get(category) || []).length > 0) {
-            <div class="category-segment">
-                @for (resource of resourcesByCategory.get(category) || []; track resource) {
-                <button mat-icon-button [class.selected]="isResourceSelected(resource)"
-                    (click)="toggleResource(resource)" [matTooltip]="formatResourceName(resource)" 
-                    [disableRipple]="true" type="button">
-                    <img [src]="getIconPath(resource)" [alt]="formatResourceName(resource)" class="resource-icon">
-                </button>
-                }
-            </div>
-            }
-            }
-        </div>
-    </div>
-
     <div class="map-wrapper">
-        @if (selectedResource) {
         <app-slab-map-view [geoJsonFetcher]="geoJsonFetcher" [viewModes]="viewModes"
             [behaviorConfig]="behaviorConfig">
         </app-slab-map-view>
-        } @else {
-        <div class="prompt-content">
-            <mat-icon class="prompt-icon">arrow_upward</mat-icon>
-            <h2>Select a Resource</h2>
-            <p>Click on one of the resource icons above to view data on the map.</p>
-        </div>
-        }
     </div>
 </div>

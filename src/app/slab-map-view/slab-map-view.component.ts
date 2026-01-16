@@ -6,6 +6,8 @@ import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvid
 import { BehaviorConfigProvider } from '../viewers/polygon-select/BehaviorConfigProvider';
 import { ViewMode } from './ViewMode';
 import { Observable } from 'rxjs';
+import { LabeledAndIconed } from '../../ui/LabeledAndIconed';
+import { CustomButton } from '../viewers/polygon-select/CustomButton';
 
 @Component({
     selector: 'app-slab-map-view',
@@ -18,7 +20,7 @@ export class SlabMapViewComponent {
     mapService = inject(MapService);
 
     @Input() geoJsonFetcher!: () => Observable<any>;
-    @Input() viewModes: ViewMode<any>[] = [];
+    @Input() viewModes: LabeledAndIconed<ViewMode>[] = [];
     protected colorConfigProviders: ColorConfigProvider[] = [];
     @Input() behaviorConfig: BehaviorConfigProvider = new BehaviorConfigProvider(0.75);
     @Input() selectionCallback: (key: string) => void = (key: string) => {
@@ -26,29 +28,28 @@ export class SlabMapViewComponent {
     };
     @ViewChild('polygonSelect') polygonSelectComponent!: PolygonSelectComponent;
 
+    customButtonsForPolySelect: CustomButton[] = [];
+
     key2Province: Map<string, any> = new Map<string, any>();
 
-    protected currentViewMode: ViewMode<any> | null = null;
+    protected currentViewMode: LabeledAndIconed<ViewMode> | null = null;
     protected currentTooltipProvider: (key: string) => string = (key: string) => key;
     defaultTooltip = (key: string) => key;
 
-    getCustomButtons() {
-        return this.viewModes.length > 1 ? [
-            {
-                icon: 'arrow_forward',
-                title: 'Next view mode',
-                action: () => {
-                    if (this.viewModes.length > 1) {
-                        const currentIndex = this.viewModes.indexOf(this.currentViewMode!);
-                        const nextIndex = (currentIndex + 1) % this.viewModes.length;
-                        this.currentViewMode = this.viewModes[nextIndex];
-                        this.currentTooltipProvider = this.currentViewMode.getTooltip();
-                        this.polygonSelectComponent.colorConfigProvider = this.colorConfigProviders[nextIndex];
-                        this.polygonSelectComponent.refreshAllColors();
-                    }
-                }
+    getCustomButtons() : CustomButton[] {
+       return this.viewModes.map((vm, index) => ({
+            icon: vm.icon,
+            isImage: true,
+            title: vm.label,
+            canBeToggled: true,
+            isToggled: index == 0,
+            action: () => {
+                this.currentViewMode = vm;
+                this.currentTooltipProvider = vm.target.getTooltip();
+                this.polygonSelectComponent.colorConfigProvider = this.colorConfigProviders[index];
+                this.polygonSelectComponent.refreshAllColors();
             }
-        ] : [];
+       }));
     }
 
     meshBuddiesProvider: (key: string) => string[] = (key: string) => {
@@ -59,12 +60,27 @@ export class SlabMapViewComponent {
         if (this.viewModes.length === 0) {
             return;
         }
-        this.colorConfigProviders = this.viewModes.map(vm => vm.getColorConfig());
+        this.customButtonsForPolySelect = this.getCustomButtons();
+        this.colorConfigProviders = this.viewModes.map(vm => vm.target.getColorConfig());
         this.currentViewMode = this.viewModes[0];
-        this.currentTooltipProvider = this.currentViewMode.getTooltip();
+        this.currentTooltipProvider = this.currentViewMode.target.getTooltip();
         this.geoJsonFetcher().subscribe((geoJson) => {
             const meshes = makeGeoJsonPolygons(geoJson, this.colorConfigProviders[0], () => null, () => false, 0.75);
             this.polygonSelectComponent.launch(meshes, this.colorConfigProviders, this.behaviorConfig);
         });
+    }
+
+    onCustomButtonClick(btn: CustomButton) {
+        if (btn.canBeToggled) {
+            if (btn.isToggled) {
+                return;
+            }
+            this.customButtonsForPolySelect.forEach(b => {
+                if (b !== btn) {
+                    b.isToggled = false;
+                }
+            });
+            btn.isToggled = true;
+        }
     }
 }

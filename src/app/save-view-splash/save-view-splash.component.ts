@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, Input, ViewChild, OnDestroy } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { combineLatest, firstValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
@@ -16,6 +16,8 @@ import { SimplifiedDate } from '../../model/common/SimplifiedDate';
 import { MatIconModule } from '@angular/material/icon';
 import { SaveFileType } from '../../model/SaveFileType';
 import { SideNavContentProvider } from '../../ui/SideNavContentProvider';
+import { ActivatedRoute } from '@angular/router';
+import { SaveSaverService } from '../save-saver.service';
 
 @Component({
     selector: 'app-save-view-splash',
@@ -27,6 +29,9 @@ export class SaveViewSplashComponent implements OnDestroy {
 
     ck3Service = inject(CK3Service);
     sideNavContentProvider = inject(SideNavContentProvider);
+    saveSaverService = inject(SaveSaverService);
+    private fileService = inject(PdxFileService);
+    private route = inject(ActivatedRoute);
 
     activeSave?: any;
     activeSaveRawData?: any;
@@ -71,19 +76,34 @@ export class SaveViewSplashComponent implements OnDestroy {
     @ViewChild('chute') chuteDiv!: ElementRef<HTMLDivElement>;
     @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
-    private fileService = inject(PdxFileService);
-
     constructor(private elementRef: ElementRef) {
-        const testURL = "http://localhost:5500/public/palatinate_1876_01_06.v3";
-        //const testURL = "http://localhost:5500/public/palatinate_1858_03_03.v3";
-        //const testURL = "http://localhost:5500/public/palatinate_1836_01_01.v3";
-        const firstExample = this.referenceSaves[0];
-        if (firstExample) {
-            this.startProcessing();
-            this.loadReferenceSave(testURL, SaveFileType.VIC3)
-                .then(result => this.handleSuccess(result.save, result.rawData))
-                .catch(error => this.handleError(this.getErrorMessage(error, firstExample.type)));
-        }
+    }
+
+    ngOnInit() {
+        combineLatest([
+            this.saveSaverService.getAvailableSavesAndMetadata(),
+            this.route.params
+        ]).subscribe(([saves, params]) => {
+            console.log('Available saves from SaveSaverService:', saves);
+            const id = saves[saves.length - 1].id;
+            const saveId = params['saveId'];
+            console.log('SaveViewSplashComponent initialized with saveId:', saveId);
+
+            this.saveSaverService.getSaveFileByIdentifier(id).subscribe(save => {
+                console.log('Loaded save from SaveSaverService with ID:', id, save);
+                this.activeSave = save;
+            });
+
+            if (saveId) {
+                if (saveId == "dev") {
+                    this.startProcessing();
+                    this.loadReferenceSave("http://localhost:5500/public/palatinate_1876_01_06.v3", SaveFileType.VIC3)
+                        .then(result => this.handleSuccess(result.save, result.rawData))
+                        .catch(error => this.handleError(this.getErrorMessage(error, SaveFileType.VIC3)));
+                }
+                console.log('Load save with ID:', saveId);
+            }
+        });
     }
 
     activeSaveIsVic3() {

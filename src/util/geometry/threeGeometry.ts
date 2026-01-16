@@ -118,7 +118,7 @@ function createFlatGeometryFromCoords(coords: any, normFn: (x: number, y: number
         meshes.push(nonInteractiveMesh);
     }
     
-    console.log(`makeGeoJsonPolygons created ${totalTriangles.toLocaleString()} triangles across ${meshes.length.toLocaleString()} meshes`);
+    console.info(`makeGeoJsonPolygons created ${totalTriangles.toLocaleString()} triangles across ${meshes.length.toLocaleString()} meshes`);
     return meshes;
 }
 

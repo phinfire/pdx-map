@@ -73,7 +73,6 @@ export class MegaCampaignComponent {
         });
         this.assignmentService.allAssignments$.subscribe(assignments => {
             this.assignments = assignments.sort((a, b) => a.region_key < b.region_key ? -1 : (a.region_key > b.region_key ? 1 : 0));
-            console.log(`Loaded ${this.assignments.length} assignments`);
             if (assignments != null) {
                 const loggedInUser = this.authService.getLoggedInUser();
                 this.userAssignment = loggedInUser ? assignments.find(a => a.user.id === loggedInUser.id) || null : null;
@@ -99,7 +98,6 @@ export class MegaCampaignComponent {
                                 console.log(`Illegality report for ${a.user.getName()}: ${message}`);
                             }
                         }
-
                     }
                 });
             }

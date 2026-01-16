@@ -79,4 +79,27 @@ export class TableColumn<T> implements ITableColumn<T> {
             return (value / 1000000).toFixed(1) + 'M';
         }
     }
+
+    finalizeFor(elements: T[]) {
+        const element2Values: Map<T, any> = new Map<T, any>();
+        const element2VisibleValues: Map<T, any> = new Map<T, any>();
+        for (const element of elements) {
+            const value = this.cellValue(element, 0);
+            element2Values.set(element, value);
+            element2VisibleValues.set(element, this.visibleCellValue(element, 0));
+        }
+        return new TableColumn<T>(
+            this.def,
+            this.header,
+            this.tooltip,
+            this.sortable,
+            (element: T, _: number) => element2Values.get(element),
+            (element: T, index: number) => this.cellTooltip(element, index),
+            this.subscript,
+            this.isImage,
+            this.headerImage,
+            this.headerImageType,
+            null
+        );
+    }
 }

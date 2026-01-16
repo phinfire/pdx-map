@@ -33,9 +33,6 @@ interface Nation {
 export class AlliancehelperComponent implements OnInit, OnDestroy {
 
     @Input() vic3SaveFile?: Vic3Save;
-    // TODO: Don't hardcode this, needs to depend on MegaCampaign's last V3 session
-    saveFileId: string = "b9b8af2a-6938-4eec-8c49-a52a501f7fbe";
-    //saveFileId: string = "f9396abb-f48e-4f80-8d83-355d0ed59dc3"; 
     private nationsLoaded = false;
     private countriesLoaded = false;
     private megaService = inject(MegaService);
@@ -65,18 +62,30 @@ export class AlliancehelperComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.megaService.getLastEu4Save().pipe(takeUntil(this.destroy$)).subscribe(save => {
-            const demographicsObservable = this.saveFileId
-                ? this.saveDatabase.downloadFile(this.saveFileId).pipe(
-                    map(data => {
-                        const jsonStr = new TextDecoder().decode(data);
-                        return JSON.parse(jsonStr);
-                    }),
-                    catchError(error => {
-                        console.warn('Failed to fetch demographics:', error);
+            const demographicsObservable = this.saveDatabase.listFiles().pipe(
+                switchMap(files => {
+                    const demographicsFiles = files.filter(file => file.metadata && file.metadata['kind'] === 'demographics');
+                    if (demographicsFiles.length === 0) {
                         return of(null);
-                    })
-                )
-                : of(null);
+                    }
+                    demographicsFiles.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+                    const mostRecentId = demographicsFiles[0].id;
+                    return this.saveDatabase.downloadFile(mostRecentId).pipe(
+                        map(data => {
+                            const jsonStr = new TextDecoder().decode(data);
+                            return JSON.parse(jsonStr);
+                        }),
+                        catchError(error => {
+                            console.warn('Failed to fetch demographics:', error);
+                            return of(null);
+                        })
+                    );
+                }),
+                catchError(error => {
+                    console.warn('Failed to list files:', error);
+                    return of(null);
+                })
+            );
 
             forkJoin({
                 nations: this.megaService.getNations$(),
@@ -183,7 +192,6 @@ export class AlliancehelperComponent implements OnInit, OnDestroy {
                 nation.countryShell = this.countries.get(nation.key);
                 nation.disabled = nation.countryShell ? nation.countryShell.getPopulation() === 0 : true;
             } else {
-                // Nations not in the mapping are disabled
                 nation.disabled = true;
             }
         }

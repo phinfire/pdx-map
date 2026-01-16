@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, of, from } from 'rxjs';
+import { Observable, BehaviorSubject, of, from, throwError } from 'rxjs';
 import { catchError, tap, map, switchMap } from 'rxjs/operators';
 import { DiscordAuthenticationService } from '../services/discord-auth.service';
 import * as pako from 'pako';
@@ -158,6 +158,9 @@ export class DataStorageService {
         method: 'post' | 'put',
         customId?: string
     ): Observable<any> {
+        if (this.authService.isLoggedIn() === false) {
+            return throwError(() => new Error('User is not authenticated'));
+        }
         const formData = new FormData();
         formData.append('file', new File([compressedData as any], fileName, { type: 'application/octet-stream' }));
         formData.append('metadata', JSON.stringify(metadata));

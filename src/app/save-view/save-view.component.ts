@@ -9,6 +9,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Country } from '../../model/vic/Country';
 import { GoodCategory } from '../../model/vic/enum/GoodCategory';
@@ -25,12 +26,14 @@ import { BehaviorConfigProvider } from '../viewers/polygon-select/BehaviorConfig
 import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvider';
 import { takeUntil, Subject } from 'rxjs';
 import { SideNavContentProvider } from '../../ui/SideNavContentProvider';
-import { ValueGradientColorConfig } from '../viewers/polygon-select/ValueGradientColorConfig';
-import { TableColumn } from '../../util/table/TableColumn';
+import { Vic3MapViewModeProvider } from '../../services/configuration/Vic3MapViewModeProvider';
+import { MatButtonModule } from '@angular/material/button';
+import { Good } from '../../model/vic/game/Good';
+import { LabeledAndIconed } from '../../ui/LabeledAndIconed';
 
 @Component({
     selector: 'app-save-view',
-    imports: [CommonModule, MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule, SlabMapViewComponent, MatIconModule],
+    imports: [CommonModule, MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule, SlabMapViewComponent, MatIconModule, MatButtonModule, MatTooltipModule],
     templateUrl: './save-view.component.html',
     styleUrl: './save-view.component.scss',
 })
@@ -40,23 +43,27 @@ export class SaveViewComponent implements OnDestroy {
 
     private persistence = inject(PersistenceService);
     protected columnProvider = inject(Vic3TableColumnProvider);
+    private mapViewModeProvider = inject(Vic3MapViewModeProvider);
     private mapService = inject(MapService);
     private saveSaverService = inject(SaveSaverService);
     private snackBar = inject(MatSnackBar);
     private dialog = inject(MatDialog);
     sideNavContentProvider = inject(SideNavContentProvider);
 
+    protected availableMapViewModes: LabeledAndIconed<ViewMode>[] = [];
+
     includeAi = true;
     selectedTabIndex = 0;
 
     cachedCountries: Country[] = [];
+    goodViews: { good: Good, view: ViewMode }[] = [];
 
+    activeMapViewMode: ViewMode | null = null;
     goodsViewMode = GoodsViewMode.BALANCE;
     selectedGoodsCategory: GoodCategory = GoodCategory.INDUSTRIAL;
     availableGoodsCategories: GoodCategory[] = Object.values(GoodCategory);
 
     geoJsonFetcher = () => this.mapService.fetchVic3GeoJson(true);
-    viewModes: ViewMode<any>[] = [];
     colorConfigProviders: ColorConfigProvider[] = [];
     behaviorConfig = new BehaviorConfigProvider(0.75);
 
@@ -91,25 +98,10 @@ export class SaveViewComponent implements OnDestroy {
         if (!this.activeSave) {
             return;
         }
-        const state2Value = new Map<string, number>();
-        this.activeSave
-            .getCountries(true)
-            .flatMap(c => c.getStates())
-            .forEach(s =>
-                state2Value.set(
-                    s.getName(),
-                    (state2Value.get(s.getName()) ?? 0) +
-                    s.getPopulationStatBlock().getTotalPopulation()
-                )
-            );
-        const colorConfig = new ValueGradientColorConfig(state2Value);
-        const viewMode: ViewMode<any> = {
-            getColorConfig: () => colorConfig,
-            getTooltip: () => (key: string) => `<b>${key}</b><br>Population: ${TableColumn.formatNumber(state2Value.get(key) || 0)}`
-        };
-
-        this.viewModes = [viewMode];
-        this.colorConfigProviders = [colorConfig];
+        this.mapViewModeProvider.getViewModes(this.activeSave).subscribe(goodViews => {
+            this.goodViews = goodViews
+            //this.availableMapViewModes
+        });
     }
 
     onTabChange(index: number) {
@@ -141,13 +133,16 @@ export class SaveViewComponent implements OnDestroy {
         }
     }
 
+    setActiveMapViewMode(viewMode: ViewMode) {
+        this.activeMapViewMode = viewMode;
+    }
+
     getCountries() {
         if (this.cachedCountries.length === 0 && this.activeSave) {
             this.cachedCountries = this.activeSave.getCountries(this.includeAi);
         }
         return this.cachedCountries;
     }
-
 
     private setupToolbarActions(): void {
         this.removeToolbarActions();
@@ -224,7 +219,6 @@ export class SaveViewComponent implements OnDestroy {
             });
         });
     }
-
 
     private generateFileName(): string {
         const now = new Date();

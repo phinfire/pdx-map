@@ -1,5 +1,5 @@
 <table mat-table [dataSource]="dataSource" matSort>
-  @for (col of columns; track col.def; let index = $index) {
+  @for (col of internalColumns; track col.def; let index = $index) {
     <ng-container [matColumnDef]="col.def" [sticky]="false">
       <th mat-header-cell *matHeaderCellDef [mat-sort-header]="col.sortable ? col.def : ''"
         [matTooltip]="col.tooltip" matTooltipClass="tooltip" [cdkContextMenuTriggerFor]="headermenu"

@@ -49,6 +49,8 @@ export class TableComponent<T> {
     @Input() columns: TableColumn<T>[] = [];
     @Input() rowElements: T[] = [];
 
+    internalColumns: TableColumn<T>[] = [];
+
     @ViewChild(MatSort) sort!: MatSort;
     displayedColumns: string[] = [];
     dataSource = new MatTableDataSource<T>([]);
@@ -107,10 +109,14 @@ export class TableComponent<T> {
         if (changes["columns"] && this.columns) {
             this.displayedColumns = this.columns.map(c => c.def);
         }
+        if ((changes['rowElements'] || changes['columns']) && this.columns && this.rowElements) {
+            this.internalColumns = [this.columns[0], ...this.columns.slice(1,this.columns.length).map(col => col.finalizeFor(this.rowElements))];
+        }
+        
         this.dataSource.sort = this.sort;
         this.dataSource.sortingDataAccessor = (item, property) => {
             try {
-                for (const column of this.columns) {
+                for (const column of this.internalColumns) {
                     if (column.def === property) {
                         return this.safeGetCellValue(column, item, 0);
                     }
