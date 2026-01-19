@@ -15,7 +15,7 @@ export class CK3TableColumnProvider {
                 new SimpleTableColumn<Character>("faith", "Faith", char => char.getFaith() ? char.getFaith()!.getName() : null, null, false, this.rootUrl + "/faith/catholic.webp"),
                 new SimpleTableColumn<Character>("culture", "Culture",
                     char => char.getCulture() ? char.getCulture()!.getName() : null, null, false, this.rootUrl + "/message_feed/culture.webp"),
-                    new TableColumnBuilder<Character>("tech", "Tech")
+                    new TableColumnBuilder<Character>("Tech")
                         .withCellValue((char: Character) => char.getCulture() ? char.getCulture()!.getResearchedInnovationNames().length : 0)
                         .withCellTooltip((char: Character) => char.getCulture() ? char.getCulture()!.getResearchedInnovationNames().map((n: string) => n.replace("innovation_", "")).join("\n") : "")
                         .build(),
@@ -63,13 +63,13 @@ export class CK3TableColumnProvider {
                     false,
                     this.rootUrl + "/icon_domain.webp"
                 ),
-                new TableColumnBuilder<Character>("titles", "Titles")
+                new TableColumnBuilder<Character>("Titles")
                     .withCellValue((char: Character) => char.getTitles().length)
                     .withCellTooltip((char: Character) => char.getTitles().map(title => title.getTier().getStateTitle() + " of " + title.getLocalisedName()).join("\n"))
                     .build(),
                 //new SimpleTableColumn<Character>("vassals", "Vassals",
                 //    char => char.getVassals().length, null, false, this.rootUrl + "/icon_vassal.webp"),
-                new TableColumnBuilder<Character>("troops", "Troops")
+                new TableColumnBuilder<Character>("Troops")
                     .withCellValue((char: Character) => char.getLevies() + char.getNonLevyTroops() + char.getKnights().length)
                     .withCellTooltip((char: Character) => `Levies: ${char.getLevies()}\nMAA: ${char.getNonLevyTroops()}\nKnights: ${char.getKnights().length}`)
                     .build(),

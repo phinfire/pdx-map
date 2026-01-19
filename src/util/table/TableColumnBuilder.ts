@@ -14,8 +14,8 @@ export class TableColumnBuilder<T> {
     private headerImageType: ImageIconType | undefined;
     private cellValueTransform: ((value: any) => any) | null = null;
 
-    constructor(def: string, header: string = '') {
-        this.def = def;
+    constructor(header: string) {
+        this.def = header.toLowerCase().replace(/\s+/g, '_');
         this.header = header;
     }
 

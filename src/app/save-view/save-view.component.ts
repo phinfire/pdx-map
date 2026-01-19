@@ -67,7 +67,6 @@ export class SaveViewComponent implements OnDestroy {
     colorConfigProviders: ColorConfigProvider[] = [];
     behaviorConfig = new BehaviorConfigProvider(0.75);
 
-    private downloadActionHandle: string | null = null;
     private uploadActionHandle: string | null = null;
     private destroy$ = new Subject<void>();
 
@@ -146,11 +145,6 @@ export class SaveViewComponent implements OnDestroy {
 
     private setupToolbarActions(): void {
         this.removeToolbarActions();
-        this.downloadActionHandle = this.sideNavContentProvider.addToolbarAction(
-            'groups',
-            'Download demographics',
-            () => this.downloadDemographics()
-        );
         this.uploadActionHandle = this.sideNavContentProvider.addToolbarAction(
             'cloud_upload',
             'Upload save',
@@ -159,10 +153,6 @@ export class SaveViewComponent implements OnDestroy {
     }
 
     private removeToolbarActions(): void {
-        if (this.downloadActionHandle) {
-            this.sideNavContentProvider.removeToolbarAction(this.downloadActionHandle);
-            this.downloadActionHandle = null;
-        }
         if (this.uploadActionHandle) {
             this.sideNavContentProvider.removeToolbarAction(this.uploadActionHandle);
             this.uploadActionHandle = null;

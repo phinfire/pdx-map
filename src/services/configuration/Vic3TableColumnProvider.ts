@@ -21,16 +21,16 @@ import { GoodsViewMode } from "./GoodViewMode";
 export class Vic3TableColumnProvider {
 
     baseColumns: TableColumn<Country>[] = [
-        new TableColumnBuilder<Country>("position", "")
+        new TableColumnBuilder<Country>("position")
             .isSortable(false)
             .withCellValue((element: Country, index: number) => index + 1)
             .withCellTooltip((_: Country) => null)
             .build(),
-        new TableColumnBuilder<Country>("name", "Country")
+        new TableColumnBuilder<Country>("Country")
             .withCellValue((element: Country) => this.getCountryName(element.getTag()))
             .withCellTooltip((_: Country) => null)
             .build(),
-        new TableColumnBuilder<Country>("player", "Player")
+        new TableColumnBuilder<Country>("Player")
             .withCellValue((element: Country) => element.getPlayerName() || "")
             .withCellTooltip((_: Country) => null)
             .withHeaderImage("face", ImageIconType.MATERIAL_SYMBOL)
@@ -39,7 +39,7 @@ export class Vic3TableColumnProvider {
     ];
 
     countryColumns: TableColumn<Country>[] = [
-        new TableColumnBuilder<Country>("pops", "Pop.")
+        new TableColumnBuilder<Country>("Pop.")
             .withTooltip("Population")
             .withCellValue((element: Country) => element.getPops().getTotal("pops", (pop: Pop) => true, (pop: Pop) => pop.getSize()))
             .withCellTooltip((element: Country) => Array.from(element.getPops().getTotalExplanation("pops", (pop: Pop) => true, (pop: Pop) => pop.getSize(), (pop: Pop) => pop.getType()).entries())
@@ -47,18 +47,19 @@ export class Vic3TableColumnProvider {
                 .join('\n'))
             .withHeaderImage("groups", ImageIconType.MATERIAL_SYMBOL)
             .build(),
-        new TableColumnBuilder<Country>("employed", "Employees")
+        new TableColumnBuilder<Country>("Employees")
             .withHeaderImage("engineering", ImageIconType.MATERIAL_SYMBOL)
             .withTooltip("Employed Population")
             .withCellValue((element: Country) => element.getNumberOfEmployed())
             .withCellTooltip((element: Country) => element.getNumberOfEmployed().toLocaleString())
             .build(),
-        new TableColumnBuilder<Country>("technologies", "Techs")
+        new TableColumnBuilder<Country>("Techs")
+            .withTooltip("Number of acquired technologies")
             .withCellValue((element: Country) => element.getAcquiredTechs().length)
             .withCellTooltip((element: Country) => element.getAcquiredTechs().sort().join('\n'))
             .withHeaderImage("experiment", ImageIconType.MATERIAL_SYMBOL)
             .build(),
-        new TableColumnBuilder<Country>("netincome", "Net Income")
+        new TableColumnBuilder<Country>("Net Income")
             .withCellValue((element: Country) => element.getBudget().getNetIncome())
             .withCellTooltip((_: Country) => null)
             .build(),
@@ -74,29 +75,30 @@ export class Vic3TableColumnProvider {
     ];
 
     countryFinancialColumns: TableColumn<Country>[] = [
-        new TableColumnBuilder<Country>("cash", "Cash")
+        new TableColumnBuilder<Country>("Cash")
             .withCellValue((element: Country) => element.getBudget().getNetCash())
             .withCellTooltip((_: Country) => null)
             .withHeaderImage("currency_pound", ImageIconType.MATERIAL_SYMBOL)
             .withTooltip("Cash balance")
             .build(),
-        new TableColumnBuilder<Country>("credit", "Credit")
+        new TableColumnBuilder<Country>("Credit")
+            .withTooltip("Maximum credit available. Correspond to the total reserves of all buildings in the country.")
             .withCellValue((element: Country) => element.getBudget().getCredit())
             .withCellTooltip((_: Country) => null)
             .build(),
-        new TableColumnBuilder<Country>("investmentPool", "I. Pool")
+        new TableColumnBuilder<Country>("I. Pool")
             .withCellValue((element: Country) => element.getBudget().getInvestmentPool())
             .withCellTooltip((_: Country) => null)
             .build(),
-        new TableColumnBuilder<Country>("tax", "Tax")
+        new TableColumnBuilder<Country>("Tax")
             .withCellValue((element: Country) => element.getBudget().getTaxIncome())
-            .withCellTooltip((element: Country) => element.getTaxLevel().toUpperCase())
+            .withSubscript((element: Country) => element.getTaxLevel().toUpperCase())
             .build(),
-        new TableColumnBuilder<Country>("minting", "Minting")
+        new TableColumnBuilder<Country>("Minting")
             .withCellValue((element: Country) => element.getBudget().getMintingIncome())
             .withCellTooltip((_: Country) => null)
             .build(),
-        new TableColumnBuilder<Country>("investmentPoolGrowth", "I. Pool Growth")
+        new TableColumnBuilder<Country>("I. Pool Growth")
             .withCellValue((element: Country) => {
                 const growth = element.getBudget().getInvestmentPoolGrowth();
                 return Array.from(growth.values()).reduce((a, b) => a + b, 0);
@@ -131,7 +133,7 @@ export class Vic3TableColumnProvider {
             "valueGoodsSold",
             "Goods Sale Value"
         )
-            .withTooltip("")
+            .withTooltip("Total value of all goods sold by buildings in the country")
             .withPredicate(b => true)
             .withValueExtractor(b => Math.floor(b.getMarketValueOfGoodSold()))
             .build(),
@@ -139,7 +141,7 @@ export class Vic3TableColumnProvider {
             "valueAdded",
             "Value Added"
         )
-            .withTooltip("")
+            .withTooltip("Value added (revenue minus input material costs) by all buildings in the country")
             .withPredicate(b => true)
             .withValueExtractor(b => Math.floor(Math.max(0, b.getNetValueAdded())))
             .build()
@@ -218,15 +220,15 @@ export class Vic3TableColumnProvider {
     ];
 
     powerBlocColumns: TableColumn<PowerBloc>[] = [
-        new TableColumnBuilder<PowerBloc>("position", "")
+        new TableColumnBuilder<PowerBloc>("position")
             .withCellValue((_, index: number) => index + 1)
             .withCellTooltip((_: PowerBloc) => null)
             .build(),
-        new TableColumnBuilder<PowerBloc>("name", "Name")
+        new TableColumnBuilder<PowerBloc>("Name")
             .withCellValue((element: PowerBloc) => element.getName())
             .withCellTooltip((_: PowerBloc) => null)
             .build(),
-        new TableColumnBuilder<PowerBloc>("leader", "Leader")
+        new TableColumnBuilder<PowerBloc>("Leader")
             .withCellValue((element: PowerBloc) => this.getCountryName(element.getLeader().getTag()))
             .withCellTooltip((_: PowerBloc) => null)
             .build(),
@@ -281,30 +283,30 @@ export class Vic3TableColumnProvider {
     ];
 
     populationColumnList: TableColumn<Country>[] = this.baseColumns.concat([
-        new TableColumnBuilder<Country>("upperStrataPopulation", "Upper")
+        new TableColumnBuilder<Country>("Upper")
             .withTooltip("% population in the upper strata")
             .withCellValue((element: Country) => element.getPopulationStatBlock().upperStrataPopulation / element.getPopulation())
             .withCellValueTransform((value: number) => (value * 100).toFixed(1) + " %")
             .withCellTooltip((element: Country) => TableColumn.formatNumber(element.getPopulationStatBlock().upperStrataPopulation))
             .build(),
-        new TableColumnBuilder<Country>("middleStrataPopulation", "Middle")
+        new TableColumnBuilder<Country>("Middle")
             .withTooltip("% population in the middle strata")
             .withCellValue((element: Country) => element.getPopulationStatBlock().middleStrataPopulation / element.getPopulation())
             .withCellValueTransform((value: number) => (value * 100).toFixed(1) + " %")
             .withCellTooltip((element: Country) => TableColumn.formatNumber(element.getPopulationStatBlock().middleStrataPopulation))
             .build(),
-        new TableColumnBuilder<Country>("lowerStrataPopulation", "Lower")
+        new TableColumnBuilder<Country>("Lower")
             .withTooltip("% population in the lower strata")
             .withCellValue((element: Country) => element.getPopulationStatBlock().lowerStrataPopulation / element.getPopulation())
             .withCellValueTransform((value: number) => (value * 100).toFixed(1) + " %")
             .withCellTooltip((element: Country) => TableColumn.formatNumber(element.getPopulationStatBlock().lowerStrataPopulation))
             .build(),
-        new TableColumnBuilder<Country>("radicals", "Radicals")
+        new TableColumnBuilder<Country>("Radicals")
             .withCellValue((element: Country) => element.getPopulationStatBlock().radicals / element.getPopulation())
             .withCellValueTransform((value: number) => (value * 100).toFixed(1) + " %")
             .withCellTooltip((element: Country) => TableColumn.formatNumber(element.getPopulationStatBlock().radicals))
             .build(),
-        new TableColumnBuilder<Country>("loyalists", "Loyalists")
+        new TableColumnBuilder<Country>("Loyalists")
             .withCellValue((element: Country) => element.getPopulationStatBlock().loyalists / element.getPopulation())
             .withCellValueTransform((value: number) => (value * 100).toFixed(1) + " %")
             .withCellTooltip((element: Country) => TableColumn.formatNumber(element.getPopulationStatBlock().loyalists))
@@ -410,7 +412,7 @@ export class Vic3TableColumnProvider {
                             .reduce((a, b) => a + b, 0);
                         return good.category === selectedGoodsCategory && total > 0;
                     })
-                    .map(good => new TableColumnBuilder<Country>(good.key, good.name)
+                    .map(good => new TableColumnBuilder<Country>(good.name)
                         .withCellValue((element: Country) => {
                             let value = 0;
                             if (viewMode === GoodsViewMode.INPUT) value = element.getGoodIn(good.index);
@@ -430,15 +432,25 @@ export class Vic3TableColumnProvider {
         });
     }
 
-    public static tableColumnfromModelElementList<T, R>(def: string, header: string, tooltip: string | null, listAccessor: (element: T) => ModelElementList<R>, predicate: (e: R) => boolean, accessor: (e: R) => number, keyFunction: (e: R) => string): TableColumn<T> {
-        return new TableColumn<T>(
-            def,
-            header,
-            tooltip,
-            true,
-            (element: T, index: number) => listAccessor(element).getTotal(def, predicate as (e: R) => boolean, accessor as (e: R) => number),
-            (element: T, index: number) => Array.from(listAccessor(element).getTotalExplanation(def, predicate, accessor, keyFunction))
-                .map(([name, val]) => `${TableColumn.formatNumber(val).padStart(15, ' ')}  ${name}`).join('\n')
-        );
+    public static tableColumnfromModelElementList<T, R>(
+        def: string,
+        header: string,
+        tooltip: string | null,
+        listAccessor: (element: T) => ModelElementList<R>,
+        predicate: (e: R) => boolean,
+        accessor: (e: R) => number,
+        keyFunction: (e: R) => string
+    ): TableColumn<T> {
+        return new TableColumnBuilder<T>(header)
+            .withTooltip(tooltip)
+            .withCellValue((element: T, index: number) =>
+                listAccessor(element).getTotal(def, predicate as (e: R) => boolean, accessor as (e: R) => number)
+            )
+            .withCellTooltip((element: T, index: number) =>
+                Array.from(listAccessor(element).getTotalExplanation(def, predicate, accessor, keyFunction))
+                    .map(([name, val]) => `${TableColumn.formatNumber(val).padStart(15, ' ')}  ${name}`)
+                    .join('\n')
+            )
+            .build();
     }
 }

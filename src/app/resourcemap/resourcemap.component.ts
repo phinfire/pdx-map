@@ -10,13 +10,6 @@ import { ValueGradientColorConfig } from '../viewers/polygon-select/ValueGradien
 
 const EXCLUDED_RESOURCES = ['bg_monuments'];
 
-const RESOURCE_GROUPS: Record<string, { members: string[] }> = {
-    'grain': {
-        members: ['bg_maize_farms', 'bg_millet_farms', 'bg_rice_farms', 'bg_rye_farms', 'bg_wheat_farms',
-            'building_maize_farm', 'building_millet_farm', 'building_rice_farm', 'building_rye_farm', 'building_wheat_farm']
-    }
-};
-
 @Component({
     selector: 'app-resourcemap',
     imports: [SlabMapViewComponent],
@@ -74,9 +67,6 @@ export class ResourcemapComponent implements OnInit {
     }
 
     formatResourceName(resource: string): string {
-        if (RESOURCE_GROUPS[resource]) {
-            return resource.charAt(0).toUpperCase() + resource.slice(1);
-        }
         return resource.replace("building_", "").replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
     

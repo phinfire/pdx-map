@@ -43,7 +43,7 @@ export class Ck3SaveViewComponent {
     }
 
     private wrap(column: TableColumn<Character>) {
-        return new TableColumnBuilder<Ck3Player>(column.def, column.header)
+        return new TableColumnBuilder<Ck3Player>(column.header)
             .withTooltip(column.tooltip)
             .isSortable(column.sortable)
             .withCellValue((p: Ck3Player) => {

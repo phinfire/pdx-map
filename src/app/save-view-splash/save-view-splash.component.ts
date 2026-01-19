@@ -84,24 +84,16 @@ export class SaveViewSplashComponent implements OnDestroy {
             this.saveSaverService.getAvailableSavesAndMetadata(),
             this.route.params
         ]).subscribe(([saves, params]) => {
-            console.log('Available saves from SaveSaverService:', saves);
-            const id = saves[saves.length - 1].id;
-            const saveId = params['saveId'];
-            console.log('SaveViewSplashComponent initialized with saveId:', saveId);
-
-            this.saveSaverService.getSaveFileByIdentifier(id).subscribe(save => {
-                console.log('Loaded save from SaveSaverService with ID:', id, save);
-                this.activeSave = save;
-            });
-
-            if (saveId) {
-                if (saveId == "dev") {
+            const saveIdFromURL = params['saveId'];
+            if (saveIdFromURL) {
+                if (saveIdFromURL == "dev") {
                     this.startProcessing();
-                    this.loadReferenceSave("http://localhost:5500/public/palatinate_1876_01_06.v3", SaveFileType.VIC3)
-                        .then(result => this.handleSuccess(result.save, result.rawData))
-                        .catch(error => this.handleError(this.getErrorMessage(error, SaveFileType.VIC3)));
+                    const id = saves[saves.length - 1].id;
+                    this.saveSaverService.getSaveFileByIdentifier(id).subscribe(save => {
+                        console.log('Loaded save from SaveSaverService with ID:', id, save);
+                        this.activeSave = save;
+                    });
                 }
-                console.log('Load save with ID:', saveId);
             }
         });
     }
@@ -193,7 +185,7 @@ export class SaveViewSplashComponent implements OnDestroy {
         this.isProcessing = true;
     }
 
-    private handleSuccess(save: any, rawData?: any): void {
+    private handleSuccess(save: any, rawData?: any | null): void {
         this.activeSave = save;
         this.activeSaveRawData = rawData;
         this.addDownloadJSONAction();

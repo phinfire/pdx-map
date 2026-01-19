@@ -51,3 +51,5 @@ public/*.eu4
 public/*.v3
 public/*.geojson
 public/*.ck3
+
+.VSCodeCounter/*

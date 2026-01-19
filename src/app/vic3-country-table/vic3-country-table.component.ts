@@ -13,7 +13,7 @@ import { Plotable } from '../plot-view/plot/Plotable';
 import { simpleHash } from '../../utils';
 import { MatIconModule } from '@angular/material/icon';
 
-export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
+const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     showDelay: 0,
     hideDelay: 0,
     touchendHideDelay: 0,
@@ -212,11 +212,7 @@ export class TableComponent<T> {
 
     }
 
-    getNameColumn() {
-        const hackyNameColumn = this.columns.find(c => c.def === 'name');
-        if (!hackyNameColumn) {
-            return null;
-        }
-        return hackyNameColumn;
+    private getNameColumn() {
+        return this.columns[2];
     }
 }
