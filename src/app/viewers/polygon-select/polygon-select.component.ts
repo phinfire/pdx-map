@@ -80,11 +80,11 @@ export class PolygonSelectComponent {
         const sanitizedUrl = url.replace(/[^a-zA-Z0-9-_]/g, '_');
         const timestamp = new Date().toISOString().replace(/:/g, '-');
         const finalFilename = `screenshot_${sanitizedUrl}_${timestamp}`;
-        let multiplierStr = prompt('Enter resolution multiplier (e.g. 2 for 2x, 4 for 4x):', '2');
+        const multiplierStr = prompt('Enter resolution multiplier (e.g. 2 for 2x, 4 for 4x):', '2');
         if (multiplierStr === null) {
             return;
         }
-        let multiplier = parseInt(multiplierStr, 10);
+        const multiplier = parseInt(multiplierStr, 10);
         if (isNaN(multiplier) || multiplier < 1) {
             return;
         }
@@ -267,6 +267,9 @@ export class PolygonSelectComponent {
         this.cameraMovementManager = new CameraMovementManager(this.camera, container, true, true, true, false);
         this.cameraMovementManager.zoomToCursor = this.zoomToCursor;
         this.cameraMovementManager.cameraHeight = this.cameraHeight;
+        this.cameraMovementManager.setShouldIgnoreWheelEvent((event: WheelEvent) => {
+            return (event.target as Element).closest('.button-group, .button-group-left, .button-group-right') !== null;
+        });
 
         if (this.pendingMeshes.length > 0) {
             this.scene.add(...this.pendingMeshes);

@@ -1,23 +1,22 @@
-import { Component, ElementRef, inject, Input, ViewChild, OnDestroy } from '@angular/core';
-import { combineLatest, firstValueFrom } from 'rxjs';
+import { Component, ElementRef, inject, OnDestroy, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectChange } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectChange, MatSelectModule } from '@angular/material/select';
+import { ActivatedRoute } from '@angular/router';
+import { combineLatest, firstValueFrom } from 'rxjs';
+import { Ck3Save } from '../../model/Ck3Save';
+import { SimplifiedDate } from '../../model/common/SimplifiedDate';
+import { Eu4Save } from '../../model/eu4/Eu4Save';
+import { SaveFileType } from '../../model/SaveFileType';
+import { Vic3Save } from '../../model/vic/Vic3Save';
+import { CK3Service } from '../../services/gamedata/CK3Service';
+import { PdxFileService } from '../../services/pdx-file.service';
+import { SideNavContentProvider } from '../../ui/SideNavContentProvider';
+import { SaveSaverService } from '../save-saver.service';
 import { SaveViewComponent } from '../save-view/save-view.component';
 import { Ck3SaveViewComponent } from '../saveana/ck3-save-view/ck3-save-view.component';
-import { CK3Service } from '../../services/gamedata/CK3Service';
-import { Ck3Save } from '../../model/Ck3Save';
-import { Vic3Save } from '../../model/vic/Vic3Save';
-import { Eu4Save } from '../../model/eu4/Eu4Save';
-import { PdxFileService } from '../../services/pdx-file.service';
-import { SimplifiedDate } from '../../model/common/SimplifiedDate';
-import { MatIconModule } from '@angular/material/icon';
-import { SaveFileType } from '../../model/SaveFileType';
-import { SideNavContentProvider } from '../../ui/SideNavContentProvider';
-import { ActivatedRoute } from '@angular/router';
-import { SaveSaverService } from '../save-saver.service';
 
 @Component({
     selector: 'app-save-view-splash',
@@ -86,13 +85,19 @@ export class SaveViewSplashComponent implements OnDestroy {
         ]).subscribe(([saves, params]) => {
             const saveIdFromURL = params['saveId'];
             if (saveIdFromURL) {
-                if (saveIdFromURL == "dev") {
+                this.startProcessing();
+                if (saveIdFromURL == "latest") {
                     this.startProcessing();
                     const id = saves[saves.length - 1].id;
                     this.saveSaverService.getSaveFileByIdentifier(id).subscribe(save => {
-                        console.log('Loaded save from SaveSaverService with ID:', id, save);
                         this.activeSave = save;
                     });
+                } else if (saveIdFromURL == "dev") {
+                    this.startProcessing();
+                    const localUrl = 'http://localhost:5500/public/palatinate_1888_04_14.v3';
+                    this.loadReferenceSave(localUrl, SaveFileType.VIC3)
+                        .then(result => this.handleSuccess(result.save, result.rawData))
+                        .catch(error => this.handleError(this.getErrorMessage(error, SaveFileType.JSON)));
                 }
             }
         });

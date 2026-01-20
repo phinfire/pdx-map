@@ -38,8 +38,9 @@ export class SlabMapViewComponent {
 
     getCustomButtons() : CustomButton[] {
        return this.viewModes.map((vm, index) => ({
+            categoryLabel: vm.categoryLabel,
             icon: vm.icon,
-            isImage: true,
+            isImage: vm.icon.indexOf('.') >= 0,
             title: vm.label,
             canBeToggled: true,
             isToggled: index == 0,

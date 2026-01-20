@@ -21,7 +21,7 @@ import { GoodsViewMode } from "./GoodViewMode";
 export class Vic3TableColumnProvider {
 
     baseColumns: TableColumn<Country>[] = [
-        new TableColumnBuilder<Country>("position")
+        new TableColumnBuilder<Country>("#")
             .isSortable(false)
             .withCellValue((element: Country, index: number) => index + 1)
             .withCellTooltip((_: Country) => null)
@@ -220,7 +220,7 @@ export class Vic3TableColumnProvider {
     ];
 
     powerBlocColumns: TableColumn<PowerBloc>[] = [
-        new TableColumnBuilder<PowerBloc>("position")
+        new TableColumnBuilder<PowerBloc>("#")
             .withCellValue((_, index: number) => index + 1)
             .withCellTooltip((_: PowerBloc) => null)
             .build(),

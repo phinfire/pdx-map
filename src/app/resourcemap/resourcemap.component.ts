@@ -56,7 +56,7 @@ export class ResourcemapComponent implements OnInit {
                     }
                 };
                 const url = goods.find(g => g.key === resourceGood)!.getIconUrl();
-                viewModes.push(new LabeledAndIconed<ViewMode>(
+                viewModes.push(new LabeledAndIconed<ViewMode>(null,
                     this.formatResourceName(resource),
                     url,
                     viewMode

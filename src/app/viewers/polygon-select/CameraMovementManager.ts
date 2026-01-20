@@ -15,6 +15,8 @@ export class CameraMovementManager {
     public zoomToCursor = true;
     public cameraHeight = 400;
     
+    private shouldIgnoreWheelEvent: (event: WheelEvent) => boolean = () => false;
+
     constructor(
         private camera: THREE.PerspectiveCamera,
         private containerElement: HTMLElement,
@@ -24,6 +26,10 @@ export class CameraMovementManager {
         public edgeScrollingEnabled: boolean
     ) {
         this.setupEventListeners();
+    }
+
+    public setShouldIgnoreWheelEvent(predicate: (event: WheelEvent) => boolean) {
+        this.shouldIgnoreWheelEvent = predicate;
     }
     
     private setupEventListeners() {
@@ -90,7 +96,7 @@ export class CameraMovementManager {
     };
 
     private onWheel = (event: WheelEvent) => {
-        if (this.mouseWheelZoomEnabled && this.containerElement.contains(event.target as Node)) {
+        if (this.mouseWheelZoomEnabled && this.containerElement.contains(event.target as Node) && !this.shouldIgnoreWheelEvent(event)) {
             const zoomFactor = event.deltaY > 0 ? 1.1 : 0.9;
             const oldZ = this.camera.position.z;
             const newZ = Math.max(10, Math.min(1000, oldZ * zoomFactor));

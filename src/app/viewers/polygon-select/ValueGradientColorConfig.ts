@@ -19,6 +19,10 @@ export class ValueGradientColorConfig extends ColorConfigProvider {
         const offsetValue = 0.1 + normalizedValue * 0.8;
         scale.domain([0, 1]);
         const hex = scale(offsetValue);
+        if (!hex) {
+            console.warn("Could not convert value to color:", value);
+            return 0x000000;
+        }
         return parseInt(hex.slice(1), 16);
     }
 

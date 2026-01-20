@@ -1,35 +1,34 @@
-import { Component, inject, Input, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, Input, OnDestroy, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatTabsModule } from '@angular/material/tabs';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Subject, takeUntil } from 'rxjs';
 import { Country } from '../../model/vic/Country';
 import { GoodCategory } from '../../model/vic/enum/GoodCategory';
 import { Vic3Save } from '../../model/vic/Vic3Save';
 import { GoodsViewMode } from '../../services/configuration/GoodViewMode';
+import { Vic3MapViewModeProvider } from '../../services/configuration/Vic3MapViewModeProvider';
 import { Vic3TableColumnProvider } from '../../services/configuration/Vic3TableColumnProvider';
 import { PersistenceService } from '../../services/PersistanceService';
-import { SaveSaverService } from '../save-saver.service';
+import { LabeledAndIconed } from '../../ui/LabeledAndIconed';
+import { SideNavContentProvider } from '../../ui/SideNavContentProvider';
 import { MapService } from '../map.service';
+import { SaveSaverService } from '../save-saver.service';
 import { SlabMapViewComponent } from '../slab-map-view/slab-map-view.component';
 import { ViewMode } from '../slab-map-view/ViewMode';
 import { TableComponent } from '../vic3-country-table/vic3-country-table.component';
 import { BehaviorConfigProvider } from '../viewers/polygon-select/BehaviorConfigProvider';
 import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvider';
-import { takeUntil, Subject } from 'rxjs';
-import { SideNavContentProvider } from '../../ui/SideNavContentProvider';
-import { Vic3MapViewModeProvider } from '../../services/configuration/Vic3MapViewModeProvider';
-import { MatButtonModule } from '@angular/material/button';
-import { Good } from '../../model/vic/game/Good';
-import { LabeledAndIconed } from '../../ui/LabeledAndIconed';
 
 @Component({
     selector: 'app-save-view',
@@ -56,9 +55,7 @@ export class SaveViewComponent implements OnDestroy {
     selectedTabIndex = 0;
 
     cachedCountries: Country[] = [];
-    goodViews: { good: Good, view: ViewMode }[] = [];
 
-    activeMapViewMode: ViewMode | null = null;
     goodsViewMode = GoodsViewMode.BALANCE;
     selectedGoodsCategory: GoodCategory = GoodCategory.INDUSTRIAL;
     availableGoodsCategories: GoodCategory[] = Object.values(GoodCategory);
@@ -94,12 +91,13 @@ export class SaveViewComponent implements OnDestroy {
     }
 
     private initializeMapView() {
-        if (!this.activeSave) {
-            return;
-        }
-        this.mapViewModeProvider.getViewModes(this.activeSave).subscribe(goodViews => {
-            this.goodViews = goodViews
-            //this.availableMapViewModes
+        this.mapViewModeProvider.getViewModes(this.activeSave!).subscribe(goodViews => {
+            const interestingViewModes = this.mapViewModeProvider.getInterestingViewModes(this.activeSave!);
+            this.availableMapViewModes = interestingViewModes.concat(goodViews.map(gview => new LabeledAndIconed<ViewMode>("Goods",
+                gview.good.getHumanName(),
+                gview.good.getIconUrl(),
+                gview.view
+            )));
         });
     }
 
@@ -130,10 +128,6 @@ export class SaveViewComponent implements OnDestroy {
         if (this.activeSave) {
             this.columnProvider.refreshGoodColumnList(this.getCountries(), this.goodsViewMode, this.selectedGoodsCategory);
         }
-    }
-
-    setActiveMapViewMode(viewMode: ViewMode) {
-        this.activeMapViewMode = viewMode;
     }
 
     getCountries() {

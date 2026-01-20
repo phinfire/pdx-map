@@ -83,8 +83,6 @@
                 }
             </mat-radio-group>
         </div>
-        }
-        @if (selectedTabIndex === 7) {
         <ng-container
             *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getGoodColumns()}"></ng-container>
         }

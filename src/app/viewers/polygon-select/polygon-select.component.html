@@ -8,11 +8,11 @@
     <div class="button-group-left">
         @for (btn of customButtons; track $index) {
         <button class="corner-button custom" (click)="buttonClicked.emit(btn); btn.action(); $event.stopPropagation()" [title]="btn.title"
-            [class.active]="btn.canBeToggled && btn.isToggled" [class.image-button]="btn.isImage">
+            [class.active]="btn.canBeToggled && btn.isToggled">
             @if (btn.isImage) {
             <img [src]="btn.icon" [alt]="btn.title" class="button-icon">
             } @else {
-            <mat-icon>{{ btn.icon }}</mat-icon>
+            <mat-icon fontSet="material-symbols-outlined">{{ btn.icon }}</mat-icon>
             }
         </button>
         }
@@ -26,17 +26,6 @@
         <button class="corner-button" (click)="exportMapImage(); $event.stopPropagation()" title="Export map as image">
             <mat-icon>camera_alt</mat-icon>
         </button>
-        <!--<button class="corner-button" 
-                [class.active]="tooltipManager.isTooltipEnabled()"
-                (click)="toggleTooltips(); $event.stopPropagation()" 
-                [title]="tooltipManager.isTooltipEnabled() ? 'Disable tooltips' : 'Enable tooltips'">
-            <mat-icon>{{ tooltipManager.isTooltipEnabled() ? 'chat_bubble' : 'chat_bubble_outline' }}</mat-icon>
-        </button>
-    
-        @if (customButtons.length > 0) {
-        <span class="button-separator"></span>
-        }
-            -->
     </div>
 
     <div class="mesh-tooltip" [class.visible]="tooltipManager.isTooltipVisible()"
