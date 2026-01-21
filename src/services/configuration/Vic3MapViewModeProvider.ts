@@ -44,15 +44,15 @@ export class Vic3MapViewModeProvider {
     getInterestingViewModes(save: Vic3Save) {
         return [
             new LabeledAndIconed<ViewMode>(
-                "Interesting",
+                "MISC",
                 "Value Added per Employee",
                 "money_bag",
                 this.buildViewMode(save, "Value Added per Employee", (s: StateRegion) => {
                     return s.getBuildings().map(b => b.getNetValueAdded()).reduce((sum, va) => sum + va, 0) / s.getPopulationStatBlock().salariedWorkforce;
-                })!,
+                },v => v, "£")!,
             ),
             new LabeledAndIconed<ViewMode>(
-                "Interesting",
+                "MISC",
                 "Goods Produced per Employee",
                 "package",
                 this.buildViewMode(save, "Goods Produced per Employee", (s: StateRegion) => {
@@ -60,7 +60,7 @@ export class Vic3MapViewModeProvider {
                 }, v => v, "Units")!,
             ),
             new LabeledAndIconed<ViewMode>(
-                "Interesting",
+                "MISC",
                 "Population",
                 "people",
                 this.buildViewMode(save, "Population", (s: StateRegion) => {
@@ -68,13 +68,13 @@ export class Vic3MapViewModeProvider {
                 })!,
             ),
             new LabeledAndIconed<ViewMode>(
-                "Interesting",
+                "MISC",
                 "Avg. Wealth",
                 "payments",
-                this.buildViewMode(save, "Avg. Wealth", (s: StateRegion) => s.getPopulationStatBlock().totalWealth / s.getPopulationStatBlock().getTotalPopulation())!
+                this.buildViewMode(save, "Avg. Wealth", (s: StateRegion) => s.getPopulationStatBlock().totalWealth / s.getPopulationStatBlock().getTotalPopulation(), v => v, "£")!
             ),
             new LabeledAndIconed<ViewMode>(
-                "Interesting",
+                "MISC",
                 "Loyalists Percentage",
                 "thumb_up",
                 this.buildViewMode(save, "Loyalists", (s: StateRegion) => {
@@ -84,7 +84,7 @@ export class Vic3MapViewModeProvider {
                 }, v => v, "%")!,
             ),
             new LabeledAndIconed<ViewMode>(
-                "Interesting",
+                "MISC",
                 "Radicals Percentage",
                 "thumb_down",
                 this.buildViewMode(save, "Radicals", (s: StateRegion) => {

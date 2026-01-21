@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 export class CameraMovementManager {
     private readonly EDGE_SCROLL_THRESHOLD = 50;
-    private readonly KEYBOARD_PAN_SPEED = 5;
+    private readonly KEYBOARD_PAN_SPEED = 0.0125;
     private readonly EDGE_SCROLL_SPEED = 2;
     private isMouseDragging = false;
     private lastMousePos: { x: number, y: number } | null = null;
@@ -16,6 +16,7 @@ export class CameraMovementManager {
     public cameraHeight = 400;
     
     private shouldIgnoreWheelEvent: (event: WheelEvent) => boolean = () => false;
+    private shouldIgnoreMouseEvent: (event: MouseEvent) => boolean = () => false;
 
     constructor(
         private camera: THREE.PerspectiveCamera,
@@ -30,6 +31,10 @@ export class CameraMovementManager {
 
     public setShouldIgnoreWheelEvent(predicate: (event: WheelEvent) => boolean) {
         this.shouldIgnoreWheelEvent = predicate;
+    }
+
+    public setShouldIgnoreMouseEvent(predicate: (event: MouseEvent) => boolean) {
+        this.shouldIgnoreMouseEvent = predicate;
     }
     
     private setupEventListeners() {
@@ -76,7 +81,7 @@ export class CameraMovementManager {
     };
     
     private onMouseDown = (event: MouseEvent) => {
-        if (this.mouseDragEnabled && (event.button === 0 || event.button === 1 || event.button === 2)) { // Left, Middle, or Right mouse button
+        if (this.mouseDragEnabled && !this.shouldIgnoreMouseEvent(event) && (event.button === 0 || event.button === 1 || event.button === 2)) { // Left, Middle, or Right mouse button
             this.isMouseDragging = true;
             this.lastMousePos = { x: event.clientX, y: event.clientY };
             event.preventDefault();
@@ -121,7 +126,6 @@ export class CameraMovementManager {
         }
     };
     
-    // Keyboard controls
     private onKeyDown = (event: KeyboardEvent) => {
         if (!this.keyboardControlsEnabled) return;
         
@@ -160,9 +164,8 @@ export class CameraMovementManager {
     private processKeyboardInput() {
         if (!this.camera) return;
         
-        const speed = this.KEYBOARD_PAN_SPEED * (this.camera.position.z / this.cameraHeight);
-        
-        // Handle panning
+        const speed = this.KEYBOARD_PAN_SPEED * this.camera.position.z
+
         if (this.pressedKeys.has('w') || this.pressedKeys.has('arrowup')) {
             this.camera.position.y += speed;
         }
@@ -176,7 +179,6 @@ export class CameraMovementManager {
             this.camera.position.x += speed;
         }
         
-        // Handle zooming
         if (this.pressedKeys.has('+') || this.pressedKeys.has('=')) {
             const newZ = Math.max(10, this.camera.position.z * 0.98);
             this.camera.position.z = newZ;

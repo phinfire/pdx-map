@@ -1,6 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, NgZone, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatExpansionModule } from '@angular/material/expansion';
 import * as THREE from 'three';
 import { BehaviorConfigProvider } from './BehaviorConfigProvider';
 import { CameraMovementManager } from './CameraMovementManager';
@@ -10,7 +11,7 @@ import { TooltipManager } from './TooltipManager';
 
 @Component({
     selector: 'app-polygon-select',
-    imports: [MatIconModule, MatProgressSpinnerModule],
+    imports: [MatIconModule, MatProgressSpinnerModule, MatExpansionModule],
     templateUrl: './polygon-select.component.html',
     styleUrl: './polygon-select.component.scss'
 })
@@ -28,6 +29,8 @@ export class PolygonSelectComponent {
     @Input() tooltipProvider: (key: string) => string = (key: string) => key;
     @Input() customButtons: CustomButton[] = [];
     @Output() buttonClicked = new EventEmitter<CustomButton>();
+    
+    protected groupedCustomButtons: Map<string, CustomButton[]> = new Map();
 
     private readonly LIGHT_INTENSITY = 3;
     private readonly RAYCAST_THROTTLE_MS = 16;
@@ -122,6 +125,24 @@ export class PolygonSelectComponent {
         if (changes['clearColor'] && this.renderer) {
             this.renderer.setClearColor(this.clearColor);
         }
+        if (changes['customButtons']) {
+            this.groupButtonsByCategory();
+        }
+    }
+
+    private groupButtonsByCategory(): void {
+        this.groupedCustomButtons.clear();
+        for (const btn of this.customButtons) {
+            const category = btn.categoryLabel || 'Other';
+            if (!this.groupedCustomButtons.has(category)) {
+                this.groupedCustomButtons.set(category, []);
+            }
+            this.groupedCustomButtons.get(category)!.push(btn);
+        }
+    }
+
+    protected getGroupedButtonEntries(): [string, CustomButton[]][] {
+        return Array.from(this.groupedCustomButtons.entries());
     }
 
     public launch(meshes: (THREE.Mesh & { targetZ?: number, locked?: boolean, interactive?: boolean, key: string })[], colorConfigProviders: ColorConfigProvider[], liftConfig: BehaviorConfigProvider = this.liftConfig) {
@@ -262,15 +283,15 @@ export class PolygonSelectComponent {
         this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
         this.scene.rotation.x = -0.5;
         this.isRendererInitialized = true;
-
-        // Initialize camera movement manager
         this.cameraMovementManager = new CameraMovementManager(this.camera, container, true, true, true, false);
         this.cameraMovementManager.zoomToCursor = this.zoomToCursor;
         this.cameraMovementManager.cameraHeight = this.cameraHeight;
         this.cameraMovementManager.setShouldIgnoreWheelEvent((event: WheelEvent) => {
             return (event.target as Element).closest('.button-group, .button-group-left, .button-group-right') !== null;
         });
-
+        this.cameraMovementManager.setShouldIgnoreMouseEvent((event: MouseEvent) => {
+            return (event.target as Element).closest('.button-group, .corner-button, .category-panel, mat-expansion-panel, mat-expansion-panel-header') !== null;
+        });
         if (this.pendingMeshes.length > 0) {
             this.scene.add(...this.pendingMeshes);
             this.pendingMeshes.forEach(mesh => {
