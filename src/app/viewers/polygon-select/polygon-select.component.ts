@@ -1,7 +1,8 @@
 import { Component, ElementRef, EventEmitter, Input, NgZone, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import * as THREE from 'three';
 import { BehaviorConfigProvider } from './BehaviorConfigProvider';
 import { CameraMovementManager } from './CameraMovementManager';
@@ -11,7 +12,7 @@ import { TooltipManager } from './TooltipManager';
 
 @Component({
     selector: 'app-polygon-select',
-    imports: [MatIconModule, MatProgressSpinnerModule, MatExpansionModule],
+    imports: [MatIconModule, MatProgressSpinnerModule, MatExpansionModule, MatTooltipModule],
     templateUrl: './polygon-select.component.html',
     styleUrl: './polygon-select.component.scss'
 })

@@ -13,9 +13,10 @@ import { Eu4Save } from '../../model/eu4/Eu4Save';
     providedIn: 'root'
 })
 export class MegaService {
-    private readonly campaignsEndpoint = `${DiscordAuthenticationService.getApiUrl()}/megacampaigns`;
+    private readonly legacyCampaignsEndpoint = `${DiscordAuthenticationService.getApiUrl()}/megacampaigns`;
 
     private pdxFileService = inject(PdxFileService);
+    private authService = inject(DiscordAuthenticationService);
 
     private lastEu4Save$: Observable<Eu4Save>;
 
@@ -52,7 +53,7 @@ export class MegaService {
     }
 
     getAvailableCampaigns$(): Observable<MegaCampaign[]> {
-        return this.http.get<any[]>(this.campaignsEndpoint).pipe(
+        return this.http.get<any[]>(this.legacyCampaignsEndpoint).pipe(
             map(campaigns => campaigns.map(c =>
                 new MegaCampaign(
                     c.name,

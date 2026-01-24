@@ -13,7 +13,7 @@
             </mat-expansion-panel-header>
             <div class="category-buttons">
                 @for (btn of entry[1]; track btn.title) {
-                <button class="corner-button custom" (click)="buttonClicked.emit(btn); btn.action(); $event.stopPropagation()" [title]="btn.title"
+                <button class="corner-button custom" (click)="buttonClicked.emit(btn); btn.action(); $event.stopPropagation()" [matTooltip]="btn.title"
                     [class.active]="btn.canBeToggled && btn.isToggled">
                     @if (btn.isImage) {
                     <img [src]="btn.icon" [alt]="btn.title" class="button-icon">

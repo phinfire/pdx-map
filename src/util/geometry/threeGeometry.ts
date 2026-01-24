@@ -14,8 +14,8 @@ export function makeGeoJsonPolygons(geojson: any, configProvider: ColorConfigPro
     );
     const centerFn = defineTransform(allCoords, mapScale);
     const key2Geos = new Map<string, THREE.BufferGeometry[]>();
-        const key2isInteractive = new Map<string, boolean>();
-        filteredFeatures.forEach((feature: any) => {
+    const key2isInteractive = new Map<string, boolean>();
+    filteredFeatures.forEach((feature: any) => {
         const type = feature.geometry.type;
         const coords = feature.geometry.coordinates;
         const key = feature.properties.key ? feature.properties.key : "";
@@ -53,43 +53,43 @@ export function makeGeoJsonPolygons(geojson: any, configProvider: ColorConfigPro
         } catch (err) {
             console.warn(`Skipping invalid feature ${featureName}:`, err);
         }
-// Create flat geometry (no extrusion) from coordinates
-function createFlatGeometryFromCoords(coords: any, normFn: (x: number, y: number) => [number, number]): THREE.BufferGeometry | null {
-    if (!coords || !coords.length) {
-        console.warn('Invalid coordinates provided for flat geometry creation:', coords);
-        return null;
-    }
-    if (!coords[0] || !Array.isArray(coords[0]) || coords[0].length < 3) {
-        console.info('Invalid outer ring coordinates: must have at least 3 points. Got:', coords[0]);
-        return null;
-    }
-    const shape = new THREE.Shape();
-    const outerRing = coords[0];
-    let validPointsAdded = 0;
-    outerRing.forEach(([x, y]: [number, number], i: number) => {
-        if (x === undefined || y === undefined || isNaN(x) || isNaN(y)) {
-            console.warn(`Invalid coordinate at index ${i}:`, [x, y]);
-            return;
+        // Create flat geometry (no extrusion) from coordinates
+        function createFlatGeometryFromCoords(coords: any, normFn: (x: number, y: number) => [number, number]): THREE.BufferGeometry | null {
+            if (!coords || !coords.length) {
+                console.warn('Invalid coordinates provided for flat geometry creation:', coords);
+                return null;
+            }
+            if (!coords[0] || !Array.isArray(coords[0]) || coords[0].length < 3) {
+                console.info('Invalid outer ring coordinates: must have at least 3 points. Got:', coords[0]);
+                return null;
+            }
+            const shape = new THREE.Shape();
+            const outerRing = coords[0];
+            let validPointsAdded = 0;
+            outerRing.forEach(([x, y]: [number, number], i: number) => {
+                if (x === undefined || y === undefined || isNaN(x) || isNaN(y)) {
+                    console.warn(`Invalid coordinate at index ${i}:`, [x, y]);
+                    return;
+                }
+                const [nx, ny] = normFn(x, y);
+                if (isNaN(nx) || isNaN(ny)) {
+                    console.warn(`Transform resulted in NaN at index ${i}:`, [x, y], '->', [nx, ny]);
+                    return;
+                }
+                if (validPointsAdded === 0) {
+                    shape.moveTo(nx, ny);
+                } else {
+                    shape.lineTo(nx, ny);
+                }
+                validPointsAdded++;
+            });
+            if (validPointsAdded < 3) {
+                console.warn(`Insufficient valid points for flat geometry creation. Need at least 3, got ${validPointsAdded}`);
+                return null;
+            }
+            shape.closePath();
+            return new THREE.ShapeGeometry(shape);
         }
-        const [nx, ny] = normFn(x, y);
-        if (isNaN(nx) || isNaN(ny)) {
-            console.warn(`Transform resulted in NaN at index ${i}:`, [x, y], '->', [nx, ny]);
-            return;
-        }
-        if (validPointsAdded === 0) {
-            shape.moveTo(nx, ny);
-        } else {
-            shape.lineTo(nx, ny);
-        }
-        validPointsAdded++;
-    });
-    if (validPointsAdded < 3) {
-        console.warn(`Insufficient valid points for flat geometry creation. Need at least 3, got ${validPointsAdded}`);
-        return null;
-    }
-    shape.closePath();
-    return new THREE.ShapeGeometry(shape);
-}
     });
     const nonInteractiveGeos = [];
     for (const [key, geos] of key2Geos) {
@@ -117,7 +117,7 @@ function createFlatGeometryFromCoords(coords: any, normFn: (x: number, y: number
         const nonInteractiveMesh = meshFromGeometry(mergedNonInteractiveGeo, inactiveColor, false, "", useSpecialTexture);
         meshes.push(nonInteractiveMesh);
     }
-    
+
     console.info(`makeGeoJsonPolygons created ${totalTriangles.toLocaleString()} triangles across ${meshes.length.toLocaleString()} meshes`);
     return meshes;
 }
@@ -183,7 +183,7 @@ function getTriangleCount(geometry: THREE.BufferGeometry): number {
 
 function meshFromGeometry(geometry: THREE.BufferGeometry, color: number, interactive: boolean, key: string, useSpecialTexture: (key: string) => THREE.CanvasTexture | null) {
     let material: THREE.MeshPhongMaterial;
-    const specialTexture  = useSpecialTexture(key);
+    const specialTexture = useSpecialTexture(key);
     if (specialTexture) {
         material = new THREE.MeshPhongMaterial({
             color: color,

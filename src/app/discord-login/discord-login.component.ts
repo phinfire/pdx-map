@@ -34,6 +34,7 @@ export class DiscordLoginComponent {
     }
 
     loginWithDiscord() {
+        console.log("Starting Discord login flow...", this.discordAuth.getRedirectUrl());
         this.discordAuth.loginOnDiscord(this.discordAuth.getRedirectUrl());
     }
     

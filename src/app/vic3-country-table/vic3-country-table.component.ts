@@ -44,7 +44,7 @@ const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
         ])
     ]
 })
-export class TableComponent<T> {    
+export class TableComponent<T> {
 
     @Input() columns: TableColumn<T>[] = [];
     @Input() rowElements: T[] = [];
@@ -104,15 +104,16 @@ export class TableComponent<T> {
 
     ngOnChanges(changes: SimpleChanges) {
         if (changes['rowElements'] && this.rowElements) {
-            this.dataSource = new MatTableDataSource<any>(this.rowElements);
+            this.dataSource = new MatTableDataSource<T>(this.rowElements);
         }
         if (changes["columns"] && this.columns) {
             this.displayedColumns = this.columns.map(c => c.def);
+            this.updateInternalColumns();
         }
-        if ((changes['rowElements'] || changes['columns']) && this.columns && this.rowElements) {
-            this.internalColumns = [this.columns[0], ...this.columns.slice(1,this.columns.length).map(col => col.finalizeFor(this.rowElements))];
+        if (changes['rowElements'] && this.columns) {
+            this.updateInternalColumns();
         }
-        
+
         this.dataSource.sort = this.sort;
         this.dataSource.sortingDataAccessor = (item, property) => {
             try {
@@ -129,37 +130,52 @@ export class TableComponent<T> {
         };
     }
 
+    private updateInternalColumns(): void {
+        if (this.columns && this.columns.length > 0) {
+            if (this.rowElements && this.rowElements.length > 0) {
+                this.internalColumns = [this.columns[0], ...this.columns.slice(1, this.columns.length).map(col => col.finalizeFor(this.rowElements))];
+            } else {
+                this.internalColumns = this.columns;
+            }
+        } else {
+            this.internalColumns = [];
+        }
+    }
+
     openPlot() {
         if (!this.selectedColumn) {
             return;
         }
-        
+
         try {
             const hackyNameColumn = this.getNameColumn();
             if (!hackyNameColumn) {
                 console.warn('No name column found for plotting');
                 return;
             }
-            
+
             const plotables = this.rowElements.map(row => {
                 try {
-                    const value = this.safeGetCellValue(this.selectedColumn!, row, 0);
                     const label = this.safeGetCellValue(hackyNameColumn, row, 0);
+                    if (label == null || label.trim() === "") {
+                        return null;
+                    }
+                    const value = this.safeGetCellValue(this.selectedColumn!, row, 0);
                     const labelHash = simpleHash(label || (Math.random() * 16777215).toString());
                     const zeroOne = (labelHash % 1000) / 1000;
                     const color = '#' + Math.floor(zeroOne * 16777215).toString(16).padStart(6, '0');
-                    return new Plotable(label || 'Unknown', value, color);
+                    return new Plotable(label, value, color);
                 } catch (error) {
                     console.warn('Error creating plotable for row:', error);
                     return null;
                 }
             }).filter(p => p != null && p.value != null && p.value !== 0) as Plotable[];
-            
+
             if (plotables.length === 0) {
                 console.warn('No valid data found for plotting');
                 return;
             }
-            
+
             const width = 1400;
             const height = 800;
             this.dialog.open(PlotViewComponent, {

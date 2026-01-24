@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
 
 :host {
     width: 100%;
@@ -7,40 +8,84 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    @include mat.toolbar-overrides((container-background-color: var(--background-color),
-            container-text-color: var(--text-color),
-            title-text-size: 2em,
-            title-text-tracking: 0.2em,
-            title-text-font: var(--hacker-font)));
-    @include mat.icon-overrides((color: var(--text-color)));
-    @include mat.sidenav-overrides((container-text-color: var(--text-color)));
-    @include mat.button-overrides((protected-label-text-size: 1.4em,
-            protected-container-height: 48px,
-            protected-horizontal-padding: 20px,
-        ));
-    @include mat.sidenav-overrides((content-background-color: var(--void-color)));
+    $toolbar-font: "Permanent Marker", cursive;
+
+    @include mat.sidenav-overrides((container-text-color: var(--text-color),
+            content-background-color: var(--void-color)));
+
+    mat-toolbar {
+        @include mat.toolbar-overrides((container-background-color: var(--header-background-color),
+                container-text-color: var(--text-color),
+                title-text-size: 2em,
+                title-text-tracking: 0.2em,
+                title-text-font: var(--hacker-font)));
+    }
+
+    mat-toolbar button {
+        font-family: $toolbar-font !important;
+    }
+
+    .toolbar-menu-button,
+    .toolbar-action {
+        font-family: $toolbar-font !important;
+    }
+}
+
+.menus-container {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
 }
 
 .spacer {
-    flex: 1 1 auto;
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 2em;
 }
 
 .spacer-right {
     width: 1em;
 }
 
-.toolbar-label {
-    margin-left: 6em;
-    font-size: 0.75em;
-    font-weight: 500;
-}
+.toolbar-menu-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
 
-.toolbar-action {
-    position: relative;
-    border-radius: 50%;
+    height: 100%;
+    padding: 0 1em;
+
+    font-size: 1em;
+    color: var(--text-color);
+    border-radius: 0;
 
     &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        color: var(--accent-color);
+    }
+}
+
+.menu-chevron {
+    transition: transform 200ms ease-in-out;
+
+    &.open {
+        transform: rotate(180deg);
+    }
+}
+
+.menu-button,
+.toolbar-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 100%;
+    padding-top: 0;
+    padding-bottom: 0;
+
+    &:hover {
+        background-color: var(--faded-border-color);
     }
 }
 
@@ -50,24 +95,6 @@
     display: flex;
     flex-direction: column;
 }
-
-/*
-.container::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    //background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" preserveAspectRatio="none"><rect x="0" y="0" width="100" height="200" fill="%23009736"/><rect x="100" y="0" width="100" height="200" fill="%23FFFFFF"/><rect x="200" y="0" width="100" height="200" fill="%23000000"/><polygon points="0,0 300,0 150,100" fill="%23EE2A35"/></svg>');
-    background-color: var(--void-color);
-    background-size: cover;
-    filter: brightness(0.3);
-    pointer-events: none;
-    box-shadow: inset 0 0 30px black;
-}
-*/
 
 .sidenav {
     padding: 1em;
@@ -91,73 +118,10 @@
     width: 100%;
 }
 
-.nav-buttons-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.nav-button {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 16px 20px;
-    width: 100%;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-
-    &:hover:not([disabled]) {
-        background-color: rgba(255, 255, 255, 0.08);
-    }
-
-    &[disabled] {
-        background-color: var(--background-color);
-
-        .nav-icon {
-            opacity: 0.5;
-        }
-    }
-
-    .nav-icon {
-        margin-right: 16px;
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
-        line-height: 32px;
-        flex-shrink: 0;
-    }
-
-    .nav-label {
-        font-size: 18px;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-}
-
-.menu-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2em;
-    height: 2em;
-
-    mat-icon {
-        font-size: 36px;
-        width: 36px;
-        height: 36px;
-        line-height: 36px;
-    }
-
-    &:hover {
-        background-color: var(--faded-border-color);
-    }
-}
-
 .panorama {
     width: 6em;
     height: 2em;
     display: flex;
-    flex-direction: row;
     justify-content: space-between;
     align-items: center;
     box-sizing: border-box;
@@ -202,4 +166,9 @@
     height: 100%;
     overflow: hidden;
     background-color: var(--void-color);
+}
+
+.mat-menu-panel {
+    transition: none !important;
+    animation: none !important;
 }

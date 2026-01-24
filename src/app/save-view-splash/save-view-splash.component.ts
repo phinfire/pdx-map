@@ -330,7 +330,6 @@ export class SaveViewSplashComponent implements OnDestroy {
             Number.MAX_VALUE
         );
         const saveName = this.getSaveDisplayName();
-        this.sideNavContentProvider.setToolbarLabel(saveName);
     }
 
     private clearSave(): void {
@@ -344,7 +343,6 @@ export class SaveViewSplashComponent implements OnDestroy {
             this.sideNavContentProvider.removeToolbarAction(this.downloadSaveActionHandle);
             this.downloadSaveActionHandle = undefined;
         }
-        this.sideNavContentProvider.clearToolbarLabel();
     }
 
     private getSaveDisplayName(): string {
@@ -381,6 +379,5 @@ export class SaveViewSplashComponent implements OnDestroy {
             this.sideNavContentProvider.removeToolbarAction(this.downloadSaveActionHandle);
             this.downloadSaveActionHandle = undefined;
         }
-        this.sideNavContentProvider.clearToolbarLabel();
     }
 }

@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import { DiscordUser } from '../model/social/DiscordUser';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, interval, Observable, of, EMPTY } from 'rxjs';
-import { switchMap, catchError, startWith, tap, map } from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, interval, Observable, of } from 'rxjs';
+import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { DiscordUser } from '../model/social/DiscordUser';
 
 export interface ApiHealth {
     timestamp: string;
@@ -33,9 +33,7 @@ interface HealthResponse {
 export class DiscordAuthenticationService {
     private static readonly CONFIG = {
         API_URL: "https://codingafterdark.de/mc-signup",
-        //API_URL: "http://localhost:3000/api",
         AUTH_SERVICE_URL: "https://codingafterdark.de/authentication",
-        //AUTH_SERVICE_URL: "http://localhost:8001",
         CLIENT_ID: "1403891748371038462",
         JWT_STORAGE_KEY: "discordToken",
         HEALTH_CHECK_INTERVAL: 3000,

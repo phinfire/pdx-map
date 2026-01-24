@@ -22,6 +22,7 @@
         ));
     @include mat.form-field-overrides((outlined-label-text-color:var(--text-color),
         ));
+    --header-font: "Permanent Marker", cursive;
 }
 
 h2 {
@@ -67,4 +68,39 @@ body {
 
 * {
     box-sizing: border-box;
+}
+
+
+
+.mat-mdc-menu-panel,
+.mdc-menu,
+.mdc-menu-surface {
+    background-color: var(--background-color) !important;
+}
+
+.mat-mdc-menu-content,
+.mat-menu-item,
+.mdc-list-item {
+    color: var(--text-color) !important;
+}
+
+.mat-menu-item {
+    font-family: var(--font-family) !important;
+}
+
+.mat-menu-item:hover:not([disabled]) {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.mat-menu-item[disabled] {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+.mat-menu-item mat-icon {
+    color: var(--text-color) !important;
+}
+
+mat-icon {
+    color: var(--text-color) !important;
 }

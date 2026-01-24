@@ -9,6 +9,7 @@ import { ParadoxComponent } from './paradox/paradox.component';
 import { ResourcemapComponent } from './resourcemap/resourcemap.component';
 import { SaveViewSplashComponent } from './save-view-splash/save-view-splash.component';
 import { SavefileadminComponent } from './savefileadmin/savefileadmin.component';
+import { WelcomeComponent } from './welcome/welcome.component';
 
 export const routes: Routes = [
     {
@@ -25,6 +26,7 @@ export const routes: Routes = [
             { path: 'jomini', component: JominiKioskComponent },
             { path: 'bloc', component: AlliancehelperComponent },
             { path: 'db', component: SavefileadminComponent },
+            { path: '', component: WelcomeComponent }
         ]
     }
 ];

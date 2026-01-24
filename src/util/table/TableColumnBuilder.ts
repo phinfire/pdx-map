@@ -79,7 +79,8 @@ export class TableColumnBuilder<T> {
             this.subscript,
             this.isImage,
             this.headerImage,
-            this.headerImageType
+            this.headerImageType,
+            this.cellValueTransform
         );
     }
 }

@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { BehaviorSubject, Subject } from "rxjs";
 
 @Injectable({
     providedIn: 'root'
@@ -6,45 +7,50 @@ import { Injectable } from "@angular/core";
 export class SideNavContentProvider {
 
     private handleCounter = 0;
-    private actions: Map<string, () => void> = new Map();
-    private toolbarActions: Array<{ id: string, icon: string, tooltip: string, action: () => void, positionFloatWeight: number }> = [];
+    private actionsSubject = new BehaviorSubject<{ label: string, action: () => void }[]>([]);
+    actions$ = this.actionsSubject.asObservable();
+    
+    private toolbarActionsSubject = new BehaviorSubject<Array<{ id: string, icon: string, tooltip: string, action: () => void, positionFloatWeight: number }>>([]);
+    toolbarActions$ = this.toolbarActionsSubject.asObservable();
+    
     private toolbarLabel: string | null = null;
 
     constructor() {
     }
     
-    getActions(): { label: string, action: () => void }[] {
-        return Array.from(this.actions.entries()).map(([label, action]) => ({ label, action }));
+    addAction(label: string, action: () => void) {
+        const currentActions = this.actionsSubject.value;
+        const newActions = [...currentActions, { label, action }];
+        this.actionsSubject.next(newActions);
     }
 
-    getToolbarActions(): Array<{ id: string, icon: string, tooltip: string, action: () => void, positionFloatWeight: number }> {
-        return this.toolbarActions;
+    removeAction(label: string) {
+        const currentActions = this.actionsSubject.value;
+        const newActions = currentActions.filter(item => item.label !== label);
+        this.actionsSubject.next(newActions);
+    }
+
+    clearActions() {
+        this.actionsSubject.next([]);
     }
 
     addToolbarAction(icon: string, tooltip: string, action: () => void, positionFloatWeight: number = 0) {
         const id = `action-${this.handleCounter++}`;
-        this.toolbarActions.push({ id, icon, tooltip, action , positionFloatWeight });
-        this.toolbarActions.sort((a, b) => a.positionFloatWeight - b.positionFloatWeight);
+        const currentActions = this.toolbarActionsSubject.value;
+        const newActions = [...currentActions, { id, icon, tooltip, action, positionFloatWeight }];
+        newActions.sort((a, b) => a.positionFloatWeight - b.positionFloatWeight);
+        this.toolbarActionsSubject.next(newActions);
         return id;
     }
 
     removeToolbarAction(handle: string) {
-        this.toolbarActions = this.toolbarActions.filter(item => item.id !== handle);
+        const currentActions = this.toolbarActionsSubject.value;
+        const newActions = currentActions.filter(item => item.id !== handle);
+        this.toolbarActionsSubject.next(newActions);
     }
 
     clearToolbarActions() {
-        this.toolbarActions = [];
+        this.toolbarActionsSubject.next([]);
     }
 
-    getToolbarLabel(): string | null {
-        return this.toolbarLabel;
-    }
-
-    setToolbarLabel(text: string) {
-        this.toolbarLabel = text;
-    }
-
-    clearToolbarLabel() {
-        this.toolbarLabel = null;
-    }
 }

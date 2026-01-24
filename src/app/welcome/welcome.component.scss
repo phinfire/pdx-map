@@ -1,0 +1,15 @@
+:host {
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: var(--header-font);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+h1 {
+    text-align: center;
+    font-size: 3em;
+}

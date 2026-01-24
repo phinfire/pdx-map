@@ -1,17 +1,22 @@
-import { Component, inject, Renderer2, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
+import { animate, keyframes, state, style, transition, trigger } from '@angular/animations';
+import { AsyncPipe } from '@angular/common';
+import { AfterViewInit, Component, inject, OnDestroy, Renderer2, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule, MatDrawer } from '@angular/material/sidenav';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterModule, Router, ActivatedRoute } from '@angular/router';
-import { trigger, state, style, transition, animate, keyframes } from '@angular/animations';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { map } from 'rxjs';
+import { DiscordAuthenticationService } from '../../services/discord-auth.service';
 import { SideNavContentProvider } from '../../ui/SideNavContentProvider';
+import { DiscordLoginComponent } from '../discord-login/discord-login.component';
 
 @Component({
     selector: 'app-paradox',
-    imports: [MatToolbarModule, MatButtonModule, MatIconModule, MatSidenavModule, MatDividerModule, MatTooltipModule, RouterModule],
+    imports: [AsyncPipe, MatToolbarModule, MatButtonModule, MatIconModule, MatSidenavModule, MatDividerModule, MatTooltipModule, MatMenuModule, RouterModule, DiscordLoginComponent],
     templateUrl: './paradox.component.html',
     styleUrl: './paradox.component.scss',
     animations: [
@@ -72,8 +77,36 @@ export class ParadoxComponent implements OnDestroy, AfterViewInit {
     protected renderer = inject(Renderer2);
     protected router = inject(Router);
     protected activatedRoute = inject(ActivatedRoute);
-
+    protected authService = inject(DiscordAuthenticationService);
+    
     currentRoute: string = '';
+
+    navMenus = [
+        {
+            label: 'Save',
+            items: [
+                { label: 'Analyzer', path: 'save', icon: 'file_open' },
+            ]
+        },
+        {
+            label: 'Campaigns',
+            items: [
+                { label: 'Overview', path: 'mc', icon: 'menu_book' },
+                { label: 'Power Bloc Helper', path: 'bloc', icon: 'diversity_3' },
+                { label: 'Stonks', path: 'stonks', icon: 'insights' },
+                { label: 'Administration', path: 'mc/admin', icon: 'admin_panel_settings' },
+                { label: 'Modding', path: 'mc/modder', icon: 'build_circle' },
+            ]
+        },
+        {
+            label: 'Tools',
+            items: [
+                { label: 'Vic3 Resource Map', path: 'map', icon: 'map' },
+                { label: 'Parser Kiosk', path: 'jomini', icon: 'data_object' },
+                { label: 'File Administration', path: 'db', icon: 'database' }
+            ]
+        }
+    ];
 
     constructor() {
         this.router.events.subscribe(() => {
@@ -82,7 +115,7 @@ export class ParadoxComponent implements OnDestroy, AfterViewInit {
     }
 
     ngAfterViewInit(): void {
-        this.drawer.open();
+        
     }
 
     setTheme(darkMode: boolean) {
@@ -102,20 +135,17 @@ export class ParadoxComponent implements OnDestroy, AfterViewInit {
     private seenActionIds = new Set<string>();
     private animationTimeouts = new Map<string, any>();
 
-    getToolbarActionsArray() {
-        const actions = this.sideNavContentProvider.getToolbarActions();
-        actions.forEach(action => {
-            if (!this.hasSeenAction(action.id)) {
-                this.triggerNewActionAnimation(action.id);
-                this.markActionAsSeen(action.id);
-            }
-        });
-        return actions;
-    }
-
-    getToolbarLabel(): string | null {
-        return this.sideNavContentProvider.getToolbarLabel();
-    }
+    toolbarActionsArray$ = this.sideNavContentProvider.toolbarActions$.pipe(
+        map(actions => {
+            actions.forEach(action => {
+                if (!this.hasSeenAction(action.id)) {
+                    this.triggerNewActionAnimation(action.id);
+                    this.markActionAsSeen(action.id);
+                }
+            });
+            return actions;
+        })
+    );
 
     trackByActionId(index: number, action: any): string {
         return action.id;

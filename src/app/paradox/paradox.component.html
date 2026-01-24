@@ -1,24 +1,48 @@
 <mat-toolbar>
-    <button mat-icon-button class="menu-button" aria-label="Menu" (click)="drawer.toggle()">
+    <!--<button mat-icon-button class="menu-button" aria-label="Menu" (click)="drawer.toggle()">
         <mat-icon>menu</mat-icon>
     </button>
-    <span>PDX</span>
-    @if (getToolbarLabel()) {
-    <span class="toolbar-label">{{ getToolbarLabel() }}</span>
-    }
-    <span class="spacer"></span>
-    @for (action of getToolbarActionsArray(); track trackByActionId($index, action)) {
-    <button mat-icon-button class="toolbar-action" [@newActionAlert]="getAnimationState(action.id)"
-        (@newActionAlert.done)="onAnimationDone($event, action.id)" [attr.aria-label]="action.tooltip"
-        [matTooltip]="action.tooltip" (click)="onActionClick(action)">
-        <mat-icon>{{ action.icon }}</mat-icon>
-    </button>
-    }
-    <span class="spacer-right"></span>
+-->
+    <div class="spacer">
+        <div class="hello">
+            @if (authService.isLoggedIn()) {
+            Hello, {{ authService.getLoggedInUser()!.global_name }}
+            } @else {
+            <app-discord-login></app-discord-login>
+            }
+        </div>
+    </div>
+    <div class="menus-container">
+        @for (menu of navMenus; track menu.label) {
+        <button mat-button [matMenuTriggerFor]="dropdownMenu" class="toolbar-menu-button" [attr.aria-label]="menu.label"
+            #menuTrigger="matMenuTrigger">
+            {{ menu.label }}
+            <mat-icon class="menu-chevron" [class.open]="menuTrigger.menuOpen">expand_more</mat-icon>
+        </button>
+        <mat-menu #dropdownMenu="matMenu">
+            @for (item of menu.items; track item.path) {
+            <button mat-menu-item (click)="navigate(item.path)" [disabled]="isActiveRoute(item.path)">
+                <mat-icon fontSet="material-symbols-outlined">{{ item.icon }}</mat-icon>
+                {{ item.label }}
+            </button>
+            }
+        </mat-menu>
+        }
+    </div>
+    <div class="spacer">
+        <span class="spacer-right"></span>
+        @for (action of toolbarActionsArray$ | async; track trackByActionId($index, action)) {
+        <button mat-icon-button class="toolbar-action" [@newActionAlert]="getAnimationState(action.id)"
+            (@newActionAlert.done)="onAnimationDone($event, action.id)" [attr.aria-label]="action.tooltip"
+            [matTooltip]="action.tooltip" (click)="onActionClick(action)">
+            <mat-icon fontSet="material-symbols-outlined">{{ action.icon }}</mat-icon>
+        </button>
+        }
+    </div>
 </mat-toolbar>
 
 <mat-drawer-container class="container" autosize>
-    <mat-drawer #drawer class="sidenav" mode="side">
+    <mat-drawer #drawer class="sidenav" mode="side" [opened]="false">
         <div class="sidenav-top">
             <div class="panorama">
                 <button mat-icon-button (click)="setTheme(false); toggleAnimation('day')"
@@ -33,60 +57,12 @@
             </div>
         </div>
         <div class="sidenav-content">
-            <!--query_stats-->
-            <h3 class="nav-category">Mega Campaign</h3>
-            <div class="nav-buttons-container">
-                <button mat-button class="nav-button" (click)="navigate('mc')" [disabled]="isActiveRoute('mc')">
-                    <mat-icon class="nav-icon">menu_book</mat-icon>
-                    <span class="nav-label">Campaign</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('bloc')" [disabled]="isActiveRoute('bloc')">
-                    <mat-icon class="nav-icon">diversity_3</mat-icon>
-                    <span class="nav-label">Power Bloc Helper</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('mc/admin')"
-                    [disabled]="isActiveRoute('mc/admin')">
-                    <mat-icon class="nav-icon">admin_panel_settings</mat-icon>
-                    <span class="nav-label">Admin</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('mc/modder')"
-                    [disabled]="isActiveRoute('mc/modder')">
-                    <mat-icon class="nav-icon">build_circle</mat-icon>
-                    <span class="nav-label">Modder</span>
-                </button>
-            </div>
-
-            <h3 class="nav-category">Other</h3>
-            <div class="nav-buttons-container">
-                <button mat-button class="nav-button" (click)="navigate('save')" [disabled]="isActiveRoute('save')">
-                    <mat-icon class="nav-icon">file_open</mat-icon>
-                    <span class="nav-label">Save Analyzer</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('stonks')" [disabled]="isActiveRoute('stonks')">
-                    <mat-icon class="nav-icon">insights</mat-icon>
-                    <span class="nav-label">Stonks</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('map')" [disabled]="isActiveRoute('map')">
-                    <mat-icon class="nav-icon">map</mat-icon>
-                    <span class="nav-label">Map</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('jomini')" [disabled]="isActiveRoute('jomini')">
-                    <mat-icon class="nav-icon">data_object</mat-icon>
-                    <span class="nav-label">Parser Kiosk</span>
-                </button>
-                <button mat-button class="nav-button" (click)="navigate('db')" [disabled]="isActiveRoute('db')">
-                    <mat-icon class="nav-icon" fontSet="material-symbols-outlined">database</mat-icon>
-                    <span class="nav-label">File Administration</span>
-                </button>
-            </div>
+            @for (action of sideNavContentProvider.actions$ | async; track action.label) {
+            <button mat-button (click)="action.action()">{{ action.label }}</button>
+            <mat-divider></mat-divider>
+            }
         </div>
-
-        @for (action of sideNavContentProvider.getActions(); track action.label) {
-        <button mat-button (click)="action.action()">{{ action.label }}</button>
-        <mat-divider></mat-divider>
-        }
     </mat-drawer>
-
     <router-outlet></router-outlet>
 
 </mat-drawer-container>
