@@ -13,7 +13,7 @@ import { BuildingAggregatingTableColumnBuilder } from "../../util/table/Building
 import { ImageIconType } from "../../util/table/ImageIconType";
 import { TableColumn } from "../../util/table/TableColumn";
 import { TableColumnBuilder } from "../../util/table/TableColumnBuilder";
-import { GoodsViewMode } from "./GoodViewMode";
+import { GoodsViewMode } from "../../ui/GoodViewMode";
 
 @Injectable({
     providedIn: 'root'
@@ -253,33 +253,7 @@ export class Vic3TableColumnProvider {
     ];
 
     ecoConnectionsColumns: TableColumn<Country>[] = [
-        new BuildingAggregatingTableColumnBuilder(
-            "localOwnedBuildings",
-            "Public"
-        )
-            .withTooltip("")
-            .withPredicate(b => b.getOwnership() == Ownership.LOCAL_GOVERNMENT)
-            .withValueExtractor(b => b.getLevels())
-            .withPredicateForNormalization(b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence())
-            .build(),
-        new BuildingAggregatingTableColumnBuilder(
-            "localPrivateBuildingsFraction",
-            "Private"
-        )
-            .withTooltip("")
-            .withPredicate(b => b.getOwnership() == Ownership.LOCAL_CAPITALISTS)
-            .withValueExtractor(b => b.getLevels())
-            .withPredicateForNormalization(b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence())
-            .build(),
-        new BuildingAggregatingTableColumnBuilder(
-            "foreignOwnedBuildings",
-            "Foreign Owned"
-        )
-            .withTooltip("")
-            .withPredicate(b => b.getOwnership() == Ownership.FOREIGN_CAPITALISTS || b.getOwnership() == Ownership.FOREIGN_GOVERNMENT)
-            .withValueExtractor(b => b.getLevels())
-            .withPredicateForNormalization(b => !b.isConstructionSector() && !b.isGovernment() && !b.isSubsistence())
-            .build()
+        
     ];
 
     populationColumnList: TableColumn<Country>[] = this.baseColumns.concat([

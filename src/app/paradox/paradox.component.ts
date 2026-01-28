@@ -201,13 +201,21 @@ export class ParadoxComponent implements OnDestroy, AfterViewInit {
         this.seenActionIds.add(actionId);
     }
 
+    openGitHubRepository(): void {
+        window.open('https://github.com/phinfire/pdx-map', '_blank');
+    }
+
+    openDiscordServer(): void {
+        window.open('https://discord.gg/38Y8pPxBmD', '_blank');
+    }
+
     ngOnDestroy(): void {
         this.animationTimeouts.forEach(timeout => clearTimeout(timeout));
         this.animationTimeouts.clear();
     }
 
     navigate(path: string): void {
-        this.router.navigate([path]);
+        this.router.navigate([path], { relativeTo: this.activatedRoute });
     }
 
     isActiveRoute(path: string): boolean {

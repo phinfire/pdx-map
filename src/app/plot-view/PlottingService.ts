@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import * as d3 from 'd3';
-import { Plotable } from "./plot/Plotable";
+import { Plotable } from "./Plotable";
 
 // Minimal default style for tooltip
 class DefaultPlotStyle {

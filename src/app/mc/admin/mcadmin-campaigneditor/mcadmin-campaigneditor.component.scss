@@ -1,0 +1,16 @@
+
+:host {
+    display: flex;
+    flex-direction: column;
+}
+.date-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.date-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+}

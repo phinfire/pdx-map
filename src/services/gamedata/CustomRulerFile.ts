@@ -7,7 +7,7 @@ export class CustomRulerFile {
     }
 
     getCustomRulerPointCost(): number {
-        let ageCost = 0;
+        const ageCost = 0; // TODO: implement age cost calculation
         let traitsCost = this.educationTrait ? this.educationTrait.getRulerDesignerCost() : 0;
         for (const trait of this.traits) {
             traitsCost += trait.getRulerDesignerCost();

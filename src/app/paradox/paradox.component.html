@@ -4,10 +4,12 @@
     </button>
 -->
     <div class="spacer">
-        <div class="hello">
+        <div class="hello-wrapper">
             @if (authService.isLoggedIn()) {
-            Hello, {{ authService.getLoggedInUser()!.global_name }}
+            <span class="hello">Hello,</span> <button mat-button class="username" (click)="navigate('')">{{
+                authService.getLoggedInUser()!.global_name }}</button>
             } @else {
+                <div style="padding: 0 2em"></div>
             <app-discord-login></app-discord-login>
             }
         </div>
@@ -28,6 +30,21 @@
             }
         </mat-menu>
         }
+        <button mat-icon-button [matMenuTriggerFor]="dropdownMenu" class="toolbar-menu-button"
+            #menuTrigger="matMenuTrigger">
+            <mat-icon>settings</mat-icon>
+        </button>
+        <mat-menu #dropdownMenu="matMenu">
+            <button mat-menu-item (click)="openGitHubRepository()">
+                <mat-icon svgIcon="github-logo"></mat-icon>
+                View Source
+            </button>
+            <button mat-menu-item (click)="openDiscordServer()">
+                <mat-icon svgIcon="discord-logo"></mat-icon>
+                Join the Discord
+            </button>
+
+        </mat-menu>
     </div>
     <div class="spacer">
         <span class="spacer-right"></span>

@@ -7,7 +7,7 @@ import { TraitType } from '../../model/ck3/enum/TraitType';
 import { HttpClient } from '@angular/common/http';
 import { DiscordAuthenticationService } from '../../services/discord-auth.service';
 import { PdxFileService } from '../../services/pdx-file.service';
-import { Eu4Save } from '../../model/eu4/Eu4Save';
+import { Eu4Save } from '../../model/games/eu4/Eu4Save';
 
 @Injectable({
     providedIn: 'root'
@@ -54,17 +54,29 @@ export class MegaService {
 
     getAvailableCampaigns$(): Observable<MegaCampaign[]> {
         return this.http.get<any[]>(this.legacyCampaignsEndpoint).pipe(
-            map(campaigns => campaigns.map(c =>
-                new MegaCampaign(
-                    c.name,
-                    new Date(c.regionDeadlineDate),
-                    new Date(c.startDeadlineDate),
-                    new Date(c.firstSessionDate),
-                    c.firstEu4Session ? new Date(c.firstEu4Session) : null
-                )
-            )),
+            map(campaigns =>
+                campaigns
+                    .filter(c =>
+                        c &&
+                        c.name &&
+                        c.regionDeadlineDate &&
+                        c.startDeadlineDate &&
+                        c.firstSessionDate
+                    )
+                    .map(c =>
+                        new MegaCampaign(
+                            c.name,
+                            this.utcToLocalDate(c.regionDeadlineDate),
+                            this.utcToLocalDate(c.startDeadlineDate),
+                            this.utcToLocalDate(c.firstSessionDate),
+                            c.firstEu4Session ? this.utcToLocalDate(c.firstEu4Session) : null
+                        )
+                    )
+            ),
             catchError(() => {
-                console.warn('MegaService: Failed to fetch campaigns from backend, returning empty list');
+                console.warn(
+                    'MegaService: Failed to fetch campaigns from backend, returning empty list'
+                );
                 return of([]);
             })
         );
@@ -116,5 +128,11 @@ export class MegaService {
 
     getFlagUrl(nationKey: string): string {
         return `https://codingafterdark.de/mc/ideas/flags/${nationKey}.webp`;
+    }
+
+    private utcToLocalDate(dateString: string | Date): Date {
+        const date = new Date(dateString);
+        const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        return localDate;
     }
 }

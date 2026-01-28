@@ -5,7 +5,7 @@ import { BehaviorSubject, merge, Observable, of, Subject, Subscription } from 'r
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { DiscordUser } from "../../model/social/DiscordUser";
 import { DiscordAuthenticationService } from "../../services/discord-auth.service";
-// Removed duplicate import
+
 export interface Signup {
     user: DiscordUser,
     picks: string[];
@@ -71,10 +71,9 @@ export class MCSignupService implements OnDestroy {
         if (!this.discordAuthService.isLoggedIn()) {
             return of(false);
         }
-        const authHeader = this.discordAuthService.getAuthenticationHeader();
         const headers = new HttpHeaders({
             'Content-Type': 'application/json',
-            ...authHeader
+            ...this.discordAuthService.getAuthenticationHeader()
         });
 
         return this.http.post<any>(this.endpoints.signup, { picks }, { headers }).pipe(

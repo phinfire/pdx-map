@@ -40,12 +40,6 @@
                     @if (isInWaitingForFirstSessionStage() || isPlayingCk3()) {
                         <button mat-raised-button (click)="downloadAllRulersAsZip()">Download All Rulers</button>
                     }
-                    @if (!authService.isLoggedIn()) {
-                    <div class="pseudo-component">
-                        <p>Please log in to see more details.</p>
-                        <app-discord-login></app-discord-login>
-                    </div>
-                    }
                     </div>
                 }
                 @if (currentView == VIEW.PLOT_VIEW) {

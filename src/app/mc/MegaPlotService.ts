@@ -3,7 +3,7 @@ import { StartAssignment } from "./StartAssignment";
 import { CK3Service } from "../../services/gamedata/CK3Service";
 import { PdxFileService } from "../../services/pdx-file.service";
 import { Trait } from "../../model/ck3/Trait";
-import { Plotable } from "../plot-view/plot/Plotable";
+import { Plotable } from "../plot-view/Plotable";
 import { RGB } from "../../util/RGB";
 import { TraitType } from "../../model/ck3/enum/TraitType";
 import { CK3 } from "../../model/ck3/CK3";

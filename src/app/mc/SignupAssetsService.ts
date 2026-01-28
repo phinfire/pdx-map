@@ -3,13 +3,13 @@ import { Injectable, inject } from "@angular/core";
 import { BehaviorSubject, Observable, forkJoin, map, shareReplay } from "rxjs";
 import { CK3 } from "../../model/ck3/CK3";
 import { AbstractLandedTitle } from "../../model/ck3/title/AbstractLandedTitle";
-import { Ck3Save } from "../../model/Ck3Save";
 import { CK3Service } from "../../services/gamedata/CK3Service";
-import { makeDotTexture, makeGeoJsonPolygons } from "../../util/geometry/threeGeometry";
+import { makeGeoJsonPolygons } from "../../util/geometry/threeGeometry";
 import { MapService } from "../map.service";
 import { ColorConfigProvider } from "../viewers/polygon-select/ColorConfigProvider";
 import { ClusterManager } from "./mcsignup/ClusterManager";
 import { RulerTier } from '../../model/ck3/RulerTier';
+import { Ck3Save } from '../../model/ck3/Ck3Save';
 
 export interface SignupAssetsData {
     geoJsonData: any;

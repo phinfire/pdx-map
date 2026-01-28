@@ -1,0 +1,96 @@
+<div class="content">
+    @if (activeSave != null) {
+    <span>
+        <div>
+            <span><strong>Save-Date:</strong></span>
+            <span>{{ activeSave.getRealDate().toLocaleDateString() }}</span>
+            <span><strong>Ingame-Date:</strong></span>
+            <span>{{ activeSave.getIngameDate().toLocaleDateString() }}</span>
+        </div>
+    </span>
+    }
+</div>
+
+<ng-template #tableWrapper let-rowElements="rowElements" let-columns="columns">
+    <div class="table-wrapper">
+        <app-table [rowElements]="rowElements" [columns]="columns"></app-table>
+    </div>
+</ng-template>
+
+@if (activeSave != null) {
+<mat-tab-group [selectedIndex]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)" style="width: 100%;">
+    <mat-tab label="Countries">
+        @if (selectedTabIndex === 0) {
+        <ng-container
+            *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getCountryColumnList()}"></ng-container>
+        }
+    </mat-tab>
+    <mat-tab label="Country Budgets">
+        @if (selectedTabIndex === 1) {
+        <ng-container
+            *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getCountryFinancialColumnList()}"></ng-container>
+        }
+    </mat-tab>
+    <mat-tab label="Blocs" [disabled]="!activeSave || activeSave.getPowerBlocs().length === 0">
+        @if (selectedTabIndex === 2) {
+        <ng-container
+            *ngTemplateOutlet="tableWrapper; context: {rowElements: activeSave.getPowerBlocs(), columns: columnProvider.getPowerBlocColumnList()}"></ng-container>
+        }
+    </mat-tab>
+    <mat-tab label="Economy">
+        @if (selectedTabIndex === 3) {
+        <ng-container
+            *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getBuildingFinancialColumnList()}"></ng-container>
+        }
+    </mat-tab>
+    <mat-tab label="Buildings">
+        @if (selectedTabIndex === 4) {
+        <ng-container
+            *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getBuildingTableColumnList()}"></ng-container>
+        }
+    </mat-tab>
+    <mat-tab label="Population">
+        @if (selectedTabIndex === 5) {
+        <ng-container
+            *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getPopulationColumnList()}"></ng-container>
+        }
+    </mat-tab>
+    <mat-tab label="Links">
+        @if (selectedTabIndex === 6) {
+        <ng-container
+            *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getEcoConnectionsColumnList()}"></ng-container>
+        }
+    </mat-tab>
+    <mat-tab label="Goods">
+        @if (selectedTabIndex === 7) {
+        <div class="table-controls">
+            <label class="radio-group-label">Goods View Mode</label>
+            <mat-radio-group [(ngModel)]="goodsViewMode" (ngModelChange)="onGoodsViewModeChange($event)"
+                aria-label="Goods view mode" style="margin-bottom: 8px;">
+                <mat-radio-button value="input" style="margin-right: 16px;">Input</mat-radio-button>
+                <mat-radio-button value="balance" style="margin-right: 16px;">Balance</mat-radio-button>
+                <mat-radio-button value="output" style="margin-right: 16px;">Output</mat-radio-button>
+            </mat-radio-group>
+            <label class="radio-group-label">Category</label>
+            <mat-radio-group [ngModel]="selectedGoodsCategory" (ngModelChange)="onGoodsCategoryChange($event)">
+                @for (category of availableGoodsCategories; track category.name) {
+                <mat-radio-button [value]="category" style="margin-right: 16px;">
+                    {{ category.name }}
+                </mat-radio-button>
+                }
+            </mat-radio-group>
+        </div>
+        <ng-container
+            *ngTemplateOutlet="tableWrapper; context: {rowElements: getCountries(), columns: columnProvider.getGoodColumns()}"></ng-container>
+        }
+    </mat-tab>
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <mat-icon>map</mat-icon>
+        </ng-template>
+        <app-slab-map-view [geoJsonFetcher]="geoJsonFetcher" [viewModes]="availableMapViewModes"
+            [behaviorConfig]="behaviorConfig">
+        </app-slab-map-view>
+    </mat-tab>
+</mat-tab-group>
+}

@@ -1,0 +1,110 @@
+:host {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.chute {
+    height: 50%;
+    width: 50%;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    border-radius: 10px;
+    box-shadow: 0 0 10px var(--faded-border-color) inset, 0 0 10px var(--faded-border-color);
+    background-color: var(--background-color);
+
+    >* {
+        margin: 0.5rem 0;
+    }
+
+    span:first-child {
+        font-size: 2em;
+    }
+
+    button {
+        transform: scale(2);
+        margin: 1.5em 0 1.5em 0;
+    }
+}
+
+.chute-active {
+    background-color: var(--background-color);
+    box-shadow: 0 0 10px var(--text-color) inset, 0 0 10px var(--text-color);
+}
+
+.splash-spinner-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    gap: 2em;
+}
+
+.splash-spinner-text {
+    color: var(--text-color);
+    font-family: var(--hacker-font);
+    text-shadow: 0 0 10px black;
+    font-size: 3em;
+}
+
+.construction-notice {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 1em;
+    color: var(--text-color);
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    padding: 2em;
+    border-radius: 10px;
+    box-shadow: 0 0 10px var(--faded-border-color);
+
+    mat-icon {
+        margin: 4em;
+        transform: scale(4);
+    }
+
+    span:first-child {
+        font-size: 1.4em;
+    }
+
+    span:last-child {
+        font-size: 1.2em;
+    }
+}
+
+::ng-deep .mat-mdc-form-field {
+    height: 56px;
+
+    .mat-mdc-text-field-wrapper {
+        height: 56px;
+    }
+}
+
+::ng-deep .mat-mdc-select-panel {
+    background-color: var(--background-color) !important;
+}
+
+::ng-deep .mat-mdc-option {
+    background-color: var(--background-color) !important;
+    color: var(--text-color) !important;
+}
+
+::ng-deep .mat-mdc-option:hover {
+    background-color: var(--faded-border-color) !important;
+}
+
+::ng-deep .mat-mdc-option.mdc-list-item--selected {
+    background-color: var(--faded-border-color) !important;
+}

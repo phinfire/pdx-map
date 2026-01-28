@@ -63,10 +63,14 @@ export class DiscordAuthenticationService {
     private initializeAuth(): void {
         this.jwt = localStorage.getItem(DiscordAuthenticationService.CONFIG.JWT_STORAGE_KEY);
         const redirectUrl = this.getRedirectUrl();
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
         
-        const auth$ = this.jwt 
-            ? this.getUserViaJWT(redirectUrl)
-            : this.exchangeCodeForJWT(redirectUrl);
+        const auth$ = code
+            ? this.exchangeCodeForJWT(redirectUrl)
+            : (this.jwt 
+                ? this.getUserViaJWT(redirectUrl)
+                : of(null));
             
         auth$.pipe(
             catchError(error => {

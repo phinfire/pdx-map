@@ -10,7 +10,7 @@ export class SideNavContentProvider {
     private actionsSubject = new BehaviorSubject<{ label: string, action: () => void }[]>([]);
     actions$ = this.actionsSubject.asObservable();
     
-    private toolbarActionsSubject = new BehaviorSubject<Array<{ id: string, icon: string, tooltip: string, action: () => void, positionFloatWeight: number }>>([]);
+    private toolbarActionsSubject = new BehaviorSubject<Array<{ id: string, icon: string, tooltip: string, action: (() => void) | null, positionFloatWeight: number }>>([]);
     toolbarActions$ = this.toolbarActionsSubject.asObservable();
     
     private toolbarLabel: string | null = null;
@@ -34,7 +34,7 @@ export class SideNavContentProvider {
         this.actionsSubject.next([]);
     }
 
-    addToolbarAction(icon: string, tooltip: string, action: () => void, positionFloatWeight: number = 0) {
+    addToolbarAction(icon: string, tooltip: string, action: (() => void) | null, positionFloatWeight: number = 0) {
         const id = `action-${this.handleCounter++}`;
         const currentActions = this.toolbarActionsSubject.value;
         const newActions = [...currentActions, { id, icon, tooltip, action, positionFloatWeight }];

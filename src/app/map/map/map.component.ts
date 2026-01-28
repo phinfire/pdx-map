@@ -2,7 +2,7 @@ import * as L from 'leaflet';
 import * as d3 from 'd3';
 import { HttpClient } from '@angular/common/http';
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { Eu4Save } from '../../../model/eu4/Eu4Save';
+import { Eu4Save } from '../../../model/games/eu4/Eu4Save';
 import { PdxFileService } from '../../../services/pdx-file.service';
 import { MapService } from '../../map.service';
 import { IHasKey, MapEU4DataProvider } from '../config/MapDataProvider';

@@ -253,8 +253,7 @@ export class CameraMovementManager {
         
         this.edgeScrollAnimationId = requestAnimationFrame(this.edgeScrollLoop);
     };
-    
-    // Public utility methods
+
     public fitCameraToBox(box: THREE.Box3, margin: number = 0.1) {
         if (box.isEmpty()) return;
         

@@ -1,0 +1,43 @@
+@if (!activeSave) {
+@if (isProcessing) {
+<div class="splash-spinner-overlay">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <div class="splash-spinner-text">Processing save file...</div>
+</div>
+}
+    @if (!isProcessing) {
+<div #chute class="chute" (drop)="onDrop($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)">
+    <span>Drag and drop a save file here to start</span>
+    <span>or</span>
+    <div class="file-selection">
+        <button matButton="elevated" color="primary" (click)="openFileDialog()">
+            <mat-icon>folder_open</mat-icon>
+            Select a save file
+        </button>
+        <input #fileInput type="file" accept=".ck3,.eu4,.v3,.json" style="display: none;"
+            (change)="onFileSelected($event)" />
+    </div>
+    <span>or</span>
+    <button matButton="elevated" color="primary" (click)="goToLatestSave()">
+        <mat-icon>history</mat-icon>
+        Open Latest Save
+    </button>
+</div>
+}
+}
+@if (activeSave) {
+    @if (activeSaveIsVic3()) {
+    <app-save-view class="container" [activeSave]="activeSave" [isFromDatabase]="isFromDatabase">
+    </app-save-view>
+    }
+    @if (activeSaveIsCk3()) {
+    <app-ck3-save-view [activeSave]="activeSave"></app-ck3-save-view>
+    }
+    @if (activeSaveIsEu4()) {
+        <div class="construction-notice">
+            <span>Europa Universalis IV save file detected.</span>
+            <mat-icon>construction</mat-icon>
+            <span>EU4 save analysis is not available yet.</span>
+        </div>
+    }
+}

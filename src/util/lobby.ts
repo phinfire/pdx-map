@@ -1,5 +1,3 @@
-import { DiscordUser } from "../model/social/DiscordUser";
-
 export function calculateAssignments<U, T>(
     choices: T[],
     signups: { user: U; picks: T[] }[]
@@ -37,11 +35,6 @@ export function calculateAssignments<U, T>(
     return result;
 }
 
-/**
- * Hungarian algorithm (Kuhn–Munkres)
- * Input: square cost matrix
- * Output: assignment array where result[i] = column assigned to row i
- */
 function hungarian(costMatrix: number[][]): number[] {
     const n = costMatrix.length;
     const u = Array(n + 1).fill(0);

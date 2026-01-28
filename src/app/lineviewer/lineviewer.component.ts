@@ -1,17 +1,16 @@
-import { Component, ElementRef, inject, AfterViewInit, OnDestroy, ChangeDetectorRef, Input, SimpleChanges } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, inject, Input, OnDestroy, SimpleChanges } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 import { FormsModule } from '@angular/forms';
-import { LinePlotterService, DataSeries } from './LinePlotterService';
-import { Eu4SaveSeriesData } from './model/Eu4SaveSeriesData';
-import { LineAccessor } from './model/LineAccessor';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { DataSeries, LinePlotterService } from './LinePlotterService';
 import { LineableEntity } from './model/LineableEntity';
+import { LineAccessor } from './model/LineAccessor';
 import { LineViewerData } from './model/LineViewerData';
 
 interface SeriesWithEntity extends DataSeries {

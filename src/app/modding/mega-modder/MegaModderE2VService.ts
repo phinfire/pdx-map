@@ -2,7 +2,7 @@ import { inject, Injectable } from "@angular/core";
 import { BehaviorSubject, from, map, mergeMap, Observable, shareReplay, combineLatest } from "rxjs";
 import { PdxFileService } from "../../../services/pdx-file.service";
 import { HttpClient } from "@angular/common/http";
-import { Eu4SaveProvince } from "../../../model/eu4/Eu4SaveProvince";
+import { Eu4SaveProvince } from "../../../model/games/eu4/Eu4SaveProvince";
 import { MapStateRegion } from "../../../model/vic/game/MapStateRegion";
 
 export interface MappingTableRow {

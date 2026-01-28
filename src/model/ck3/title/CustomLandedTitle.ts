@@ -11,7 +11,8 @@ export class CustomLandedTitle extends AbstractLandedTitle {
     constructor(key: string, holder: string, deFactoLiege: string | null, private color: RGB, private tier: RulerTier, deJureVassalIndices: number[], private name: string, capitalHoldingIndex: number | null, save: ICk3Save, ck3: CK3) {
         super(key, holder, deFactoLiege, deJureVassalIndices, capitalHoldingIndex, save, ck3);
         if (!this.name) {
-            throw new Error("Custom landed title must have a name");
+            this.name = key;
+            //throw new Error("Custom landed title must have a name " + tier + " " + key);
         }
     }
 

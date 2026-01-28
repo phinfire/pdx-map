@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { CategoryViewMode, ValueViewMode, ViewMode } from "./ViewMode";
 import { County } from "../../model/ck3/County";
 import { ICk3Save } from "../../model/ck3/save/ICk3Save";
-import { Eu4Save } from '../../model/eu4/Eu4Save';
+import { Eu4Save } from '../../model/games/eu4/Eu4Save';
 import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvider';
 import { RGB } from '../../util/RGB';
 import { AbstractLandedTitle } from "../../model/ck3/title/AbstractLandedTitle";

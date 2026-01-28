@@ -2,7 +2,30 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, from, of, throwError } from 'rxjs';
 import { catchError, concatMap, map, tap } from 'rxjs/operators';
 import { Vic3Save } from '../model/vic/Vic3Save';
-import { DataStorageService } from './savedatabase.service';
+import { DataStorageService, FileUploadResponse } from '../services/datastorage.service';
+
+export type GameType = 'ck3' | 'vic3' | 'eu4';
+
+export interface SaveMetadata extends Record<string, any> {
+    kind: 'save';
+    game: GameType;
+    hash: string;
+    fileName?: string;
+    realDate: string;
+    ingameDate: string;
+    subfiles?: Record<string, { id: string }>;
+}
+
+export interface SaveInfo {
+    id: string;
+    metadata: SaveMetadata;
+}
+
+export interface SaveUploadResponse {
+    success: boolean;
+    message: string;
+    id?: string;
+}
 
 export interface SubfileMeta {
     kind: string;
@@ -27,19 +50,20 @@ export class SaveSaverService {
 
     private saveDatabaseService = inject(DataStorageService);
 
-    public getAvailableSaveIdentifiers(): Observable<string[]> {
-        return this.saveDatabaseService.listFiles().pipe(
-            map(files => files.filter(file => file.metadata && file.metadata["kind"] === 'save').map(file => file.id))
-        );
-    }
-
-    public getAvailableSavesAndMetadata(): Observable<Array<{ id: string; metadata: any }>> {
+    public getAvailableSavesAndMetadata(): Observable<SaveInfo[]> {
         return this.saveDatabaseService.listFiles().pipe(
             map(files => files
-                .filter(file => file.metadata && file.metadata["kind"] === 'save')
+                .filter((file): file is { id: string; metadata: SaveMetadata } & typeof file => 
+                    file.metadata?.['kind'] === 'save'
+                )
                 .map(file => ({ id: file.id, metadata: file.metadata }))
             )
         );
+    }
+
+    public getGameFromSaveMetadata(save: SaveInfo | { metadata: SaveMetadata }): GameType | null {
+        const game = save.metadata?.game?.toLowerCase() as GameType;
+        return (['ck3', 'vic3', 'eu4'] as const).includes(game) ? game : null;
     }
 
     public getSaveFileByIdentifier(saveId: string): Observable<any> {
@@ -65,7 +89,7 @@ export class SaveSaverService {
         );
     }
 
-    public storeVic3Save(save: Vic3Save, fileName: string): Observable<{ success: boolean; message: string }> {
+    public storeVic3Save(save: Vic3Save, fileName: string): Observable<SaveUploadResponse> {
         const mainData = save.toJson() as any;
         const serialized = JSON.stringify(mainData);
         return this.hashData(serialized).pipe(
@@ -79,7 +103,7 @@ export class SaveSaverService {
                         fileName: `${fileName}_demographics`
                     }
                 ];
-                const mainFileConfig = { kind: 'save', game: 'vic3', fileName };
+                const mainFileConfig = { kind: 'save' as const, game: 'vic3' as GameType, fileName, realDate: save.getRealDate().toISOString(), ingameDate: save.getIngameDate().toISOString() };
                 return this.uploadSaveWithSubfiles(mainData, mainFileConfig, subfiles, hash);
             })
         );
@@ -87,10 +111,10 @@ export class SaveSaverService {
 
     private uploadSaveWithSubfiles(
         mainObject: any,
-        mainFileConfig: { kind: string; game: string; fileName?: string },
+        mainFileConfig: { kind: string; game: GameType; fileName?: string; realDate: string; ingameDate: string },
         subfiles: SubfileMeta[],
         hash: string
-    ): Observable<{ success: boolean; message: string }> {
+    ): Observable<SaveUploadResponse> {
         return this.uploadFilesSequentially(subfiles, `${mainFileConfig.game} subfiles`).pipe(
             concatMap((subfileResult) => {
                 if (Object.keys(subfileResult.metadata).length > 0) {
@@ -104,6 +128,8 @@ export class SaveSaverService {
                     mainObject.metadata = {};
                 }
                 mainObject.metadata.hash = hash;
+                mainObject.metadata.realDate = mainFileConfig.realDate;
+                mainObject.metadata.ingameDate = mainFileConfig.ingameDate;
 
                 const serializedMain = JSON.stringify(mainObject);
                 const mainFileArray: UploadFileMeta[] = [{
@@ -144,7 +170,11 @@ export class SaveSaverService {
                     message: error.message || 'Unknown error occurred during upload'
                 }));
             }),
-            map(() => ({ success: true, message: `${mainFileConfig.game} save and all subfiles uploaded successfully` }))
+            map((mainFileResult) => ({ 
+                success: true, 
+                message: `${mainFileConfig.game} save and all subfiles uploaded successfully`,
+                id: mainFileResult.uploaded[0]?.id
+            }))
         );
     }
 
@@ -176,7 +206,7 @@ export class SaveSaverService {
             game: files[0].game,
             ...(files[0].fileName && { fileName: files[0].fileName })
         }).pipe(
-            tap((response: any) => {
+            tap((response: FileUploadResponse) => {
                 const uploadedFile = { id: response?.id, kind: files[0].kind, metadataKey: files[0].metadataKey };
                 uploaded.push(uploadedFile);
                 metadata[files[0].metadataKey] = { id: response?.id };
@@ -198,7 +228,7 @@ export class SaveSaverService {
                         game: file.game,
                         ...(file.fileName && { fileName: file.fileName })
                     }).pipe(
-                        tap((response: any) => {
+                        tap((response: FileUploadResponse) => {
                             const uploadedFile = { id: response?.id, kind: file.kind, metadataKey: file.metadataKey };
                             uploaded.push(uploadedFile);
                             metadata[file.metadataKey] = { id: response?.id };

@@ -7,8 +7,8 @@ import { RGB } from '../../util/RGB';
 import { PdxFileService } from '../pdx-file.service';
 import { CK3 } from '../../model/ck3/CK3';
 import { Trait } from '../../model/ck3/Trait';
-import { Ck3Save } from '../../model/Ck3Save';
 import { CustomRulerFile } from './CustomRulerFile';
+import { Ck3Save } from '../../model/ck3/Ck3Save';
 
 @Injectable({
     providedIn: 'root'

@@ -148,7 +148,10 @@ export function createTitle(data: any, save: ICk3Save, ck3: CK3): AbstractLanded
     const capitalHoldingIndex = data.capital || null;
     const deJureVassalIndices = data.de_jure_vassals || [];
     if (key.startsWith("x_")) {
-        const rgb = new RGB(data.color.rgb[0], data.color.rgb[1], data.color.rgb[2]);
+        if (!data.color) {
+            console.warn("Custom landed title missing color", data);
+        }
+        const rgb = data.color != null ? new RGB(data.color.rgb[0], data.color.rgb[1], data.color.rgb[2]) : new RGB(255, 0, 0);
         const tierString = data.tier ? RulerTier.fromRealmTier(data.tier) : RulerTier.NONE;
         const name = data.name;
         return new CustomLandedTitle(key, holder, de_facto_liege, rgb, tierString, deJureVassalIndices, name, capitalHoldingIndex, save, ck3);

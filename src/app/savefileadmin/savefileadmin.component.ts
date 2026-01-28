@@ -11,9 +11,9 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { DataStorageService, FileListResponse } from '../savedatabase.service';
-import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { DataStorageService, FileListResponse } from '../../services/datastorage.service';
 
 @Component({
     selector: 'app-savefileadmin',

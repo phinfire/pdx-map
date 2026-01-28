@@ -6,24 +6,9 @@ export class TableColumn<T> implements ITableColumn<T> {
     public readonly headerImage?: string;
     public readonly headerImageType?: ImageIconType;
 
-    public static getIndexColumn<T>(offset: number = 0): TableColumn<T> {
-        return new TableColumn<T>(
-            'position',
-            '',
-            null,
-            false,
-            (element: T, index: number) => index + 1 + offset,
-            (element: T, index: number) => null,
-            null,
-            false,
-            undefined,
-            undefined,
-            null
-        );
-    };
-
     public readonly visibleCellValue: (element: T, index: number) => any;
     public readonly isImage: boolean;
+    public readonly isIcon: boolean;
 
     constructor(
         public readonly def: string,
@@ -36,9 +21,11 @@ export class TableColumn<T> implements ITableColumn<T> {
         isImage: boolean = false,
         headerImage?: string,
         headerImageType?: ImageIconType,
-        private readonly cellValueTransform?: ((value: any) => any) | null
+        private readonly cellValueTransform?: ((value: any) => any) | null,
+        isIcon: boolean = false
     ) {
         this.isImage = isImage;
+        this.isIcon = isIcon;
         this.headerImage = headerImage;
         this.headerImageType = headerImageType;
         this.visibleCellValue = (element: T, index: number) => {
@@ -99,7 +86,8 @@ export class TableColumn<T> implements ITableColumn<T> {
             this.isImage,
             this.headerImage,
             this.headerImageType,
-            null
+            this.cellValueTransform,
+            this.isIcon
         );
     }
 }

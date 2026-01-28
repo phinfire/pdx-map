@@ -11,7 +11,7 @@ import { TableColumn } from '../../../util/table/TableColumn';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
 import { MegaModderE2VService, MappingTableRow } from './MegaModderE2VService';
 import { ModPop } from '../../../model/vic/game/ModPop';
-import { Eu4Save } from '../../../model/eu4/Eu4Save';
+import { Eu4Save } from '../../../model/games/eu4/Eu4Save';
 import { PopScaleDiagramComponent } from './pop-scale-diagram.component';
 import { forkJoin } from 'rxjs';
 import { MapStateRegion } from '../../../model/vic/game/MapStateRegion';
@@ -182,7 +182,6 @@ export class MegaModderComponent implements AfterViewInit {
                 seenVic3Tags.add(row.vic3Tag);
             }
         }
-
         return scalingFactors;
     }
 

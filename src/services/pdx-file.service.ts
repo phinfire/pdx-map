@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Jomini } from 'jomini';
 import JSZip from 'jszip';
-import { Eu4Save } from '../model/eu4/Eu4Save';
+import { Eu4Save } from '../model/games/eu4/Eu4Save';
 
 @Injectable({
     providedIn: 'root'

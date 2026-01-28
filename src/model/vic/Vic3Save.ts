@@ -1,4 +1,4 @@
-import { ParadoxSave } from "../ParadoxSave";
+import { ParadoxSave } from "../common/ParadoxSave";
 import { Building } from "./Building";
 import { Country } from "./Country";
 import { CountryBudget } from "./CountryBudget";
@@ -86,7 +86,7 @@ export class Vic3Save implements ParadoxSave {
                     return vassalCountryEntry ? vassalCountryEntry.definition : v;
                 });
                 const country = new Country(playerName, vassalTags, countryEntry.definition, states, countryEntry.pop_statistics,
-                     country2pops.get(countryIndex) || [], techEntry, countryBudget, taxLevel);
+                    country2pops.get(countryIndex) || [], techEntry, countryBudget, taxLevel);
                 countries.push(country);
                 index2Country.set(countryIndex, country);
                 if (countryEntry["power_bloc_as_core"]) {
@@ -108,8 +108,8 @@ export class Vic3Save implements ParadoxSave {
         const nonBlocCountries = existingCountries.filter(c => blocs.every(bloc => !bloc.getCountries().getInternalElements().includes(c)));
         const realDateString = saveData.meta_data.real_date;
         const ingameDateString = saveData.meta_data.game_date;
-        const ingameDateStringDatePart = ingameDateString.substring(0, ingameDateString.lastIndexOf("."));
-        const ingameDateParts = ingameDateStringDatePart.split(".");
+        console.log(saveData.meta_data.real_date, saveData.meta_data.game_date);
+        const ingameDateParts = ingameDateString.split(".");
         const ingameDate = new Date(parseInt(ingameDateParts[0]), parseInt(ingameDateParts[1]) - 1, parseInt(ingameDateParts[2]));
         const realDateParts = realDateString.split(".");
         const realDate = new Date(parseInt(realDateParts[0]), parseInt(realDateParts[1]) - 1, parseInt(realDateParts[2]));
@@ -119,27 +119,27 @@ export class Vic3Save implements ParadoxSave {
 
     private static parseStateRegionEntries(saveData: RawSaveData): Map<string, ResourceHaver> {
         const stateRegionMap = new Map<string, ResourceHaver>();
-        
+
         const arableResourceTypes = new Set([
             'bg_maize_farms', 'bg_millet_farms', 'bg_rice_farms', 'bg_rye_farms', 'bg_wheat_farms',
             'bg_banana_plantations', 'bg_coffee_plantations', 'bg_cotton_plantations', 'bg_dye_plantations',
             'bg_livestock_ranches', 'bg_opium_plantations', 'bg_silk_plantations', 'bg_sugar_plantations',
             'bg_tea_plantations', 'bg_tobacco_plantations', 'bg_vineyard_plantations'
         ]);
-        
+
         for (const stateIndex in saveData.state_region_manager.database) {
             const stateEntry = saveData.state_region_manager.database[stateIndex];
             const identifier = stateEntry["template"];
             const arableLand = stateEntry["arable_land"] || 0;
-            
+
             const arableResources = new Map<string, number>();
             const otherResources = new Map<string, number>();
             const uncappedResources: Array<{ type: string; undiscovered_amount: number }> = [];
-            
+
             const resources = stateEntry.persistent_resources?.resources || [];
             for (const resource of resources) {
                 const resourceType = resource.type;
-                
+
                 if (arableResourceTypes.has(resourceType)) {
                     const amount = resource.amount || 0;
                     arableResources.set(resourceType, amount);
@@ -157,7 +157,7 @@ export class Vic3Save implements ParadoxSave {
                     });
                 }
             }
-            
+
             const resourceHaver = new ResourceHaver(
                 identifier,
                 arableLand,
@@ -165,7 +165,7 @@ export class Vic3Save implements ParadoxSave {
                 arableResources,
                 otherResources
             );
-            
+
             stateRegionMap.set(identifier, resourceHaver);
         }
         return stateRegionMap;
@@ -175,11 +175,13 @@ export class Vic3Save implements ParadoxSave {
         const stateRegion2Buildings = new Map<number, Building[]>();
         for (const buildingIndex in saveData.building_manager.database) {
             const buildingEntry = saveData.building_manager.database[buildingIndex];
-            const { locationIndex, buildings } = Building.fromRawData(buildingEntry, saveData.building_manager.database, saveData.building_ownership_manager.database, new Map());
-            if (!stateRegion2Buildings.has(locationIndex)) {
-                stateRegion2Buildings.set(locationIndex, []);
+            if (buildingEntry !== "none") {
+                const { locationIndex, buildings } = Building.fromRawData(buildingEntry, saveData.building_manager.database, saveData.building_ownership_manager.database, new Map());
+                if (!stateRegion2Buildings.has(locationIndex)) {
+                    stateRegion2Buildings.set(locationIndex, []);
+                }
+                stateRegion2Buildings.get(locationIndex)!.push(...buildings);
             }
-            stateRegion2Buildings.get(locationIndex)!.push(...buildings);
         }
         return stateRegion2Buildings;
     }
@@ -207,6 +209,7 @@ export class Vic3Save implements ParadoxSave {
         const nonBlocCountries = (json.countries || []).map((cJson: any) => Country.fromJson(cJson));
         const blocs = (json.blocs || []).map((bJson: any) => PowerBloc.fromJson(bJson));
         const ingameDate = new Date(json.ingameDate);
+        console.log(ingameDate);
         const realDate = new Date(json.realDate);
         const save = new Vic3Save(nonBlocCountries, blocs, ingameDate, realDate);
         return save;

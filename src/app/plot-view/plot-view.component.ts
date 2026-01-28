@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import { Component, OnInit, ElementRef, Inject, inject, Input, Optional, OnChanges, SimpleChanges, AfterViewInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Plotable } from './plot/Plotable';
+import { Plotable } from './Plotable';
 import { PlottingService } from './PlottingService';
 import { PlotExportService } from './PlotExportService';
 import { MatButtonModule } from '@angular/material/button';

@@ -2,6 +2,14 @@ import { TableColumn } from "./TableColumn";
 import { ImageIconType } from "./ImageIconType";
 
 export class TableColumnBuilder<T> {
+
+    public static getIndexColumn<T>(offset: number = 0): TableColumn<T> {
+        return new TableColumnBuilder<T>('')
+            .withCellValue((element: T, index: number) => index + 1 + offset)
+            .isSortable(false)
+            .build();
+    }
+
     private def: string;
     private header: string;
     private tooltip: string | null = null;
@@ -15,8 +23,10 @@ export class TableColumnBuilder<T> {
     private cellValueTransform: ((value: any) => any) | null = null;
 
     constructor(header: string) {
-        this.def = header.toLowerCase().replace(/\s+/g, '_');
         this.header = header;
+        this.def = header.length > 0
+            ? header.toLowerCase().replace(/\s+/g, '_')
+            : `col_${Math.random().toString(36).substring(2, 9)}`;
     }
 
     withHeader(header: string): this {
