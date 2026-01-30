@@ -64,16 +64,16 @@ export class MegaModderComponent implements AfterViewInit {
 
     }
 
-    private processEu4Save(save: any): void {
+    private processEu4Save(save: Eu4Save): void {
         const provinces = new Map<string, any>();
         for (const [key, prov] of save.getProvinces().entries()) {
-            if (prov.getOwner() != null) {
+            if (prov.getOwner(save) != null) {
                 provinces.set(key, prov);
             }
         }
         this.vic3GameFilesService.getHistoryStateRegions().subscribe(historyRegions => {
             const vic3OwnershipMap = this.buildVic3OwnershipMap(historyRegions);
-            this.modderService.guessTagMapping(provinces, vic3OwnershipMap).subscribe(mapping => {
+            this.modderService.guessTagMapping(save,provinces, vic3OwnershipMap).subscribe(mapping => {
                 this.processTagMapping(save, provinces, mapping);
             });
         });

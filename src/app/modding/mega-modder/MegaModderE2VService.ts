@@ -4,6 +4,7 @@ import { PdxFileService } from "../../../services/pdx-file.service";
 import { HttpClient } from "@angular/common/http";
 import { Eu4SaveProvince } from "../../../model/games/eu4/Eu4SaveProvince";
 import { MapStateRegion } from "../../../model/vic/game/MapStateRegion";
+import { Eu4Save } from "../../../model/games/eu4/Eu4Save";
 
 export interface MappingTableRow {
     eu4Tag: string;
@@ -90,7 +91,7 @@ export class MegaModderE2VService {
         return this.eu2vicProvinceMapping$
     }
 
-    guessTagMapping(provinces: Map<string, Eu4SaveProvince>, vic3OwnershipMap: Map<string, string>): Observable<Map<string, string>> {
+    guessTagMapping(eu4Save: Eu4Save, provinces: Map<string, Eu4SaveProvince>, vic3OwnershipMap: Map<string, string>): Observable<Map<string, string>> {
         return this.eu2vicProvinceMapping$.pipe(
             map(mappings => {
                 const reconProvince = new Set<string>();
@@ -101,8 +102,8 @@ export class MegaModderE2VService {
                         .map((id: string) => provinces.get(id))
                         .filter((prov: Eu4SaveProvince | undefined) => prov !== undefined) as Eu4SaveProvince[];
                     eu4Provinces.forEach(prov => reconProvince.add(prov.getId()));
-                    eu4Provinces.forEach(prov => reconTags.add(prov.getOwner()!.getTag()));
-                    const eu4Owners = eu4Provinces.map(prov => prov.getOwner()!.getTag());
+                    eu4Provinces.forEach(prov => reconTags.add(prov.getOwner(eu4Save)!.getTag()));
+                    const eu4Owners = eu4Provinces.map(prov => prov.getOwner(eu4Save)!.getTag());
                     const vic3Owners = entry.vic3
                         .map((id: string) => vic3OwnershipMap.get(id))
                         .filter((tag: string | undefined) => tag !== undefined) as string[];

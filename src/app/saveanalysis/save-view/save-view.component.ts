@@ -29,10 +29,13 @@ import { TableComponent } from '../../vic3-country-table/vic3-country-table.comp
 import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
 import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
 import { SaveFileNameDialogComponent } from '../save-filename-dialog.component';
+import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
+import { LineViewerData } from '../../lineviewer/model/LineViewerData';
+import { Vic3SaveSeriesData } from '../../../app/lineviewer/model/Vic3SaveSeriesData';
 
 @Component({
     selector: 'app-save-view',
-    imports: [CommonModule, MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule, SlabMapViewComponent, MatIconModule, MatButtonModule, MatTooltipModule],
+    imports: [CommonModule, MatTabsModule, TableComponent, MatProgressSpinnerModule, MatRadioModule, FormsModule, MatButtonToggleModule, SlabMapViewComponent, MatIconModule, MatButtonModule, MatTooltipModule, LineviewerComponent],
     templateUrl: './save-view.component.html',
     styleUrl: './save-view.component.scss',
 })
@@ -61,6 +64,7 @@ export class SaveViewComponent implements OnDestroy {
     goodsViewMode = GoodsViewMode.BALANCE;
     selectedGoodsCategory: GoodCategory = GoodCategory.INDUSTRIAL;
     availableGoodsCategories: GoodCategory[] = Object.values(GoodCategory);
+    seriesData: LineViewerData | null = null;
 
     geoJsonFetcher = () => this.mapService.fetchVic3GeoJson(true);
     colorConfigProviders: ColorConfigProvider[] = [];
@@ -88,7 +92,14 @@ export class SaveViewComponent implements OnDestroy {
         if (changes['activeSave'] && this.activeSave) {
             this.onGoodsCategoryChange(this.selectedGoodsCategory);
             this.initializeMapView();
+            this.initializeSeriesData();
             this.setupToolbarActions();
+        }
+    }
+
+    private initializeSeriesData(): void {
+        if (this.activeSave) {
+            this.seriesData = new Vic3SaveSeriesData(this.activeSave);
         }
     }
 

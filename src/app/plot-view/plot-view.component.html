@@ -1,17 +1,18 @@
 <div class="plot-wrapper">
-    <h2 cdkFocusInitial> {{ title}} </h2>
-    <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Download plot" matTooltip="Download plot">
-        <mat-icon>download</mat-icon>
-    </button>
-    <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="downloadPlotAsSVG()">
-            <mat-icon>polyline</mat-icon>
-            <span>Download SVG</span>
+    <h2 cdkFocusInitial> {{ title}}
+        <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Download plot" matTooltip="Download plot">
+            <mat-icon>download</mat-icon>
         </button>
-        <button mat-menu-item (click)="downloadPlotAsPNG()">
-            <mat-icon>insert_photo</mat-icon>
-            <span>Download PNG</span>
-        </button>
-    </mat-menu>
+        <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="downloadPlotAsSVG()">
+                <mat-icon>polyline</mat-icon>
+                <span>Download SVG</span>
+            </button>
+            <button mat-menu-item (click)="downloadPlotAsPNG()">
+                <mat-icon>insert_photo</mat-icon>
+                <span>Download PNG</span>
+            </button>
+        </mat-menu>
+    </h2>
     <div class="plot-container"></div>
 </div>

@@ -41,7 +41,8 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     isLoading = false;
     selectedMetric: string = '';
     optionsList: Array<[string, LineAccessor]> = [];
-    showDataPointMarkers = true;
+    protected showDataPointMarkers = false;
+    protected useLogScale = false;
 
     get allSeriesVisible(): boolean {
         return this.series.length > 0 && this.series.every(s => s.entity?.isVisible?.() ?? false);
@@ -49,10 +50,6 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
 
     get someSeriesVisible(): boolean {
         return this.series.some(s => s.entity?.isVisible?.() ?? false);
-    }
-
-    constructor() {
-        
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -69,6 +66,7 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
             this.selectedOption().pipe(
                 takeUntil(this.destroy$)
             ).subscribe(seriesMap => {
+                
                 this.setSeriesFromMap(seriesMap);
                 this.redrawChart();
                 this.isLoading = false;
@@ -79,6 +77,10 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
 
     ngAfterViewInit() {
         const chartContainer = this.elementRef.nativeElement.querySelector('.chart-container');
+        if (this.optionsList.length > 0) {
+            this.selectedMetric = this.optionsList[0][0];
+            this.onOptionSelected(this.selectedMetric);
+        }
         this.resizeObserver = new ResizeObserver(() => {
             if (this.resizeTimeout !== null) {
                 clearTimeout(this.resizeTimeout);
@@ -114,6 +116,10 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         this.redrawChart();
     }
 
+    toggleLogScale() {
+        this.redrawChart();
+    }
+
     getVisibility(series: SeriesWithEntity): boolean {
         return series.entity?.isVisible?.() ?? false;
     }
@@ -133,7 +139,11 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         this.series = Array.from(seriesMap.entries()).map(([entity, ds]) => ({
             ...ds,
             entity
-        }));
+        })).sort((a, b) => {
+            const aLastValue = a.values[a.values.length - 1]?.y ?? 0;
+            const bLastValue = b.values[b.values.length - 1]?.y ?? 0;
+            return bLastValue - aLastValue;
+        });
         this.series.forEach(s => {
             const previousState = previousVisibility.get(s.entity);
             s.entity?.setVisible?.(previousState ?? true);
@@ -146,7 +156,18 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         if (this.svgElement) {
             this.svgElement.remove();
         }
-        const visibleSeries = this.series.filter(s => s.entity?.isVisible?.() ?? false);
+        let visibleSeries = this.series.filter(s => s.entity?.isVisible?.() ?? false);
+        
+        if (this.useLogScale) {
+            visibleSeries = visibleSeries.map(series => ({
+                ...series,
+                values: series.values.map(point => ({
+                    x: point.x,
+                    y: point.y > 0 ? parseFloat(Math.log10(point.y).toFixed(2)) : 0
+                }))
+            }));
+        }
+        
         const chartContainer = this.elementRef.nativeElement.querySelector('.chart-container');
         this.svgElement = this.plotterService.redrawChart(visibleSeries, chartContainer, this.showDataPointMarkers);
         if (chartContainer && this.svgElement) {

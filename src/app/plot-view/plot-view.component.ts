@@ -27,6 +27,7 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
     private isFromDialog = false;
 
     @Input() plotablesInput: Plotable[] = [];
+    @Input() titleInput: string | null = null;
 
     downloadPlotAsSVG() {
         if (!this.previousPlot) return;
@@ -45,7 +46,7 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
 
     downloadPlotAsPNG() {
         if (!this.previousPlot) return;
-        
+
         const previousPlot = this.previousPlot;
         const width = previousPlot.width.baseVal.value || 800;
         const height = previousPlot.height.baseVal.value || 500;
@@ -55,13 +56,6 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
             console.error('Error exporting plot as PNG:', err);
         });
     }
-
-
-
-
-
-
-
 
     constructor(
         @Optional() @Inject(MAT_DIALOG_DATA) private data: { plotables: Plotable[], plotType: string, title: string } | null,
@@ -100,6 +94,9 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
                 // Use setTimeout to ensure view is initialized
                 setTimeout(() => this.redrawPlot(), 0);
             }
+        }
+        if (changes['titleInput'] && this.titleInput) {
+            this.title = this.titleInput;
         }
     }
 

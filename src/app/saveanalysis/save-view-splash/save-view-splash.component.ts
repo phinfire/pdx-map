@@ -15,10 +15,11 @@ import { SaveSaverService } from '../../save-saver.service';
 import { SaveViewComponent } from '../save-view/save-view.component';
 import { Ck3SaveViewComponent } from '../ck3-save-view/ck3-save-view.component';
 import { Ck3Save } from '../../../model/ck3/Ck3Save';
+import { Eu4SaveViewComponent } from '../eu4-save-view/eu4-save-view.component';
 
 @Component({
     selector: 'app-save-view-splash',
-    imports: [SaveViewComponent, MatButtonModule, MatProgressSpinnerModule, Ck3SaveViewComponent, MatIconModule],
+    imports: [Ck3SaveViewComponent, Eu4SaveViewComponent, SaveViewComponent, MatButtonModule, MatProgressSpinnerModule, Ck3SaveViewComponent, MatIconModule],
     templateUrl: './save-view-splash.component.html',
     styleUrl: './save-view-splash.component.scss'
 })
@@ -37,6 +38,7 @@ export class SaveViewSplashComponent implements OnDestroy {
     isFromDatabase = false;
     private clearSaveActionHandle?: string;
     private downloadSaveActionHandle?: string;
+    private downloadProcessedSaveActionHandle?: string;
 
     @ViewChild('chute') chuteDiv!: ElementRef<HTMLDivElement>;
     @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
@@ -51,7 +53,6 @@ export class SaveViewSplashComponent implements OnDestroy {
         ]).subscribe(([saves, params]) => {
             const gameFromURL = params['game'];
             const saveIdFromURL = params['saveId'];
-
             if (saveIdFromURL) {
                 this.startProcessing();
                 const fileType = this.getFileTypeFromGame(gameFromURL);
@@ -66,11 +67,19 @@ export class SaveViewSplashComponent implements OnDestroy {
                     }
                     this.finishProcessing();
                 } else if (saveIdFromURL === "dev") {
-                    const localUrl = "http://localhost:5500/public/Pope_Udalrich_of_die_The_Misanthropy_1262_04_18.ck3";
-                    this.isFromDatabase = false;
-                    this.loadReferenceSave(localUrl, fileType || SaveFileType.CK3)
-                        .then(result => this.handleSuccess(result.save, result.rawData))
-                        .catch(error => this.handleError(this.getErrorMessage(error, fileType || SaveFileType.JSON)));
+                    if (fileType) {
+                        let localUrl = "";
+                        if (gameFromURL == "eu4") {
+                            localUrl = "http://localhost:5500/public/saves/mp_Palatinate1705_10_30.eu4";
+                        } else if (gameFromURL == "ck3") {
+                            localUrl = "http://localhost:5500/public/Pope_Udalrich_of_die_The_Misanthropy_1262_04_18.ck3";
+                        } else if (gameFromURL == "vic3") {
+                            localUrl = "http://localhost:5500/public/saves/palatinate_1897_08_22.v3";
+                        }
+                        this.loadReferenceSave(localUrl, fileType)
+                            .then(result => this.handleSuccess(result.save, result.rawData))
+                            .catch(error => this.handleError(this.getErrorMessage(error, fileType)));
+                    }
                 } else {
                     this.isFromDatabase = true;
                     this.saveSaverService.getSaveFileByIdentifier(saveIdFromURL).subscribe(save => {
@@ -171,7 +180,7 @@ export class SaveViewSplashComponent implements OnDestroy {
         const namesAndJsons = await this.fileService.importFilesPromise(files);
         const first = namesAndJsons[0];
         console.log('EU4 Save JSON:', first.json);
-        const save = new Eu4Save(first.json);
+        const save = Eu4Save.makeSaveFromRawData(first.json);
         return { save, rawData: first.json };
     }
 
@@ -187,6 +196,7 @@ export class SaveViewSplashComponent implements OnDestroy {
         this.activeSave = save;
         this.activeSaveRawData = rawData;
         this.addDownloadJSONAction();
+        this.addDownloadProcessedJSONAction();
         this.addClearSaveAction();
         this.finishProcessing();
     }
@@ -275,7 +285,7 @@ export class SaveViewSplashComponent implements OnDestroy {
         }
         if (this.activeSaveRawData) {
             this.downloadSaveActionHandle = this.sideNavContentProvider.addToolbarAction(
-                'download',
+                'file_save',
                 'Download JSON',
                 () => {
                     const jsonStr = JSON.stringify(this.activeSaveRawData, null, 2);
@@ -284,6 +294,31 @@ export class SaveViewSplashComponent implements OnDestroy {
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = 'save.json';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            );
+        }
+    }
+
+    private addDownloadProcessedJSONAction(): void {
+        if (this.downloadProcessedSaveActionHandle) {
+            this.sideNavContentProvider.removeToolbarAction(this.downloadProcessedSaveActionHandle);
+        }
+        if (this.activeSave && typeof this.activeSave.toJSON === 'function') {
+            this.downloadProcessedSaveActionHandle = this.sideNavContentProvider.addToolbarAction(
+                'download',
+                'Download Processed JSON',
+                () => {
+                    const processed = this.activeSave.toJSON();
+                    const jsonStr = JSON.stringify(processed, null, 2);
+                    const blob = new Blob([jsonStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'save-processed.json';
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -317,6 +352,10 @@ export class SaveViewSplashComponent implements OnDestroy {
         if (this.downloadSaveActionHandle) {
             this.sideNavContentProvider.removeToolbarAction(this.downloadSaveActionHandle);
             this.downloadSaveActionHandle = undefined;
+        }
+        if (this.downloadProcessedSaveActionHandle) {
+            this.sideNavContentProvider.removeToolbarAction(this.downloadProcessedSaveActionHandle);
+            this.downloadProcessedSaveActionHandle = undefined;
         }
     }
 
@@ -353,6 +392,10 @@ export class SaveViewSplashComponent implements OnDestroy {
         if (this.downloadSaveActionHandle) {
             this.sideNavContentProvider.removeToolbarAction(this.downloadSaveActionHandle);
             this.downloadSaveActionHandle = undefined;
+        }
+        if (this.downloadProcessedSaveActionHandle) {
+            this.sideNavContentProvider.removeToolbarAction(this.downloadProcessedSaveActionHandle);
+            this.downloadProcessedSaveActionHandle = undefined;
         }
     }
 }

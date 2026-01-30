@@ -20,6 +20,7 @@ export class PlottingService {
         const bars = plotables;
         const width = nativeElement.clientWidth || 800;
         const height = nativeElement.clientHeight || 500;
+        console.log(`Drawing bar plot with width ${width} and height ${height} based on ${nativeElement.clientWidth}x${nativeElement.clientHeight} of host element.`);
         const IMAGE_SIZE_PERCENT = 0.9;
         const tempX = d3.scaleBand()
             .domain(bars.map(d => d.label))
@@ -29,7 +30,7 @@ export class PlottingService {
         const margin = {
             top: Math.max(40, Math.ceil(maxImageSize) + 8),
             right: 30,
-            bottom: 300 + (showXAxisTickLabels ? 100 : 0),
+            bottom: 50 + (showXAxisTickLabels ? 100 : 0),
             left: 80
         };
         const chartWidth = width - margin.left - margin.right;

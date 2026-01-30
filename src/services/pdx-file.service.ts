@@ -224,7 +224,7 @@ export class PdxFileService {
             const file = new File([blob], url.split('/').pop() || 'eu4-save');
             const namesAndJsons = await this.importFilesPromise([file]);
             const first = namesAndJsons[0];
-            const save = new Eu4Save(first.json);
+            const save = Eu4Save.makeSaveFromRawData(first.json);
             return save;
         } catch (error) {
             throw new Error(`Failed to load EU4 save from URL: ${error}`);

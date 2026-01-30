@@ -97,12 +97,12 @@ export class AlliancehelperComponent implements OnInit, OnDestroy {
                 this.nations = (nations || []).map(nation => ({ ...nation, selected: false })).sort((a, b) => a.name.localeCompare(b.name));
                 const provinces = new Map<string, any>();
                 for (const [key, prov] of save.getProvinces().entries()) {
-                    if (prov.getOwner() != null) {
+                    if (prov.getOwner(save) != null) {
                         provinces.set(key, prov);
                     }
                 }
                 const vic3OwnershipMap = this.buildVic3OwnershipMap(historyRegions);
-                this.service.guessTagMapping(provinces, vic3OwnershipMap).pipe(takeUntil(this.destroy$)).subscribe(mapping => {
+                this.service.guessTagMapping(save, provinces, vic3OwnershipMap).pipe(takeUntil(this.destroy$)).subscribe(mapping => {
                     this.buildCountries(mapping, pops, diplomaticPacts, demographics);
                     this.nationsLoaded = true;
                     this.countriesLoaded = true;

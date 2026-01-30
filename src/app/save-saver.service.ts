@@ -3,6 +3,7 @@ import { Observable, forkJoin, from, of, throwError } from 'rxjs';
 import { catchError, concatMap, map, tap } from 'rxjs/operators';
 import { Vic3Save } from '../model/vic/Vic3Save';
 import { DataStorageService, FileUploadResponse } from '../services/datastorage.service';
+import { Eu4Save } from '../model/games/eu4/Eu4Save';
 
 export type GameType = 'ck3' | 'vic3' | 'eu4';
 
@@ -89,7 +90,7 @@ export class SaveSaverService {
         );
     }
 
-    public storeVic3Save(save: Vic3Save, fileName: string): Observable<SaveUploadResponse> {
+    storeVic3Save(save: Vic3Save, fileName: string): Observable<SaveUploadResponse> {
         const mainData = save.toJson() as any;
         const serialized = JSON.stringify(mainData);
         return this.hashData(serialized).pipe(
@@ -105,6 +106,17 @@ export class SaveSaverService {
                 ];
                 const mainFileConfig = { kind: 'save' as const, game: 'vic3' as GameType, fileName, realDate: save.getRealDate().toISOString(), ingameDate: save.getIngameDate().toISOString() };
                 return this.uploadSaveWithSubfiles(mainData, mainFileConfig, subfiles, hash);
+            })
+        );
+    }
+
+    storeEu4Save(save: Eu4Save, fileName: string, realDate: Date): Observable<SaveUploadResponse> {
+        const mainData = save.toJSON() as any;
+        const serialized = JSON.stringify(mainData);
+        return this.hashData(serialized).pipe(
+            concatMap(hash => {
+                const mainFileConfig = { kind: 'save' as const, game: 'eu4' as GameType, fileName, realDate: realDate.toISOString(), ingameDate: save.getIngameDate().toISOString() };
+                return this.uploadSaveWithSubfiles(mainData, mainFileConfig, [], hash);
             })
         );
     }

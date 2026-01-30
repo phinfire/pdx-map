@@ -5,6 +5,7 @@ import { Pop } from "./Pop";
 import { HasElements } from "../../util/table/HasElements";
 import { StateRegion } from "./StateRegion";
 import { PopulationStatBlock } from "./PopulationStatBlock";
+import { CurveBuffer } from "./CurveBuffer";
 
 export class Country implements HasElements<Building> {
 
@@ -22,10 +23,14 @@ export class Country implements HasElements<Building> {
             json.tag,
             json.states.map((s: any) => StateRegion.fromJson(s)),
             json.popStatistics,
+            CurveBuffer.fromJSON(json.gdp),
+            CurveBuffer.fromJSON(json.prestige),
+            CurveBuffer.fromJSON(json.literacy),
+            CurveBuffer.fromJSON(json.avgsoltrend),
             json.pops.map((p: any) => Pop.fromJson(p)),
             json.techEntry,
             CountryBudget.fromJson(json.budget),
-            json.taxLevel
+            json.taxLevel,
         );
     }
 
@@ -40,11 +45,16 @@ export class Country implements HasElements<Building> {
             pops: this.pops.getInternalElements().map(p => p.toJson()),
             techEntry: this.techEntry,
             budget: this.budget.toJson(),
-            taxLevel: this.taxLevel
+            taxLevel: this.taxLevel,
+            gdp: this.gdpCurve.toJSON(),
+            prestige: this.prestigeCurve.toJSON(),
+            literacy: this.literacyCurve.toJSON(),
+            avgsoltrend: this.avgSolTrendCurve.toJSON()
         };
     }
 
-    constructor(private playerName: string | null, private vassalTags: string[], private tag: string, private states: StateRegion[], private popStatistics: any, pops: Pop[], private techEntry: any, private budget: CountryBudget, private taxLevel: string) {
+    constructor(private playerName: string | null, private vassalTags: string[], private tag: string, private states: StateRegion[], private popStatistics: any,
+        private gdpCurve: CurveBuffer, private prestigeCurve: CurveBuffer, private literacyCurve: CurveBuffer, private avgSolTrendCurve: CurveBuffer, pops: Pop[], private techEntry: any, private budget: CountryBudget, private taxLevel: string) {
         this.buildings = new ModelElementList<Building>(states.flatMap(s => s.getBuildings()));
         this.pops = new ModelElementList<Pop>(pops);
         this.cachedTotalPopulationBlock = PopulationStatBlock.merge(states.map(s => s.getPopulationStatBlock()));
@@ -118,5 +128,21 @@ export class Country implements HasElements<Building> {
 
     getStates(): StateRegion[] {
         return this.states;
+    }
+
+    getGdpCurve(): CurveBuffer {
+        return this.gdpCurve;
+    }
+
+    getPrestigeCurve(): CurveBuffer {
+        return this.prestigeCurve;
+    }
+
+    getLiteracyCurve(): CurveBuffer {
+        return this.literacyCurve;
+    }
+
+    getAvgSolTrendCurve(): CurveBuffer {
+        return this.avgSolTrendCurve;
     }
 }

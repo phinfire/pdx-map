@@ -5,9 +5,12 @@
 -->
     <div class="spacer">
         <div class="hello-wrapper">
-            @if (authService.isLoggedIn()) {
+            @if (authService.loggedInUser$ | async; as user) {
             <span class="hello">Hello,</span> <button mat-button class="username" (click)="navigate('')">{{
-                authService.getLoggedInUser()!.global_name }}</button>
+                user.getName() }}</button>
+            <button mat-icon-button (click)="authService.logOut()" [attr.aria-label]="'Log out'" matTooltip="Log out">
+                <mat-icon>logout</mat-icon>
+            </button>
             } @else {
                 <div style="padding: 0 2em"></div>
             <app-discord-login></app-discord-login>

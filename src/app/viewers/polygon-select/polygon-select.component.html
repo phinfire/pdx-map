@@ -7,7 +7,7 @@
     }
     <div class="button-group-left">
         @for (entry of getGroupedButtonEntries(); track entry[0]) {
-        <mat-expansion-panel class="category-panel">
+        <mat-expansion-panel class="category-panel" #panel>
             <mat-expansion-panel-header>
                 <mat-panel-title class="category-title">{{ entry[0] }}</mat-panel-title>
             </mat-expansion-panel-header>

@@ -1,60 +1,57 @@
 <div class="lineviewer-container">
-  <div class="chart-wrapper">
-    <mat-toolbar class="chart-toolbar">
-      <mat-form-field appearance="outline">
-        <mat-label>Select Metric</mat-label>
-        <mat-select #optionSelect [(value)]="selectedMetric" (selectionChange)="onOptionSelected($event.value)">
-          <mat-option value="" disabled>Select a value</mat-option>
-          @for (option of optionsList; track option[0]) {
-            <mat-option [value]="option[0]">{{ option[0] }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      <span class="toolbar-spacer"></span>
-      <mat-checkbox 
-          [(ngModel)]="showDataPointMarkers" 
-          (change)="toggleDataPointMarkers()">
-          Show sample markers
-      </mat-checkbox>
-    </mat-toolbar>
-    <div class="chart-container">
-      @if (isLoading) {
-        <div class="spinner-overlay">
-          <mat-spinner diameter="50"></mat-spinner>
-        </div>
-      }
-    </div>
-  </div>
-  
-  <div class="controls-panel">
-    <div class="checkbox-list">
-      @if (isLoading) {
-        <div class="spinner-overlay">
-          <mat-spinner diameter="40"></mat-spinner>
-        </div>
-      }
-      @if (series.length > 0) {
-        <h3>Toggle display</h3>
-        <div class="checkbox-item">
-          <mat-checkbox 
-              [checked]="allSeriesVisible"
-              [indeterminate]="someSeriesVisible && !allSeriesVisible"
-              (change)="toggleAllSeries($event.checked)">
-              <strong>Show all</strong>
-          </mat-checkbox>
-        </div>
-        @for (s of series; track s.name) {
-            <div class="checkbox-item">
-            <mat-checkbox 
-                [checked]="getVisibility(s)" 
-                (change)="setVisibility(s, $event.checked)">
-                <span [style.color]="s.color">
-                {{ s.name }}
-                </span>
+    <div class="chart-wrapper">
+        <mat-toolbar class="chart-toolbar">
+            <mat-form-field appearance="outline">
+                <mat-label>Select Metric</mat-label>
+                <mat-select #optionSelect [(value)]="selectedMetric" (selectionChange)="onOptionSelected($event.value)">
+                    <mat-option value="" disabled>Select a value</mat-option>
+                    @for (option of optionsList; track option[0]) {
+                    <mat-option [value]="option[0]">{{ option[0] }}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+            <span class="toolbar-spacer"></span>
+            <mat-checkbox [(ngModel)]="useLogScale" (change)="toggleLogScale()">
+                Log Scale
             </mat-checkbox>
+            <mat-checkbox [(ngModel)]="showDataPointMarkers" (change)="toggleDataPointMarkers()">
+                Show sample markers
+            </mat-checkbox>
+        </mat-toolbar>
+        <div class="chart-container">
+            @if (isLoading) {
+            <div class="spinner-overlay">
+                <mat-spinner diameter="50"></mat-spinner>
             </div>
-        }
-      }
+            }
+        </div>
     </div>
-  </div>
+
+    <div class="controls-panel">
+        <div class="checkbox-list">
+            @if (isLoading) {
+            <div class="spinner-overlay">
+                <mat-spinner diameter="40"></mat-spinner>
+            </div>
+            }
+            @if (series.length > 0) {
+            <h3>Toggle display</h3>
+            <div class="checkbox-item">
+                <mat-checkbox [checked]="allSeriesVisible" [indeterminate]="someSeriesVisible && !allSeriesVisible"
+                    (change)="toggleAllSeries($event.checked)">
+                    <strong>Show all</strong>
+                </mat-checkbox>
+            </div>
+            @for (s of series; track s.name) {
+            <div class="checkbox-item">
+                <mat-checkbox [checked]="getVisibility(s)" (change)="setVisibility(s, $event.checked)">
+                    <span [style.color]="s.color">
+                        {{ s.name }}
+                    </span>
+                </mat-checkbox>
+            </div>
+            }
+            }
+        </div>
+    </div>
 </div>

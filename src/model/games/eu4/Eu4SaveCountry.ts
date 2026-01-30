@@ -1,13 +1,30 @@
-import { Eu4Save } from "./Eu4Save";
-
 export class Eu4SaveCountry {
 
-    constructor(private tag: string, private countryData: any, private playerName: string | null) {
+    static fromRawData(tag: string, countryData: any, playerName: string | null) {
+        const color = Array.from(countryData.colors.map_color);
+        const subjects = countryData.subjects || [];
+        const overlord = countryData.overlord || null;
+        const name = countryData.name || tag;
+        return new Eu4SaveCountry(tag, color as number[], subjects, overlord, name, playerName);
+    }
+
+    constructor(private tag: string, private color: number[], private subjects: string[], private overlord: string | null, private name: string, private playerName: string | null) {
         
     }
 
+    toJSON(): any {
+        return {
+            tag: this.tag,
+            color: this.color,
+            subjects: this.subjects,
+            overlord: this.overlord,
+            name: this.name,
+            playerName: this.playerName
+        };
+    }
+
     getColor(): number[] {
-        return Array.from(this.countryData.colors.map_color)
+        return this.color;
     }
 
     getTag(): string {
@@ -15,11 +32,11 @@ export class Eu4SaveCountry {
     }
 
     getSubjectTags(): string[] {
-        return this.countryData.subjects || [];
+        return this.subjects;
     }
 
     getOverlordTag(): string | null {
-        return this.countryData.overlord || null;
+        return this.overlord;
     }
 
     isIndependent(): boolean {
@@ -27,7 +44,7 @@ export class Eu4SaveCountry {
     }
 
     getName(): string {
-        return this.countryData.name || this.getTag();
+        return this.name;
     }
     
     getPlayerName(): string | null {

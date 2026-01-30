@@ -92,5 +92,11 @@
             [behaviorConfig]="behaviorConfig">
         </app-slab-map-view>
     </mat-tab>
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <mat-icon>insights</mat-icon>
+        </ng-template>
+        <app-lineviewer [data]="seriesData"></app-lineviewer>
+    </mat-tab>
 </mat-tab-group>
 }

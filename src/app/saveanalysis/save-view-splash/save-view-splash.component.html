@@ -34,10 +34,6 @@
     <app-ck3-save-view [activeSave]="activeSave"></app-ck3-save-view>
     }
     @if (activeSaveIsEu4()) {
-        <div class="construction-notice">
-            <span>Europa Universalis IV save file detected.</span>
-            <mat-icon>construction</mat-icon>
-            <span>EU4 save analysis is not available yet.</span>
-        </div>
+        <app-eu4-save-view [activeSave]="activeSave"></app-eu4-save-view>
     }
 }

@@ -1,6 +1,7 @@
 import { inject, Injectable } from "@angular/core";
 import { DiscordAuthenticationService } from "../../services/discord-auth.service";
 import { HttpClient } from "@angular/common/http";
+import { Subject, of } from "rxjs";
 import { map, catchError, switchMap, startWith, tap, shareReplay} from "rxjs/operators";
 import { MegaCampaign } from "./MegaCampaign";
 

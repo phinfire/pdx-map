@@ -1,3 +1,4 @@
+import { Curve } from "three";
 import { ParadoxSave } from "../common/ParadoxSave";
 import { Building } from "./Building";
 import { Country } from "./Country";
@@ -6,6 +7,7 @@ import { ResourceHaver } from "./game/ResourceHaver";
 import { Pop } from "./Pop";
 import { PowerBloc } from "./PowerBloc";
 import { StateRegion } from "./StateRegion";
+import { CurveBuffer } from "./CurveBuffer";
 
 interface RawSaveData {
     states: any;
@@ -29,7 +31,6 @@ export class Vic3Save implements ParadoxSave {
     public static makeSaveFromRawData(saveData: RawSaveData) {
         const overlordToVassals = Vic3Save.getOverlordToVassals(saveData.pacts.database);
         const stateRegion2Buildings = Vic3Save.assembleStateRegion2BuildingsMap(saveData);
-        const parsedStateTemplates = Vic3Save.parseStateRegionEntries(saveData);
         const state2ownerIndex = new Map<number, number>();
         const countryIndex2StateRegions: Map<string, StateRegion[]> = new Map();
         for (const stateEntryIndex in saveData.states.database) {
@@ -41,7 +42,6 @@ export class Vic3Save implements ParadoxSave {
             const ownerIndex = stateRegion.getOwnerCountryIndex() + "";
             countryIndex2StateRegions.set(stateRegion.getOwnerCountryIndex() + "", (countryIndex2StateRegions.get(ownerIndex) || []).concat([stateRegion]));
         }
-        const countries: Country[] = [];
         const country2pops = new Map<string, Pop[]>();
         for (const popIndex in saveData.pops.database) {
             const popEntry = saveData.pops.database[popIndex];
@@ -86,15 +86,18 @@ export class Vic3Save implements ParadoxSave {
                     return vassalCountryEntry ? vassalCountryEntry.definition : v;
                 });
                 const country = new Country(playerName, vassalTags, countryEntry.definition, states, countryEntry.pop_statistics,
+                    CurveBuffer.fromRawData(countryEntry.gdp),
+                    CurveBuffer.fromRawData(countryEntry.prestige),
+                    CurveBuffer.fromRawData(countryEntry.literacy),
+                    CurveBuffer.fromRawData(countryEntry.avgsoltrend),
                     country2pops.get(countryIndex) || [], techEntry, countryBudget, taxLevel);
-                countries.push(country);
                 index2Country.set(countryIndex, country);
                 if (countryEntry["power_bloc_as_core"]) {
                     countryName2BlocIndex.set(country.getTag(), countryEntry["power_bloc_as_core"] + "");
                 }
             }
         }
-        const existingCountries = countries.filter(c => c.getPopulation() > 0);
+        const existingCountries = Array.from(index2Country.values()).filter(c => c.getPopulation() > 0);
         const blocs: PowerBloc[] = [];
         for (const blocIndex in saveData.power_bloc_manager.database) {
             const blocData = saveData.power_bloc_manager.database[blocIndex];
@@ -106,12 +109,9 @@ export class Vic3Save implements ParadoxSave {
             }
         }
         const nonBlocCountries = existingCountries.filter(c => blocs.every(bloc => !bloc.getCountries().getInternalElements().includes(c)));
-        const realDateString = saveData.meta_data.real_date;
-        const ingameDateString = saveData.meta_data.game_date;
-        console.log(saveData.meta_data.real_date, saveData.meta_data.game_date);
-        const ingameDateParts = ingameDateString.split(".");
+        const ingameDateParts = saveData.meta_data.game_date.split(".");
         const ingameDate = new Date(parseInt(ingameDateParts[0]), parseInt(ingameDateParts[1]) - 1, parseInt(ingameDateParts[2]));
-        const realDateParts = realDateString.split(".");
+        const realDateParts = saveData.meta_data.real_date.split(".");
         const realDate = new Date(parseInt(realDateParts[0]), parseInt(realDateParts[1]) - 1, parseInt(realDateParts[2]));
         realDate.setFullYear(realDate.getFullYear() + 1900);
         return new Vic3Save(nonBlocCountries, blocs, ingameDate, realDate);
@@ -209,7 +209,6 @@ export class Vic3Save implements ParadoxSave {
         const nonBlocCountries = (json.countries || []).map((cJson: any) => Country.fromJson(cJson));
         const blocs = (json.blocs || []).map((bJson: any) => PowerBloc.fromJson(bJson));
         const ingameDate = new Date(json.ingameDate);
-        console.log(ingameDate);
         const realDate = new Date(json.realDate);
         const save = new Vic3Save(nonBlocCountries, blocs, ingameDate, realDate);
         return save;
@@ -223,10 +222,8 @@ export class Vic3Save implements ParadoxSave {
         return {
             "ingameDate": this.ingameDate.toISOString(),
             "realDate": this.realDate.toISOString(),
-
             "countries": this.nonBlocCountries.map(c => c.toJson()),
             "blocs": this.blocs.map(b => b.toJson()),
-
             "stateRegions": Array.from(this.stateRegions.values()).map(r => r.toJson())
         };
     }

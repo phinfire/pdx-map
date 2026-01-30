@@ -23,17 +23,17 @@ import { StartAssignment } from '../StartAssignment';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import JSZip from 'jszip';
 import { TableColumnBuilder } from '../../../util/table/TableColumnBuilder';
+import { MatDivider, MatDividerModule } from '@angular/material/divider';
 
 enum VIEW {
     ASSIGNMENT_TABLE,
     SIGNUP,
-    START_SELECTION,
-    PLOT_VIEW
+    START_SELECTION
 }
 
 @Component({
     selector: 'app-mega-campaign',
-    imports: [MCSignupComponent, McstartselectComponent, MatButtonModule, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent],
+    imports: [MCSignupComponent, McstartselectComponent, MatButtonModule, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent, MatDividerModule],
     templateUrl: './mega-campaign.component.html',
     styleUrl: './mega-campaign.component.scss'
 })
@@ -62,7 +62,6 @@ export class MegaCampaignComponent {
 
     goBackToPlayerList = () => this.setView(VIEW.ASSIGNMENT_TABLE);
     goToStartSelection = () => this.setView(VIEW.START_SELECTION);
-    goToTraitHistogram = () => this.setView(VIEW.PLOT_VIEW);
     goToSignup = () => this.setView(VIEW.SIGNUP);
 
     setView(view: VIEW) {
@@ -125,10 +124,7 @@ export class MegaCampaignComponent {
 
         const offset = col == 0 ? 0 : this.getFirstHalfLength();
         const columns = [
-            new TableColumnBuilder<StartAssignment>('Index')
-                .withCellValue((a, index) => offset + index + 1)
-                .isSortable(false)
-                .build(),
+            TableColumnBuilder.getIndexColumn(offset),
             new TableColumnBuilder<StartAssignment>('')
                 .withCellValue(a => a.user.getAvatarImageUrl())
                 .showCellAsImage()
@@ -156,6 +152,7 @@ export class MegaCampaignComponent {
                     return illegalityReport.length === 0 ? '✅' : '❌';
                 })
                 .isSortable(false)
+                .withTooltip("Whether this user has uploaded a permitted ruler")
                 .build()
         ];
 

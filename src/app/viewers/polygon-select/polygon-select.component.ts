@@ -1,5 +1,5 @@
-import { Component, ElementRef, EventEmitter, Input, NgZone, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { MatExpansionModule } from '@angular/material/expansion';
+import { Component, ElementRef, EventEmitter, Input, NgZone, Output, SimpleChanges, ViewChild, AfterViewInit, QueryList, ViewChildren } from '@angular/core';
+import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -19,6 +19,7 @@ import { TooltipManager } from './TooltipManager';
 export class PolygonSelectComponent {
 
     @ViewChild('rendererContainer', { static: true }) containerRef!: ElementRef;
+    @ViewChildren('panel') expansionPanels!: QueryList<MatExpansionPanel>;
 
     @Input() clearColor = 0x000000;
     @Input() colorConfigProviders: ColorConfigProvider[] = [];
@@ -234,6 +235,10 @@ export class PolygonSelectComponent {
             this.tooltipManager.setTooltipVisibility(false);
         });
         this.animate();
+    }
+
+    ngAfterViewInit(): void {
+        this.expansionPanels.forEach(panel => panel.open());
     }
 
     ngOnDestroy(): void {

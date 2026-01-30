@@ -48,7 +48,7 @@ export class DiscordAuthenticationService {
 
     private jwt: string | null = null;
     private loggedInUser: DiscordUser | null = null;
-    
+
     private readonly _loggedInUser$ = new BehaviorSubject<DiscordUser | null>(null);
     public readonly loggedInUser$ = this._loggedInUser$.asObservable();
 
@@ -65,16 +65,15 @@ export class DiscordAuthenticationService {
         const redirectUrl = this.getRedirectUrl();
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        
+
         const auth$ = code
             ? this.exchangeCodeForJWT(redirectUrl)
-            : (this.jwt 
+            : (this.jwt
                 ? this.getUserViaJWT(redirectUrl)
                 : of(null));
-            
+
         auth$.pipe(
             catchError(error => {
-                console.error('Auth initialization failed:', error);
                 this.updateUserState(null);
                 return of(null);
             })
@@ -114,10 +113,10 @@ export class DiscordAuthenticationService {
             ? new HttpHeaders({
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${this.jwt}`
-              })
+            })
             : new HttpHeaders({
                 'Content-Type': 'application/json'
-              });
+            });
 
         return this.http.get<HealthResponse>(this.endpoints.health, { headers })
             .pipe(
@@ -148,12 +147,7 @@ export class DiscordAuthenticationService {
     }
 
     getRedirectUrl(): string {
-        const address = window.location.href;
-        if (address.indexOf("?") != -1) {
-            return address.split("?")[0];
-        }
-        window.history.replaceState({}, document.title, address.split("?")[0]);
-        return address;
+        return window.location.href.indexOf("localhost") != -1 ? "http://localhost:4200/pdx" : "https://codingafterdark.de/pdx";
     }
 
     logOut(): void {
@@ -199,7 +193,6 @@ export class DiscordAuthenticationService {
                 return user;
             }),
             catchError((error: any) => {
-                console.error('JWT exchange failed:', error);
                 this.updateUserState(null);
                 return of(null);
             })
@@ -210,9 +203,7 @@ export class DiscordAuthenticationService {
         if (this.loggedInUser) {
             return of(this.loggedInUser);
         }
-        
         if (!this.jwt) {
-            console.error("JWT is null, cannot fetch user");
             throw new Error("JWT is null");
         }
         const authHeader = this.getAuthenticationHeader();
@@ -220,7 +211,7 @@ export class DiscordAuthenticationService {
             'Content-Type': 'application/json',
             ...authHeader
         });
-        
+
         return this.http.get<UserResponse>(this.endpoints.user, { headers }).pipe(
             map(data => {
                 const user = DiscordUser.fromApiJson(data.user);
@@ -228,7 +219,6 @@ export class DiscordAuthenticationService {
                 return user;
             }),
             catchError((error: any) => {
-                console.error('User fetch failed:', error);
                 if (error.status === 401) {
                     this.jwt = null;
                     localStorage.removeItem(DiscordAuthenticationService.CONFIG.JWT_STORAGE_KEY);

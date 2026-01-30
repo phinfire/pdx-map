@@ -14,57 +14,47 @@
                     </app-mcstartselect>
                 }
                 @if (currentView == VIEW.ASSIGNMENT_TABLE) {
-                    <h1>{{ campaign.getName() }} Mega Campaign - Start Regions</h1>
-                    @if (!isInRegionSignupStage()) {
-                        <button mat-raised-button (click)="goToSignup()" matTooltip="Signups are closed, but you can still view the signup screen">Go back to Signup</button>
-                    }
-                    @if (!isInStartSelectionStage()) {
-                        <button mat-raised-button (click)="goToStartSelection()" disabled="!userAssignment"
-                                [matTooltip]="userAssignment ? 'County Selection is closed, but you can still view the starting county selection screen' : 'You must be assigned a region to select a starting county'">
-                            Go back to Starting County Selection
-                        </button>
-                    }
-                    <div class="player-list-container">
-                        <div class="table-container">
-                            <app-table [rowElements]="getAssignments(0)" [columns]="getColumns(0)"></app-table>
-                            @if (assignments.length > 1) {
-                            <app-table [rowElements]="getAssignments(1)" [columns]="getColumns(1)"></app-table>
-                            }
-                        </div>
+                    <h1>{{ campaign.getName() }} Mega Campaign</h1>
+                    <h2>Start Regions</h2>
+                    <div class="table-container">
+                        <app-table [rowElements]="getAssignments(0)" [columns]="getColumns(0)"></app-table>
+                        @if (assignments.length > 1) {
+                        <app-table [rowElements]="getAssignments(1)" [columns]="getColumns(1)"></app-table>
+                        }
                     </div>
                     <div class="button-container">
+                        @if (!isInRegionSignupStage()) {
+                            <button matButton="elevated" color="primary" (click)="goToSignup()" 
+                                    matTooltip="Signups are closed, but you can still view the signup screen">
+                                <mat-icon>arrow_back</mat-icon>
+                                Go back to Signup
+                            </button>
+                        }
+                        @if (!isInStartSelectionStage()) {
+                            <button matButton="elevated" color="primary" (click)="goToStartSelection()" 
+                                    [disabled]="!userAssignment"
+                                    [matTooltip]="userAssignment ? 'County Selection is closed, but you can still view the starting county selection screen' : 'You must be assigned a region to select a starting county'">
+                                <mat-icon>arrow_back</mat-icon>
+                                Go back to Starting County Selection
+                            </button>
+                        }
                         @if (!isPlayingCk3()) {
-                        <button mat-raised-button (click)="goToStartSelection()">Select your starting county</button>
-                    }
-                        <button mat-raised-button (click)="goToTraitHistogram()">View Trait Histogram</button>
-                    @if (isInWaitingForFirstSessionStage() || isPlayingCk3()) {
-                        <button mat-raised-button (click)="downloadAllRulersAsZip()">Download All Rulers</button>
-                    }
+                            <button matButton="elevated" color="primary" (click)="goToStartSelection()">
+                                <mat-icon>location_on</mat-icon>
+                                Select your starting county
+                            </button>
+                        }
+                        @if (isInWaitingForFirstSessionStage() || isPlayingCk3()) {
+                            <button matButton="elevated" color="primary" (click)="downloadAllRulersAsZip()">
+                                <mat-icon>download</mat-icon>
+                                Download All Rulers
+                            </button>
+                        }
                     </div>
-                }
-                @if (currentView == VIEW.PLOT_VIEW) {
                     <div class="plot-container">
-                        <div class="header-container">
-                            <h1>
-                                <button mat-button 
-                                        class="back-button"
-                                        (click)="goBackToPlayerList()"
-                                        matTooltip="Go back"
-                                        matTooltipPosition="below"
-                                        aria-label="Go back">
-                                    <mat-icon class="back-icon">chevron_left</mat-icon>
-                                </button>
-                                Player Ruler Traits
-                            </h1>
-                        </div>
-                        <app-plot-view [plotablesInput]="traitPlotables"></app-plot-view>
+                        <app-plot-view [plotablesInput]="traitPlotables" [titleInput]="'Player Ruler Traits'"></app-plot-view>
                     </div>
                 }
-            }
-            @if (this.assignments.length == 0) {
-                <div class="pseudo-component">
-                    <p>No region assigned yet</p>
-                </div>   
             }
         }
 }
