@@ -85,11 +85,12 @@ export class Vic3Save implements ParadoxSave {
                     const vassalCountryEntry = saveData.country_manager.database[v];
                     return vassalCountryEntry ? vassalCountryEntry.definition : v;
                 });
+                const gdp = CurveBuffer.fromRawData(countryEntry.gdp);
+                const prestige = CurveBuffer.fromRawData(countryEntry.prestige);
+                const literacy = CurveBuffer.fromRawData(countryEntry.literacy);
+                const avgsoltrend = CurveBuffer.fromRawData(countryEntry.avgsoltrend);
                 const country = new Country(playerName, vassalTags, countryEntry.definition, states, countryEntry.pop_statistics,
-                    CurveBuffer.fromRawData(countryEntry.gdp),
-                    CurveBuffer.fromRawData(countryEntry.prestige),
-                    CurveBuffer.fromRawData(countryEntry.literacy),
-                    CurveBuffer.fromRawData(countryEntry.avgsoltrend),
+                    gdp, prestige, literacy, avgsoltrend,
                     country2pops.get(countryIndex) || [], techEntry, countryBudget, taxLevel);
                 index2Country.set(countryIndex, country);
                 if (countryEntry["power_bloc_as_core"]) {

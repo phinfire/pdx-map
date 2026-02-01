@@ -54,6 +54,9 @@
                     <div class="plot-container">
                         <app-plot-view [plotablesInput]="traitPlotables" [titleInput]="'Player Ruler Traits'"></app-plot-view>
                     </div>
+                    <div class="lines-plot-container">
+                        <app-lineviewer [data]="seriesData"></app-lineviewer>
+                    </div>
                 }
             }
         }

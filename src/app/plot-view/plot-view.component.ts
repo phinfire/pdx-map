@@ -46,12 +46,10 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
 
     downloadPlotAsPNG() {
         if (!this.previousPlot) return;
-
         const previousPlot = this.previousPlot;
         const width = previousPlot.width.baseVal.value || 800;
         const height = previousPlot.height.baseVal.value || 500;
         const hostElement = this.elementRef.nativeElement as HTMLElement;
-
         this.plotExportService.exportPlotAsPNG(previousPlot, width, height, hostElement, this.title).catch(err => {
             console.error('Error exporting plot as PNG:', err);
         });
@@ -80,7 +78,6 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        // Only redraw if we have data
         if (this.plotables && this.plotables.length > 0) {
             this.redrawPlot();
         }
@@ -91,7 +88,6 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
             if (this.plotablesInput && this.plotablesInput.length > 0) {
                 this.plotables = this.plotablesInput;
                 this.plotType = null;
-                // Use setTimeout to ensure view is initialized
                 setTimeout(() => this.redrawPlot(), 0);
             }
         }
@@ -112,7 +108,6 @@ export class PlotViewComponent implements OnInit, OnChanges, AfterViewInit {
                 } else if (this.plotType === 'pie') {
                     this.previousPlot = this.plottingService.pieChart(this.plotables, plotContainer);
                 } else {
-                    // Default to bar chart if no plotType specified
                     this.previousPlot = this.plottingService.drawBarPlot(this.plotables, plotContainer, false, true);
                 }
             }

@@ -1,4 +1,9 @@
+import { inject } from "@angular/core";
+import { of, switchMap } from "rxjs";
+import { SaveSaverService } from "../save-saver.service";
+
 export class MegaCampaign {
+
     constructor(private name: string, private regionDeadlineDate: Date, private startDeadlineDate: Date, private firstSessionDate: Date, private firstEu4Session: Date | null) {
         if (!(regionDeadlineDate < startDeadlineDate && startDeadlineDate < firstSessionDate)) {
             throw new Error('Dates are not in correct order\nregionDeadlineDate: ' + regionDeadlineDate + '\nstartDeadlineDate: ' + startDeadlineDate + '\nfirstSessionDate: ' + firstSessionDate);
@@ -35,5 +40,9 @@ export class MegaCampaign {
 
     isPlayingCk3(): boolean {
         return new Date() > this.getFirstSessionDate();
+    }
+
+    getVic3SaveIdentifiersInChronologicalOrder() {
+        return ["cceb9db2-7f3c-4d59-8775-4aaa6bacafd9"];
     }
 }

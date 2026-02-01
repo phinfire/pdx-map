@@ -4,9 +4,9 @@ import { LineableEntity } from "./LineableEntity";
 import { LineAccessor } from "./LineAccessor";
 import { LineViewerData } from "./LineViewerData";
 import { Observable, forkJoin, map } from "rxjs";
-import { DataSeries } from "../LinePlotterService";
 import { SkanderbegProxyService } from "../../../services/api/SkanderbegProxyService";
 import { Eu4SaveDataFacade, CountryDataFacade, CountryData } from "./Eu4SaveDataFacade";
+import { DataSeries } from "./DataSeries";
 
 class CountryEntity implements LineableEntity {
     private visible = true;

@@ -1,5 +1,5 @@
+import { DataSeries } from "./DataSeries";
 import { LineableEntity } from "./LineableEntity";
-import { DataSeries } from "../LinePlotterService";
 import { Observable } from "rxjs";
 
 export interface LineAccessor {

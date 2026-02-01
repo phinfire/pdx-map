@@ -24,6 +24,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import JSZip from 'jszip';
 import { TableColumnBuilder } from '../../../util/table/TableColumnBuilder';
 import { MatDivider, MatDividerModule } from '@angular/material/divider';
+import { SaveSaverService } from '../../save-saver.service';
+import { LineViewerData } from '../../lineviewer/model/LineViewerData';
+import { Vic3SaveSeriesData } from '../../lineviewer/model/Vic3SaveSeriesData';
+import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
 
 enum VIEW {
     ASSIGNMENT_TABLE,
@@ -33,7 +37,7 @@ enum VIEW {
 
 @Component({
     selector: 'app-mega-campaign',
-    imports: [MCSignupComponent, McstartselectComponent, MatButtonModule, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent, MatDividerModule],
+    imports: [MCSignupComponent, McstartselectComponent, MatButtonModule, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent, MatDividerModule, LineviewerComponent],
     templateUrl: './mega-campaign.component.html',
     styleUrl: './mega-campaign.component.scss'
 })
@@ -48,6 +52,7 @@ export class MegaCampaignComponent {
     megaPlotService = inject(MegaPlotService);
     ck3Service = inject(CK3Service);
     destroyRef = inject(DestroyRef);
+    saveSaver = inject(SaveSaverService);
 
     campaign: MegaCampaign | null = null;
     userAssignment: StartAssignment | null = null;
@@ -56,6 +61,7 @@ export class MegaCampaignComponent {
 
     user2Ruler: Map<DiscordUser, CustomRulerFile> = new Map();
     currentView: VIEW = VIEW.ASSIGNMENT_TABLE;
+    seriesData: LineViewerData | null = null;
 
     private cachedColumns: Map<number, TableColumn<StartAssignment>[]> = new Map();
 
@@ -74,6 +80,9 @@ export class MegaCampaignComponent {
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(campaigns => {
                 this.campaign = campaigns[0];
+                this.saveSaver.getSaveFileByIdentifier$(this.campaign.getVic3SaveIdentifiersInChronologicalOrder()[0]).subscribe(save => {
+                    this.seriesData = new Vic3SaveSeriesData(save);
+                });
             });
         combineLatest([this.assignmentService.allAssignments$, this.ck3Service.initializeCK3()])
             .pipe(takeUntilDestroyed(this.destroyRef))

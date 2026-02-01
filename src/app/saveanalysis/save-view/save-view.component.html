@@ -1,7 +1,7 @@
 <div class="content">
     @if (activeSave != null) {
     <span>
-        <div>
+        <div class="text-at-the-top">
             <span><strong>Save-Date:</strong></span>
             <span>{{ activeSave.getRealDate().toLocaleDateString() }}</span>
             <span><strong>Ingame-Date:</strong></span>
@@ -94,7 +94,8 @@
     </mat-tab>
     <mat-tab>
         <ng-template mat-tab-label>
-            <mat-icon>insights</mat-icon>
+            <mat-icon>show_chart
+            </mat-icon>
         </ng-template>
         <app-lineviewer [data]="seriesData"></app-lineviewer>
     </mat-tab>

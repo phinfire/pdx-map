@@ -62,7 +62,8 @@ export class SaveViewSplashComponent implements OnDestroy {
                         const game = gameFromURL || this.saveSaverService.getGameFromSaveMetadata(latestSave);
                         const id = latestSave.id;
                         if (game && id) {
-                            this.router.navigate(['/save', game, id], { skipLocationChange: true });
+                            console.log(`Navigating to latest save: /save/${game}/${id}`);
+                            this.router.navigate(['/save', game, id]);
                         }
                     }
                     this.finishProcessing();
@@ -82,7 +83,7 @@ export class SaveViewSplashComponent implements OnDestroy {
                     }
                 } else {
                     this.isFromDatabase = true;
-                    this.saveSaverService.getSaveFileByIdentifier(saveIdFromURL).subscribe(save => {
+                    this.saveSaverService.getSaveFileByIdentifier$(saveIdFromURL).subscribe(save => {
                         this.handleSuccess(save, null);
                     });
                 }

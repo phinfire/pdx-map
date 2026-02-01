@@ -20,134 +20,134 @@ import { SideNavContentProvider } from '../../../ui/SideNavContentProvider';
 import { SaveFileNameDialogComponent } from '../save-filename-dialog.component';
 
 @Component({
-  selector: 'app-eu4-save-view',
-  imports: [TableComponent, MatTabsModule, MatIconModule, SlabMapViewComponent],
-  templateUrl: './eu4-save-view.component.html',
-  styleUrl: './eu4-save-view.component.scss',
+    selector: 'app-eu4-save-view',
+    imports: [TableComponent, MatTabsModule, MatIconModule, SlabMapViewComponent],
+    templateUrl: './eu4-save-view.component.html',
+    styleUrl: './eu4-save-view.component.scss',
 })
 export class Eu4SaveViewComponent implements OnDestroy {
 
-  @Input() activeSave: Eu4Save | null = null;
-  @Input() isFromDatabase = false;
+    @Input() activeSave: Eu4Save | null = null;
+    @Input() isFromDatabase = false;
 
-  protected rowElements: Eu4SaveCountry[] = [];
-  protected behaviorConfig = new BehaviorConfigProvider(0.75);
-  protected availableMapViewModes: LabeledAndIconed<ViewMode>[] = [];
-  protected geoJsonFetcher = () => this.mapService.fetchEU4GeoJson(true, false);
-  protected columns: TableColumn<Eu4SaveCountry>[] = [];
-  
-  private mapService = inject(MapService);
-  private saveSaverService = inject(SaveSaverService);
-  private snackBar = inject(MatSnackBar);
-  private dialog = inject(MatDialog);
-  private router = inject(Router);
-  private sideNavContentProvider = inject(SideNavContentProvider);
+    protected rowElements: Eu4SaveCountry[] = [];
+    protected behaviorConfig = new BehaviorConfigProvider(0.75);
+    protected availableMapViewModes: LabeledAndIconed<ViewMode>[] = [];
+    protected geoJsonFetcher = () => this.mapService.fetchEU4GeoJson(true, false);
+    protected columns: TableColumn<Eu4SaveCountry>[] = [];
 
-  private uploadActionHandle: string | null = null;
-  private destroy$ = new Subject<void>();
+    private mapService = inject(MapService);
+    private saveSaverService = inject(SaveSaverService);
+    private snackBar = inject(MatSnackBar);
+    private dialog = inject(MatDialog);
+    private router = inject(Router);
+    private sideNavContentProvider = inject(SideNavContentProvider);
 
-  ngOnDestroy(): void {
-    this.removeToolbarActions();
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
+    private uploadActionHandle: string | null = null;
+    private destroy$ = new Subject<void>();
 
-  ngOnInit() {
-    if (this.activeSave) {
-      const countryTags = Array.from(this.activeSave.getAllExistingCountryTags());
-      this.rowElements = countryTags
-        .map(tag => this.activeSave!.getCountry(tag))
-        .filter((country): country is Eu4SaveCountry => country != null);
-
-      this.columns = [
-        TableColumnBuilder.getIndexColumn<Eu4SaveCountry>(),
-        new TableColumnBuilder<Eu4SaveCountry>("Tag")
-          .withCellValue((country: Eu4SaveCountry) => country.getTag())
-          .build(),
-        new TableColumnBuilder<Eu4SaveCountry>("Player")
-          .withCellValue((country: Eu4SaveCountry) => country.getPlayerName())
-          .build(),
-        new TableColumnBuilder<Eu4SaveCountry>("Development")
-          .withCellValue((country: Eu4SaveCountry) => 
-            this.activeSave ? this.activeSave.getTotalCountryDevelopment(country.getTag()) : 0
-          )
-          .build()
-      ];
-      this.setupToolbarActions();
+    ngOnDestroy(): void {
+        this.removeToolbarActions();
+        this.destroy$.next();
+        this.destroy$.complete();
     }
-  }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['activeSave'] && this.activeSave) {
-      this.setupToolbarActions();
-    }
-  }
+    ngOnInit() {
+        if (this.activeSave) {
+            const countryTags = Array.from(this.activeSave.getAllExistingCountryTags());
+            this.rowElements = countryTags
+                .map(tag => this.activeSave!.getCountry(tag))
+                .filter((country): country is Eu4SaveCountry => country != null);
 
-  private setupToolbarActions(): void {
-    this.removeToolbarActions();
-    const uploadAction = this.isFromDatabase ? null : () => this.uploadSave();
-    const uploadTooltip = this.isFromDatabase 
-      ? 'This save has already been uploaded' 
-      : 'Upload save';
-    this.uploadActionHandle = this.sideNavContentProvider.addToolbarAction(
-      'cloud_upload',
-      uploadTooltip,
-      uploadAction
-    );
-  }
-
-  private removeToolbarActions(): void {
-    if (this.uploadActionHandle) {
-      this.sideNavContentProvider.removeToolbarAction(this.uploadActionHandle);
-      this.uploadActionHandle = null;
-    }
-  }
-
-  private uploadSave(): void {
-    if (!this.activeSave) return;
-    const defaultFileName = this.generateFileName();
-    const dialogRef = this.dialog.open(SaveFileNameDialogComponent, {
-      width: '400px',
-      data: { fileName: defaultFileName }
-    });
-
-    dialogRef.afterClosed().pipe(
-      takeUntil(this.destroy$)
-    ).subscribe((result: string | undefined) => {
-      if (!result) return;
-      const fileName = result;
-      this.snackBar.open(`Uploading ${fileName}...`, undefined, { duration: 0 });
-      this.saveSaverService.storeEu4Save(this.activeSave!, fileName, new Date()).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: (uploadResult) => {
-          this.snackBar.dismiss();
-          if (uploadResult.success) {
-            this.snackBar.open('Save uploaded successfully', 'Close', { duration: 3000 });
-            if (uploadResult.id) {
-              this.router.navigate(['/save', 'eu4', uploadResult.id]);
-            }
-          } else {
-            this.snackBar.open(`Upload failed: ${uploadResult.message}`, 'Close', { duration: 5000 });
-          }
-        },
-        error: (err) => {
-          console.error('Upload error:', err);
-          this.snackBar.dismiss();
-          this.snackBar.open('Upload failed', 'Close', { duration: 5000 });
+            this.columns = [
+                TableColumnBuilder.getIndexColumn<Eu4SaveCountry>(),
+                new TableColumnBuilder<Eu4SaveCountry>("Tag")
+                    .withCellValue((country: Eu4SaveCountry) => country.getTag())
+                    .build(),
+                new TableColumnBuilder<Eu4SaveCountry>("Player")
+                    .withCellValue((country: Eu4SaveCountry) => country.getPlayerName())
+                    .build(),
+                new TableColumnBuilder<Eu4SaveCountry>("Development")
+                    .withCellValue((country: Eu4SaveCountry) =>
+                        this.activeSave ? this.activeSave.getTotalCountryDevelopment(country.getTag()) : 0
+                    )
+                    .build()
+            ];
+            this.setupToolbarActions();
         }
-      });
-    });
-  }
+    }
 
-  private generateFileName(): string {
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
-    return `eu4_save_${dateStr}_${timeStr}`;
-  }
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes['activeSave'] && this.activeSave) {
+            this.setupToolbarActions();
+        }
+    }
 
-  getRowElements() {
-    return this.rowElements;
-  }
+    private setupToolbarActions(): void {
+        this.removeToolbarActions();
+        const uploadAction = this.isFromDatabase ? null : () => this.uploadSave();
+        const uploadTooltip = this.isFromDatabase
+            ? 'This save has already been uploaded'
+            : 'Upload save';
+        this.uploadActionHandle = this.sideNavContentProvider.addToolbarAction(
+            'cloud_upload',
+            uploadTooltip,
+            uploadAction
+        );
+    }
+
+    private removeToolbarActions(): void {
+        if (this.uploadActionHandle) {
+            this.sideNavContentProvider.removeToolbarAction(this.uploadActionHandle);
+            this.uploadActionHandle = null;
+        }
+    }
+
+    private uploadSave(): void {
+        if (!this.activeSave) return;
+        const defaultFileName = this.generateFileName();
+        const dialogRef = this.dialog.open(SaveFileNameDialogComponent, {
+            width: '400px',
+            data: { fileName: defaultFileName }
+        });
+
+        dialogRef.afterClosed().pipe(
+            takeUntil(this.destroy$)
+        ).subscribe((result: string | undefined) => {
+            if (!result) return;
+            const fileName = result;
+            this.snackBar.open(`Uploading ${fileName}...`, undefined, { duration: 0 });
+            this.saveSaverService.storeEu4Save(this.activeSave!, fileName, new Date()).pipe(
+                takeUntil(this.destroy$)
+            ).subscribe({
+                next: (uploadResult) => {
+                    this.snackBar.dismiss();
+                    if (uploadResult.success) {
+                        this.snackBar.open('Save uploaded successfully', 'Close', { duration: 3000 });
+                        if (uploadResult.id) {
+                            this.router.navigate(['/save', 'eu4', uploadResult.id]);
+                        }
+                    } else {
+                        this.snackBar.open(`Upload failed: ${uploadResult.message}`, 'Close', { duration: 5000 });
+                    }
+                },
+                error: (err) => {
+                    console.error('Upload error:', err);
+                    this.snackBar.dismiss();
+                    this.snackBar.open('Upload failed', 'Close', { duration: 5000 });
+                }
+            });
+        });
+    }
+
+    private generateFileName(): string {
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+        return `eu4_save_${dateStr}_${timeStr}`;
+    }
+
+    getRowElements() {
+        return this.rowElements;
+    }
 }

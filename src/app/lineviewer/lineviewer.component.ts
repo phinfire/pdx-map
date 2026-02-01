@@ -8,10 +8,11 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { DataSeries, LinePlotterService } from './LinePlotterService';
+import { LinePlotterService } from './LinePlotterService';
 import { LineableEntity } from './model/LineableEntity';
 import { LineAccessor } from './model/LineAccessor';
 import { LineViewerData } from './model/LineViewerData';
+import { DataSeries } from './model/DataSeries';
 
 interface SeriesWithEntity extends DataSeries {
     entity: LineableEntity;
@@ -41,7 +42,7 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     isLoading = false;
     selectedMetric: string = '';
     optionsList: Array<[string, LineAccessor]> = [];
-    protected showDataPointMarkers = false;
+    showDataPointMarkers = false;
     protected useLogScale = false;
 
     get allSeriesVisible(): boolean {
@@ -66,7 +67,6 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
             this.selectedOption().pipe(
                 takeUntil(this.destroy$)
             ).subscribe(seriesMap => {
-                
                 this.setSeriesFromMap(seriesMap);
                 this.redrawChart();
                 this.isLoading = false;
@@ -139,11 +139,7 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         this.series = Array.from(seriesMap.entries()).map(([entity, ds]) => ({
             ...ds,
             entity
-        })).sort((a, b) => {
-            const aLastValue = a.values[a.values.length - 1]?.y ?? 0;
-            const bLastValue = b.values[b.values.length - 1]?.y ?? 0;
-            return bLastValue - aLastValue;
-        });
+        }));
         this.series.forEach(s => {
             const previousState = previousVisibility.get(s.entity);
             s.entity?.setVisible?.(previousState ?? true);
@@ -172,6 +168,8 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         this.svgElement = this.plotterService.redrawChart(visibleSeries, chartContainer, this.showDataPointMarkers);
         if (chartContainer && this.svgElement) {
             chartContainer.appendChild(this.svgElement);
+        } else {
+            throw new Error('Chart container or SVG element is null');
         }
     }
 }

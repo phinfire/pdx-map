@@ -157,7 +157,7 @@ export class SaveViewComponent implements OnDestroy {
             ? 'This save has already been uploaded' 
             : 'Upload save';
         this.uploadActionHandle = this.sideNavContentProvider.addToolbarAction(
-            'cloud_upload',
+            this.isFromDatabase ? 'cloud_done' : 'cloud_upload',
             uploadTooltip,
             uploadAction
         );

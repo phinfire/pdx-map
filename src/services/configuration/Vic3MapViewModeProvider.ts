@@ -42,58 +42,77 @@ export class Vic3MapViewModeProvider {
     }
 
     getInterestingViewModes(save: Vic3Save) {
-        return [
-            new LabeledAndIconed<ViewMode>(
-                "MISC",
-                "Value Added per Employee",
-                "money_bag",
-                this.buildViewMode(save, "Value Added per Employee", (s: StateRegion) => {
+        const viewConfigs = [
+            {
+                label: "Value Added per Employee",
+                icon: "money_bag",
+                viewBuilder: (s: StateRegion) => {
                     return s.getBuildings().map(b => b.getNetValueAdded()).reduce((sum, va) => sum + va, 0) / s.getPopulationStatBlock().salariedWorkforce;
-                },v => v, "£")!,
-            ),
-            new LabeledAndIconed<ViewMode>(
-                "MISC",
-                "Goods Produced per Employee",
-                "package",
-                this.buildViewMode(save, "Goods Produced per Employee", (s: StateRegion) => {
+                },
+                postProcessor: (v: number) => v,
+                unit: "£"
+            },
+            {
+                label: "Goods Produced per Employee",
+                icon: "package",
+                viewBuilder: (s: StateRegion) => {
                     return s.getBuildings().map(b => Array.from(b.getGoodsOut().values()).reduce((sum, qty) => sum + qty, 0)).reduce((sum, g) => sum + g, 0) / s.getPopulationStatBlock().salariedWorkforce;
-                }, v => v, "Units")!,
-            ),
-            new LabeledAndIconed<ViewMode>(
-                "MISC",
-                "Population",
-                "people",
-                this.buildViewMode(save, "Population", (s: StateRegion) => {
+                },
+                postProcessor: (v: number) => v,
+                unit: "Units"
+            },
+            {
+                label: "Population",
+                icon: "people",
+                viewBuilder: (s: StateRegion) => {
                     return s.getPopulationStatBlock().getTotalPopulation();
-                })!,
-            ),
-            new LabeledAndIconed<ViewMode>(
-                "MISC",
-                "Avg. Wealth",
-                "payments",
-                this.buildViewMode(save, "Avg. Wealth", (s: StateRegion) => s.getPopulationStatBlock().totalWealth / s.getPopulationStatBlock().getTotalPopulation(), v => v, "£")!
-            ),
-            new LabeledAndIconed<ViewMode>(
-                "MISC",
-                "Loyalists Percentage",
-                "thumb_up",
-                this.buildViewMode(save, "Loyalists", (s: StateRegion) => {
+                },
+                postProcessor: (v: number) => v,
+                unit: ""
+            },
+            {
+                label: "Avg. Wealth",
+                icon: "payments",
+                viewBuilder: (s: StateRegion) => s.getPopulationStatBlock().totalWealth / s.getPopulationStatBlock().getTotalPopulation(),
+                postProcessor: (v: number) => v,
+                unit: "£"
+            },
+            {
+                label: "Loyalists Percentage",
+                icon: "thumb_up",
+                viewBuilder: (s: StateRegion) => {
                     const totalPopulation = s.getPopulationStatBlock().getTotalPopulation();
                     const loyalists = s.getPopulationStatBlock().loyalists;
                     return (loyalists / totalPopulation) * 100;
-                }, v => v, "%")!,
-            ),
-            new LabeledAndIconed<ViewMode>(
-                "MISC",
-                "Radicals Percentage",
-                "thumb_down",
-                this.buildViewMode(save, "Radicals", (s: StateRegion) => {
+                },
+                postProcessor: (v: number) => v,
+                unit: "%"
+            },
+            {
+                label: "Radicals Percentage",
+                icon: "thumb_down",
+                viewBuilder: (s: StateRegion) => {
                     const totalPopulation = s.getPopulationStatBlock().getTotalPopulation();
                     const radicals = s.getPopulationStatBlock().radicals;
                     return (radicals / totalPopulation) * 100;
-                }, v => v, "%")!,
-            ),
+                },
+                postProcessor: (v: number) => v,
+                unit: "%"
+            }
         ];
+
+        return viewConfigs
+            .map(config => ({
+                ...config,
+                view: this.buildViewMode(save, config.label, config.viewBuilder, config.postProcessor, config.unit)
+            }))
+            .filter(config => config.view !== null)
+            .map(config => new LabeledAndIconed<ViewMode>(
+                "MISC",
+                config.label,
+                config.icon,
+                config.view!
+            ));
     }
 
     private getMineralDepositUtilizationViewModes(save: Vic3Save) {

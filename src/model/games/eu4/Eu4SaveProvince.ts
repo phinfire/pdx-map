@@ -15,6 +15,17 @@ export class Eu4SaveProvince {
         const ownerTag = data.owner || null;
         return new Eu4SaveProvince(id, name, development, buildings, tradePower, ownerTag, data);
     }
+    static fromJSON(json: any): Eu4SaveProvince {
+        return new Eu4SaveProvince(
+            json.id,
+            json.name,
+            json.development,
+            json.buildings,
+            json.tradePower,
+            json.ownerTag,
+            json.data
+        );
+    }
 
     constructor(private id: string, private name: string, private development: number[], private buildings: string[], private tradePower: number, private ownerTag: string | null, private data: any) {
         

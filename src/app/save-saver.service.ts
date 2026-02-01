@@ -54,7 +54,7 @@ export class SaveSaverService {
     public getAvailableSavesAndMetadata(): Observable<SaveInfo[]> {
         return this.saveDatabaseService.listFiles().pipe(
             map(files => files
-                .filter((file): file is { id: string; metadata: SaveMetadata } & typeof file => 
+                .filter((file): file is { id: string; metadata: SaveMetadata } & typeof file =>
                     file.metadata?.['kind'] === 'save'
                 )
                 .map(file => ({ id: file.id, metadata: file.metadata }))
@@ -63,16 +63,28 @@ export class SaveSaverService {
     }
 
     public getGameFromSaveMetadata(save: SaveInfo | { metadata: SaveMetadata }): GameType | null {
+        console.log('Save metadata:', save.metadata);
         const game = save.metadata?.game?.toLowerCase() as GameType;
         return (['ck3', 'vic3', 'eu4'] as const).includes(game) ? game : null;
     }
 
-    public getSaveFileByIdentifier(saveId: string): Observable<any> {
+    public getSaveFileByIdentifier$(saveId: string): Observable<any> {
         return this.saveDatabaseService.downloadFile(saveId).pipe(
             map(data => {
                 const decodedString = new TextDecoder().decode(data);
                 const parsed = JSON.parse(decodedString);
-                return Vic3Save.fromJSON(parsed);
+                const game = this.getGameFromSaveMetadata({ metadata: parsed.metadata });
+                console.log(`Loaded save file of game type: ${game}`);
+                switch (game) {
+                    case 'vic3':
+                        return Vic3Save.fromJSON(parsed);
+                    case 'eu4':
+                        return Eu4Save.fromJSON(parsed);
+                    case 'ck3':
+                        throw new Error('CK3 save loading not yet implemented');
+                    default:
+                        throw new Error(`Unknown or unsupported game type: ${game}`);
+                }
             })
         );
     }
@@ -140,6 +152,7 @@ export class SaveSaverService {
                     mainObject.metadata = {};
                 }
                 mainObject.metadata.hash = hash;
+                mainObject.metadata.game = mainFileConfig.game;
                 mainObject.metadata.realDate = mainFileConfig.realDate;
                 mainObject.metadata.ingameDate = mainFileConfig.ingameDate;
 
@@ -182,8 +195,8 @@ export class SaveSaverService {
                     message: error.message || 'Unknown error occurred during upload'
                 }));
             }),
-            map((mainFileResult) => ({ 
-                success: true, 
+            map((mainFileResult) => ({
+                success: true,
                 message: `${mainFileConfig.game} save and all subfiles uploaded successfully`,
                 id: mainFileResult.uploaded[0]?.id
             }))

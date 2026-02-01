@@ -1,13 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import * as d3 from 'd3';
-import { Point2D } from '../../util/Point2D';
 import { D3JsService } from '../../services/D3JsService';
-
-export interface DataSeries {
-    name: string;
-    color: string;
-    values: Point2D[];
-}
+import { DataSeries } from './model/DataSeries';
 
 @Injectable({
     providedIn: 'root'
@@ -25,7 +19,7 @@ export class LinePlotterService {
             return document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGSVGElement;
         }
 
-        const margin = { top: 20, right: 30, bottom: 50, left: 70 };
+        const margin = { top: 20, right: 100, bottom: 50, left: 30 };
         const width = chartContainer.clientWidth - margin.left - margin.right;
         const height = chartContainer.clientHeight - margin.top - margin.bottom;
 
@@ -74,7 +68,8 @@ export class LinePlotterService {
 
         gSelection.append('g')
             .attr('class', 'y-axis')
-            .call(d3.axisLeft(yScale))
+            .attr('transform', `translate(${width},0)`)
+            .call(d3.axisRight(yScale))
             .selectAll('text')
             .style('font-size', '14px')
             .style('font-family', this.d3jsService.getFont());

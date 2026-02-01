@@ -1,11 +1,10 @@
-import { Injectable } from "@angular/core";
+import { of } from "rxjs";
+import { Country } from "../../../model/vic/Country";
+import { Vic3Save } from "../../../model/vic/Vic3Save";
 import { LineableEntity } from "./LineableEntity";
 import { LineAccessor } from "./LineAccessor";
 import { LineViewerData } from "./LineViewerData";
-import { of } from "rxjs";
-import { DataSeries } from "../LinePlotterService";
-import { Vic3Save } from "../../../model/vic/Vic3Save";
-import { Country } from "../../../model/vic/Country";
+import { DataSeries } from "./DataSeries";
 
 class CountryEntity implements LineableEntity {
     private visible = true;
@@ -39,13 +38,13 @@ export class Vic3SaveSeriesData implements LineViewerData {
     private save: Vic3Save | null = null;
 
     private readonly options = new Map([
-        ["GDP", () => of(this.buildSeriesForCurve((country: Country) => country.getGdpCurve(), 1_000_000))],
-        ["Prestige", () => of(this.buildSeriesForCurve((country: Country) => country.getPrestigeCurve(), 1))],
-        ["Literacy", () => of(this.buildSeriesForCurve((country: Country) => country.getLiteracyCurve(), 1))],
-        ["Average SoL", () => of(this.buildSeriesForCurve((country: Country) => country.getAvgSolTrendCurve(), 1))],
+        ["GDP (Millions)", () => of(this.buildSeriesForCurve((country: Country) => country.getGdpCurve(), (value: number) => parseFloat((value / 1_000_000).toFixed(2))))],
+        ["Prestige", () => of(this.buildSeriesForCurve((country: Country) => country.getPrestigeCurve()))],
+        ["Literacy", () => of(this.buildSeriesForCurve((country: Country) => country.getLiteracyCurve()))],
+        ["Avg. Standard of Living", () => of(this.buildSeriesForCurve((country: Country) => country.getAvgSolTrendCurve()))],
     ]);
 
-    private buildSeriesForCurve(curveAccessor: (country: Country) => any, scaleFactor: number): Map<LineableEntity, DataSeries> {
+    private buildSeriesForCurve(curveAccessor: (country: Country) => any, valueTransformation: (value: number) => number = (value) => value): Map<LineableEntity, DataSeries> {
         const seriesMap = new Map<LineableEntity, DataSeries>();
         
         this.entities?.forEach((entity) => {
@@ -62,7 +61,7 @@ export class Vic3SaveSeriesData implements LineViewerData {
                 .sort((a, b) => a[0] - b[0])
                 .map(([year, value]) => ({
                     x: year,
-                    y: parseFloat((value / scaleFactor).toFixed(1))
+                    y: parseFloat(valueTransformation(value).toFixed(2))
                 }));
             
             const series: DataSeries = {

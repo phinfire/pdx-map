@@ -8,6 +8,17 @@ export class Eu4SaveCountry {
         return new Eu4SaveCountry(tag, color as number[], subjects, overlord, name, playerName);
     }
 
+    static fromJSON(json: any): Eu4SaveCountry {
+        return new Eu4SaveCountry(
+            json.tag,
+            json.color,
+            json.subjects,
+            json.overlord,
+            json.name,
+            json.playerName
+        );
+    }
+
     constructor(private tag: string, private color: number[], private subjects: string[], private overlord: string | null, private name: string, private playerName: string | null) {
         
     }

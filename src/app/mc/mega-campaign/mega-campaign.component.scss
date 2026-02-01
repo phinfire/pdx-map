@@ -6,7 +6,7 @@
     color: var(--text-color);
     width: 100%;
     height: 100%;
-    padding: 0 5%;
+    padding: 0 5% 5% 5%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -71,7 +71,7 @@ h1 {
     text-decoration: underline;
 }
 
-.plot-container {
+.plot-container, .lines-plot-container {
     width: 100%;
     height: 60vh;
     display: flex;
@@ -80,4 +80,8 @@ h1 {
     justify-content: center;
     border-radius: 0.5em;
     margin-top: 1em;
+}
+
+.lines-plot-container {
+    height: 80vh;
 }

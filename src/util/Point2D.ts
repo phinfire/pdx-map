@@ -1,5 +1,5 @@
-export class Point2D {
-    constructor(public readonly x: number, public readonly y: number) {
+export class Point2D<T> {
+    constructor(public readonly x: T, public readonly y: number) {
 
     }
 }

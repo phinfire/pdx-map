@@ -1,10 +1,17 @@
 export class CurveBuffer {
+
+    public static readonly EMPTY = new CurveBuffer([], 0, new Date(0));
+
     values: number[];
     sampleRate: number;
     lastSampledDate: Date;
 
     static fromRawData(rawData: any) {
+        console.log("Raw CurveBuffer data:", rawData);
         const sampleRate = rawData.sample_rate;
+        if (!rawData.channels || Object.keys(rawData.channels).length === 0) {
+            return CurveBuffer.EMPTY;
+        }
         const channelKey = Object.keys(rawData.channels)[0];
         const channel = rawData.channels[channelKey];
 
@@ -45,7 +52,7 @@ export class CurveBuffer {
         const totalSamples = this.values.length;
         for (let i = 0; i < totalSamples; i++) {
             const sampleIndex = (totalSamples + i - 1) % totalSamples;
-            const daysAgo = (totalSamples - 1 - sampleIndex) * this.sampleRate;
+            const daysAgo = (totalSamples - 1 - sampleIndex) * this.sampleRate / 4
             const sampleDate = new Date(this.lastSampledDate);
             sampleDate.setDate(sampleDate.getDate() - daysAgo);
             pairs.push({ date: sampleDate, value: this.values[sampleIndex] });

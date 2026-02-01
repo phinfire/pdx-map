@@ -31,8 +31,18 @@ export class Eu4Save {
     }
 
     static fromJSON(json: any): Eu4Save {
-        // TODO: Implement deserialization from Eu4Save JSON format
-        throw new Error('fromJSON not yet implemented');
+        const provinces = new Map<string, Eu4SaveProvince>();
+        (json.provinces as any[]).forEach(pJson => {
+            const province = Eu4SaveProvince.fromJSON(pJson);
+            provinces.set(province.getId(), province);
+        });
+        const countries = new Map<string, Eu4SaveCountry>();
+        (json.countries as any[]).forEach(cJson => {
+            const country = Eu4SaveCountry.fromJSON(cJson);
+            countries.set(country.getTag(), country);
+        });
+        const ingameDate = new Date(json.date);
+        return new Eu4Save(provinces, countries, new Map<string, string>(json.tag2PlayerName), ingameDate);
     }
 
     private constructor(
@@ -46,6 +56,7 @@ export class Eu4Save {
         return {
             countries: Array.from(this.countries.values()).map(c => c.toJSON()),
             provinces: Array.from(this.provinces.values()).map(p => p.toJSON()),
+            tag2PlayerName: Array.from(this.tag2PlayerName.entries()),
             date: this.ingameDate.toISOString()
         };
     }

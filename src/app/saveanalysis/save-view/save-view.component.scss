@@ -22,7 +22,14 @@
     width: 100%;
     color: var(--text-color);
     background-color: var(--background-color);
-    padding: 0.25em 0em 0.25em 4em;
+    padding: 1em 0em 0.25em 4em;
+}
+
+.text-at-the-top {
+    display: flex;
+    flex-direction: row;
+    gap: 1em;
+    font-size: 1.2em;
 }
 
 .content span:nth-child(odd) {
