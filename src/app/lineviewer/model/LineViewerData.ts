@@ -1,10 +1,9 @@
 import { LineableEntity } from "./LineableEntity";
 import { LineAccessor } from "./LineAccessor";
 
-export interface LineViewerData {
+export interface LineViewerData<T> {
 
     getLineableEntities(): LineableEntity[];
 
-    getOptions(): Map<string, LineAccessor>;
-
+    getOptions(): Map<string, LineAccessor<T>>;
 }

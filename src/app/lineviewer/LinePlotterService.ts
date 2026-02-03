@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import * as d3 from 'd3';
 import { D3JsService } from '../../services/D3JsService';
 import { DataSeries } from './model/DataSeries';
+import { Scaling } from './Scaling';
 
 @Injectable({
     providedIn: 'root'
@@ -14,7 +15,12 @@ export class LinePlotterService {
 
     private d3jsService = inject(D3JsService);
 
-    public redrawChart(dataSeries: DataSeries[], chartContainer: HTMLElement, showDataPoints: boolean): SVGSVGElement {
+    public redrawChart(
+        dataSeries: DataSeries<Date>[],
+        chartContainer: HTMLElement,
+        showDataPoints: boolean,
+        scaling: Scaling = Scaling.LINEAR
+    ): SVGSVGElement {
         if (dataSeries.length === 0) {
             return document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGSVGElement;
         }
@@ -33,35 +39,45 @@ export class LinePlotterService {
             .attr('transform', `translate(${margin.left},${margin.top})`);
 
         const allData = dataSeries.flatMap(s => s.values);
-        const xExtent = d3.extent(allData, d => d.x) as [number, number];
+
+        const xExtent = d3.extent(allData, d => d.x) as [Date, Date];
         const yExtent = d3.extent(allData, d => d.y) as [number, number];
 
-        const xPadding = (xExtent[1] - xExtent[0]) * 0.05;
-        const yPadding = (yExtent[1] - yExtent[0]) * 0.05;
+        const ONE_YEAR_MS = 365.25 * 24 * 60 * 60 * 1000;
+        const yPadding =
+            (yExtent[1] - yExtent[0]) * 0.05;
 
-        const xScale = d3.scaleLinear()
-            .domain([xExtent[0] - xPadding, xExtent[1] + xPadding])
+        const xDomain: [Date, Date] = [
+            new Date(xExtent[0].getTime() - ONE_YEAR_MS),
+            new Date(xExtent[1].getTime() + ONE_YEAR_MS)
+        ];
+
+        const xScale = d3.scaleTime()
+            .domain(xDomain)
             .range([0, width]);
 
-        const yScale = d3.scaleLinear()
-            .domain([yExtent[0] - yPadding, yExtent[1] + yPadding])
-            .range([height, 0]);
+        const yScale = this.createYScale(yExtent, yPadding, height, scaling);
 
-        const line = d3.line<{ x: number; y: number }>()
+        const line = d3.line<{ x: Date; y: number }>()
             .x(d => xScale(d.x))
             .y(d => yScale(d.y));
 
         gSelection.append('g')
             .attr('class', 'grid')
             .attr('opacity', 0.1)
-            .call(d3.axisLeft(yScale)
-                .tickSize(-width)
-                .tickFormat(() => ''));
+            .call(
+                d3.axisLeft(yScale)
+                    .tickSize(-width)
+                    .tickFormat(() => '')
+            );
 
         gSelection.append('g')
             .attr('class', 'x-axis')
             .attr('transform', `translate(0,${height})`)
-            .call(d3.axisBottom(xScale).tickFormat(d3.format('d')))
+            .call(
+                d3.axisBottom(xScale)
+                    .tickFormat(d3.timeFormat('%Y') as any)
+            )
             .selectAll('text')
             .style('font-size', '14px')
             .style('font-family', this.d3jsService.getFont());
@@ -75,8 +91,12 @@ export class LinePlotterService {
             .style('font-family', this.d3jsService.getFont());
 
         const linesGroup = gSelection.append('g').attr('class', 'lines-group');
-        const pointsGroup = gSelection.append('g').attr('class', 'points-group').style('pointer-events', 'none');
-        const hoverGroup = gSelection.append('g').attr('class', 'hover-group').style('pointer-events', 'none');
+        const pointsGroup = gSelection.append('g')
+            .attr('class', 'points-group')
+            .style('pointer-events', 'none');
+        const hoverGroup = gSelection.append('g')
+            .attr('class', 'hover-group')
+            .style('pointer-events', 'none');
 
         dataSeries.forEach(series => {
             linesGroup.append('path')
@@ -93,7 +113,7 @@ export class LinePlotterService {
                         .attr('cx', xScale(point.x))
                         .attr('cy', yScale(point.y))
                         .attr('r', 5)
-                        .attr('fill', series.color)
+                        .attr('fill', series.color);
                 });
             }
         });
@@ -125,7 +145,10 @@ export class LinePlotterService {
             .style('text-anchor', 'middle')
             .style('pointer-events', 'none');
 
-        const label = hoverGroup.append('g').attr('class', 'hover-label').style('opacity', 0);
+        const label = hoverGroup.append('g')
+            .attr('class', 'hover-label')
+            .style('opacity', 0);
+
         label.append('rect')
             .attr('class', 'label-bg')
             .attr('rx', 4)
@@ -143,12 +166,42 @@ export class LinePlotterService {
 
         overlay.on('mousemove', (event: MouseEvent) => {
             const mousePos = d3.pointer(event, overlay.node());
-            const nearestPoint = this.findNearestPoint(dataSeries, mousePos[0], mousePos[1], xScale, yScale);
-            
-            if (nearestPoint !== null) {
-                this.updateMarkerAndLabel(marker, xAxisTriangle, xAxisLabel, label, nearestPoint, xScale, yScale, width, height);
+
+            let closestResult: { series: DataSeries<Date>; point: { x: Date; y: number }; distance: number } | null = null;
+            let minDistance = Infinity;
+
+            dataSeries.forEach(series => {
+                series.values.forEach(point => {
+                    const pixelX = xScale(point.x);
+                    const pixelY = yScale(point.y);
+                    const distance = Math.sqrt(Math.pow(pixelX - mousePos[0], 2) + Math.pow(pixelY - mousePos[1], 2));
+
+                    if (distance < 30 && distance < minDistance) {
+                        minDistance = distance;
+                        closestResult = { series, point, distance };
+                    }
+                });
+            });
+
+            if (closestResult) {
+                this.updateMarkerAndLabel(
+                    marker,
+                    xAxisTriangle,
+                    xAxisLabel,
+                    label,
+                    closestResult,
+                    xScale,
+                    yScale,
+                    width,
+                    height
+                );
             } else {
-                this.hideMarkerAndLabel(marker, xAxisTriangle, xAxisLabel, label);
+                this.hideMarkerAndLabel(
+                    marker,
+                    xAxisTriangle,
+                    xAxisLabel,
+                    label
+                );
             }
         });
 
@@ -162,50 +215,31 @@ export class LinePlotterService {
         return svgSelection.node() as SVGSVGElement;
     }
 
-    private findNearestPoint(
-        dataSeries: DataSeries[],
-        mouseX: number,
-        mouseY: number,
-        xScale: d3.ScaleLinear<number, number>,
-        yScale: d3.ScaleLinear<number, number>
-    ): { series: DataSeries; point: { x: number; y: number }; distance: number } | null {
-        const xValue = xScale.invert(mouseX);
-        let nearestPoint: { series: DataSeries; point: { x: number; y: number }; distance: number } | null = null;
+    private createYScale(
+        yExtent: [number, number],
+        yPadding: number,
+        height: number,
+        scaling: Scaling
+    ): d3.ScaleLinear<number, number> | d3.ScaleLogarithmic<number, number> | d3.ScalePower<number, number> {
+        const minValue = yExtent[0] - yPadding;
+        const maxValue = yExtent[1] + yPadding;
 
-        dataSeries.forEach(series => {
-            const closest = this.findClosestPointInSeries(series, xValue, xScale, yScale, mouseX, mouseY);
-            if (closest && (!nearestPoint || closest.distance < nearestPoint.distance)) {
-                nearestPoint = closest;
-            }
-        });
-
-        return nearestPoint;
-    }
-
-    private findClosestPointInSeries(
-        series: DataSeries,
-        xValue: number,
-        xScale: d3.ScaleLinear<number, number>,
-        yScale: d3.ScaleLinear<number, number>,
-        mouseX: number,
-        mouseY: number
-    ): { series: DataSeries; point: { x: number; y: number }; distance: number } | null {
-        const threshold = 30;
-        const closestPoint = this.d3jsService.findClosestPoint(series.values, mouseX, mouseY, xScale, yScale, threshold);
-        
-        if (!closestPoint) return null;
-
-        const pixelX = xScale(closestPoint.x);
-        const pixelY = yScale(closestPoint.y);
-        const distance = Math.sqrt(
-            Math.pow(pixelX - mouseX, 2) + Math.pow(pixelY - mouseY, 2)
-        );
-
-        return {
-            series,
-            point: { x: closestPoint.x, y: closestPoint.y },
-            distance
-        };
+        switch (scaling) {
+            case Scaling.LOGARITHMIC:
+                return d3.scaleLog()
+                    .domain([Math.max(minValue, 1), maxValue])
+                    .range([height, 0]) as any;
+            case Scaling.POWER:
+                return d3.scalePow()
+                    .exponent(0.5)
+                    .domain([minValue, maxValue])
+                    .range([height, 0]) as any;
+            case Scaling.LINEAR:
+            default:
+                return d3.scaleLinear()
+                    .domain([minValue, maxValue])
+                    .range([height, 0]);
+        }
     }
 
     private updateMarkerAndLabel(
@@ -213,8 +247,8 @@ export class LinePlotterService {
         xAxisTriangle: d3.Selection<SVGPolygonElement, undefined, null, undefined>,
         xAxisLabel: d3.Selection<SVGTextElement, undefined, null, undefined>,
         label: d3.Selection<SVGGElement, undefined, null, undefined>,
-        nearestPoint: { series: DataSeries; point: { x: number; y: number }; distance: number },
-        xScale: d3.ScaleLinear<number, number>,
+        nearestPoint: { series: DataSeries<Date>; point: { x: Date; y: number }; distance: number },
+        xScale: d3.ScaleTime<number, number>,
         yScale: d3.ScaleLinear<number, number>,
         width: number,
         height: number
@@ -246,7 +280,7 @@ export class LinePlotterService {
         yearLabel: d3.Selection<SVGTextElement, undefined, null, undefined>,
         pixelX: number,
         height: number,
-        year: number
+        date: Date
     ): void {
         const triangleOffset = 4;
         const points = [
@@ -254,14 +288,15 @@ export class LinePlotterService {
             [pixelX - this.TRIANGLE_SIZE / 2, height + triangleOffset + this.TRIANGLE_SIZE],
             [pixelX + this.TRIANGLE_SIZE / 2, height + triangleOffset + this.TRIANGLE_SIZE]
         ];
-        
+
         triangle
             .attr('points', points.map(p => p.join(',')).join(' '))
             .style('fill', this.AXIS_TEXT_COLOR)
             .style('opacity', 1);
-        
+
+        const formattedDate = d3.timeFormat('%b %Y')(date);
         yearLabel
-            .text(year.toString())
+            .text(formattedDate)
             .attr('x', pixelX)
             .attr('y', height + triangleOffset + this.TRIANGLE_SIZE + 14)
             .style('fill', this.AXIS_TEXT_COLOR)
@@ -270,7 +305,7 @@ export class LinePlotterService {
 
     private updateLabel(
         label: d3.Selection<SVGGElement, undefined, null, undefined>,
-        nearestPoint: { series: DataSeries; point: { x: number; y: number }; distance: number },
+        nearestPoint: { series: DataSeries<Date>; point: { x: Date; y: number }; distance: number },
         pixelX: number,
         pixelY: number,
         width: number
@@ -287,10 +322,10 @@ export class LinePlotterService {
         const bgRect = this.d3jsService.calculateLabelBackground(textEl.node() as SVGTextElement);
         const bgColor = nearestPoint.series.color;
         const textColor = this.isLightColor(bgColor) ? 'black' : 'white';
-        
+
         label.select('text')
             .style('fill', textColor);
-        
+
         label.select('rect')
             .attr('x', bgRect.x)
             .attr('y', bgRect.y)

@@ -146,13 +146,13 @@ export class PopScaleDiagramComponent implements AfterViewInit {
     }
 
     private findClosestPointOnCurve(
-        data: { dev: number; value: number }[],
+        data: { x: number; y: number }[],
         mouseX: number,
         mouseY: number,
         xScale: d3.ScaleLinear<number, number>,
         yScale: d3.ScaleLinear<number, number>
-    ): { dev: number; value: number } | null {
-        return this.d3jsService.findClosestPoint(data, mouseX, mouseY, xScale, yScale) as any;
+    ): { x: number; y: number } | null {
+        return this.d3jsService.findClosestDataPoint(data, mouseX, mouseY, xScale, yScale);
     }
 
     private findClosestMarker(
@@ -162,8 +162,11 @@ export class PopScaleDiagramComponent implements AfterViewInit {
         xScale: d3.ScaleLinear<number, number>,
         yScale: d3.ScaleLinear<number, number>,
         markerRadius: number = 15
-    ): { dev: number; value: number; playerName?: string; nationId?: string } | null {
-        let closestMarker: { dev: number; value: number; playerName?: string; nationId?: string } | null = null;
+    ): { x: number; y: number; playerName?: string; nationId?: string } | null {
+        if (!markers || markers.length === 0) {
+            throw new Error('No markers provided');
+        }
+        let closestMarker: { x: number; y: number; playerName?: string; nationId?: string } | null = null;
         let minDistance = Infinity;
 
         markers.forEach(marker => {
@@ -172,12 +175,11 @@ export class PopScaleDiagramComponent implements AfterViewInit {
             const distance = Math.sqrt(
                 Math.pow(pixelX - mouseX, 2) + Math.pow(pixelY - mouseY, 2)
             );
-
             if (distance < markerRadius && distance < minDistance) {
                 minDistance = distance;
                 closestMarker = {
-                    dev: marker.dev,
-                    value: this.service.getDevelopmentToPopTransformation()(marker.dev),
+                    x: marker.dev,
+                    y: this.service.getDevelopmentToPopTransformation()(marker.dev),
                     playerName: marker.name,
                     nationId: marker.nationId
                 };
@@ -335,7 +337,7 @@ export class PopScaleDiagramComponent implements AfterViewInit {
         overlay.on('mousemove', (event: MouseEvent) => {
             const mousePos = d3.pointer(event, overlay.node());
 
-            let closestPoint: { dev: number; value: number } | null = null;
+            let closestPoint: { x: number; y: number } | null = null;
             if (playerDevData && playerDevData.length > 0) {
                 closestPoint = this.findClosestMarker(playerDevData, mousePos[0], mousePos[1], scales.x, scales.y);
             }
@@ -343,21 +345,21 @@ export class PopScaleDiagramComponent implements AfterViewInit {
                 closestPoint = this.findClosestPointOnCurve(visibleData, mousePos[0], mousePos[1], scales.x, scales.y);
             }
             if (closestPoint) {
-                const pixelX = scales.x(closestPoint.dev);
-                const pixelY = scales.y(closestPoint.value);
+                const pixelX = scales.x(closestPoint.x);
+                const pixelY = scales.y(closestPoint.y);
 
                 marker
                     .attr('cx', pixelX)
                     .attr('cy', pixelY)
                     .style('opacity', 1);
 
-                const valueStr = this.d3jsService.formatValue(closestPoint.value);
+                const valueStr = this.d3jsService.formatValue(closestPoint.y);
 
                 let labelLines: string[] = [];
                 if ('playerName' in closestPoint && closestPoint.playerName && typeof closestPoint.playerName === 'string') {
-                    labelLines = [closestPoint.playerName, `Dev: ${closestPoint.dev}, Pop: ${valueStr}M`];
+                    labelLines = [closestPoint.playerName, `Dev: ${closestPoint.x}, Pop: ${valueStr}M`];
                 } else {
-                    labelLines = [`Dev: ${closestPoint.dev}, Pop: ${valueStr}M`];
+                    labelLines = [`Dev: ${closestPoint.x}, Pop: ${valueStr}M`];
                 }
 
                 const textEl = label.select('text');

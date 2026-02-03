@@ -55,7 +55,9 @@
                         <app-plot-view [plotablesInput]="traitPlotables" [titleInput]="'Player Ruler Traits'"></app-plot-view>
                     </div>
                     <div class="lines-plot-container">
-                        <app-lineviewer [data]="seriesData"></app-lineviewer>
+                        @if (seriesData) {
+                            <app-lineviewer [data]="seriesData"></app-lineviewer>
+                        }
                     </div>
                 }
             }

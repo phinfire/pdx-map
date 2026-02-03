@@ -1,32 +1,34 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, inject, Input, OnDestroy, SimpleChanges } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
-
-import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { LinePlotterService } from './LinePlotterService';
+import { DataSeries } from './model/DataSeries';
 import { LineableEntity } from './model/LineableEntity';
 import { LineAccessor } from './model/LineAccessor';
 import { LineViewerData } from './model/LineViewerData';
-import { DataSeries } from './model/DataSeries';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Scaling } from './Scaling';
 
-interface SeriesWithEntity extends DataSeries {
+interface SeriesWithEntity extends DataSeries<Date> {
     entity: LineableEntity;
 }
 
 @Component({
     selector: 'app-lineviewer',
-    imports: [MatCheckboxModule, MatToolbarModule, MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule, FormsModule],
+    imports: [MatCheckboxModule, MatToolbarModule, MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule, FormsModule, MatButtonToggleModule, MatTooltipModule],
     templateUrl: './lineviewer.component.html',
     styleUrl: './lineviewer.component.scss',
 })
 export class LineviewerComponent implements AfterViewInit, OnDestroy {
 
-    @Input() data: LineViewerData | null = null;
+    @Input() data: LineViewerData<Date> | null = null;
 
     private elementRef = inject(ElementRef);
     private plotterService = inject(LinePlotterService);
@@ -35,15 +37,17 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     private svgElement: SVGSVGElement | null = null;
     private resizeObserver: ResizeObserver | null = null;
     private resizeTimeout: number | null = null;
-    private selectedOption: LineAccessor | null = null;
+    private selectedOption: LineAccessor<Date> | null = null;
     private destroy$ = new Subject<void>();
+    private hasInitialized = false;
 
     series: SeriesWithEntity[] = [];
     isLoading = false;
     selectedMetric: string = '';
-    optionsList: Array<[string, LineAccessor]> = [];
+    optionsList: Array<[string, LineAccessor<Date>]> = [];
     showDataPointMarkers = false;
-    protected useLogScale = false;
+    scaling: Scaling = Scaling.LINEAR;
+    readonly Scaling = Scaling;
 
     get allSeriesVisible(): boolean {
         return this.series.length > 0 && this.series.every(s => s.entity?.isVisible?.() ?? false);
@@ -56,6 +60,11 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     ngOnChanges(changes: SimpleChanges) {
         if (changes['data'] && this.data) {
             this.optionsList = Array.from(this.data.getOptions().entries());
+            if (!this.hasInitialized && this.optionsList.length > 0) {
+                this.hasInitialized = true;
+                this.selectedMetric = this.optionsList[0][0];
+                this.onOptionSelected(this.selectedMetric);
+            }
         }
     }
 
@@ -77,10 +86,6 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
 
     ngAfterViewInit() {
         const chartContainer = this.elementRef.nativeElement.querySelector('.chart-container');
-        if (this.optionsList.length > 0) {
-            this.selectedMetric = this.optionsList[0][0];
-            this.onOptionSelected(this.selectedMetric);
-        }
         this.resizeObserver = new ResizeObserver(() => {
             if (this.resizeTimeout !== null) {
                 clearTimeout(this.resizeTimeout);
@@ -116,7 +121,8 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         this.redrawChart();
     }
 
-    toggleLogScale() {
+    onScalingChange(newScaling: Scaling) {
+        this.scaling = newScaling;
         this.redrawChart();
     }
 
@@ -134,7 +140,7 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         this.onSeriesToggle();
     }
 
-    private setSeriesFromMap(seriesMap: Map<LineableEntity, DataSeries>) {
+    private setSeriesFromMap(seriesMap: Map<LineableEntity, DataSeries<Date>>) {
         const previousVisibility = new Map(this.series.map(s => [s.entity, s.entity?.isVisible?.() ?? false]));
         this.series = Array.from(seriesMap.entries()).map(([entity, ds]) => ({
             ...ds,
@@ -144,28 +150,36 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
             const previousState = previousVisibility.get(s.entity);
             s.entity?.setVisible?.(previousState ?? true);
         });
-
+        this.sortSeriesByLastValue();
         this.cdr.markForCheck();
+    }
+
+    private getLastValue(series: SeriesWithEntity): number | null {
+        if (!series.values || series.values.length === 0) {
+            return null;
+        }
+        const lastPoint = series.values[series.values.length - 1];
+        return lastPoint?.y ?? null;
+    }
+
+    private sortSeriesByLastValue(): void {
+        this.series.sort((a, b) => {
+            const lastValueA = this.getLastValue(a);
+            const lastValueB = this.getLastValue(b);
+            if (lastValueA === null && lastValueB === null) return 0;
+            if (lastValueA === null) return 1;
+            if (lastValueB === null) return -1;
+            return lastValueB - lastValueA;
+        });
     }
 
     private redrawChart() {
         if (this.svgElement) {
             this.svgElement.remove();
         }
-        let visibleSeries = this.series.filter(s => s.entity?.isVisible?.() ?? false);
-        
-        if (this.useLogScale) {
-            visibleSeries = visibleSeries.map(series => ({
-                ...series,
-                values: series.values.map(point => ({
-                    x: point.x,
-                    y: point.y > 0 ? parseFloat(Math.log10(point.y).toFixed(2)) : 0
-                }))
-            }));
-        }
-        
+        const visibleSeries = this.series.filter(s => s.entity?.isVisible?.() ?? false);
         const chartContainer = this.elementRef.nativeElement.querySelector('.chart-container');
-        this.svgElement = this.plotterService.redrawChart(visibleSeries, chartContainer, this.showDataPointMarkers);
+        this.svgElement = this.plotterService.redrawChart(visibleSeries, chartContainer, this.showDataPointMarkers, this.scaling);
         if (chartContainer && this.svgElement) {
             chartContainer.appendChild(this.svgElement);
         } else {

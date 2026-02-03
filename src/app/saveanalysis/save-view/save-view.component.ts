@@ -12,15 +12,18 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
+import { Vic3SaveSeriesData } from '../../../app/lineviewer/model/Vic3SaveSeriesData';
 import { Country } from '../../../model/vic/Country';
 import { GoodCategory } from '../../../model/vic/enum/GoodCategory';
 import { Vic3Save } from '../../../model/vic/Vic3Save';
-import { GoodsViewMode } from '../../../ui/GoodViewMode';
 import { Vic3MapViewModeProvider } from '../../../services/configuration/Vic3MapViewModeProvider';
 import { Vic3TableColumnProvider } from '../../../services/configuration/Vic3TableColumnProvider';
 import { PersistenceService } from '../../../services/PersistanceService';
+import { GoodsViewMode } from '../../../ui/GoodViewMode';
 import { LabeledAndIconed } from '../../../ui/LabeledAndIconed';
 import { SideNavContentProvider } from '../../../ui/SideNavContentProvider';
+import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
+import { LineViewerData } from '../../lineviewer/model/LineViewerData';
 import { MapService } from '../../map.service';
 import { SaveSaverService } from '../../save-saver.service';
 import { SlabMapViewComponent } from '../../slab-map-view/slab-map-view.component';
@@ -29,9 +32,6 @@ import { TableComponent } from '../../vic3-country-table/vic3-country-table.comp
 import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
 import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
 import { SaveFileNameDialogComponent } from '../save-filename-dialog.component';
-import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
-import { LineViewerData } from '../../lineviewer/model/LineViewerData';
-import { Vic3SaveSeriesData } from '../../../app/lineviewer/model/Vic3SaveSeriesData';
 
 @Component({
     selector: 'app-save-view',
@@ -64,7 +64,7 @@ export class SaveViewComponent implements OnDestroy {
     goodsViewMode = GoodsViewMode.BALANCE;
     selectedGoodsCategory: GoodCategory = GoodCategory.INDUSTRIAL;
     availableGoodsCategories: GoodCategory[] = Object.values(GoodCategory);
-    seriesData: LineViewerData | null = null;
+    seriesData: LineViewerData<Date> | null = null;
 
     geoJsonFetcher = () => this.mapService.fetchVic3GeoJson(true);
     colorConfigProviders: ColorConfigProvider[] = [];
@@ -99,7 +99,7 @@ export class SaveViewComponent implements OnDestroy {
 
     private initializeSeriesData(): void {
         if (this.activeSave) {
-            this.seriesData = new Vic3SaveSeriesData(this.activeSave);
+            this.seriesData = Vic3SaveSeriesData.fromSaves([this.activeSave]);
         }
     }
 

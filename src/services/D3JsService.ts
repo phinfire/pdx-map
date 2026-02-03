@@ -10,34 +10,30 @@ export class D3JsService {
         return '"Titillium Web", sans-serif';
     }
 
-    findClosestPoint(
-        data: Array<{ x?: number; dev?: number; y?: number; value?: number }>,
+    findClosestDataPoint<X, Y>(
+        data: Array<{ x: X; y: Y }>,
         mouseX: number,
         mouseY: number,
-        xScale: d3.ScaleLinear<number, number>,
-        yScale: d3.ScaleLinear<number, number>,
+        xScale: (value: X) => number,
+        yScale: (value: Y) => number,
         threshold: number = 30
-    ): any | null {
+    ) {
         let closestPoint: any = null;
         let minDistance = Infinity;
 
         data.forEach(point => {
-            const xVal = point.x ?? point.dev;
-            const yVal = point.y ?? point.value;
+            const xVal = point.x;
+            const yVal = point.y;
             if (xVal === undefined || yVal === undefined) return;
-
             const pixelX = xScale(xVal);
             const pixelY = yScale(yVal);
-            const distance = Math.sqrt(
-                Math.pow(pixelX - mouseX, 2) + Math.pow(pixelY - mouseY, 2)
-            );
+            const distance = Math.sqrt(Math.pow(pixelX - mouseX, 2) + Math.pow(pixelY - mouseY, 2));
 
             if (distance < threshold && distance < minDistance) {
                 minDistance = distance;
                 closestPoint = point;
             }
         });
-
         return closestPoint;
     }
 
@@ -81,8 +77,8 @@ export class D3JsService {
             .style('font-family', this.getFont());
     }
 
-    calculateLabelBackground(
-        textElement: SVGTextElement,
+    calculateLabelBackground<T extends SVGTextElement = SVGTextElement>(
+        textElement: T,
         padding: { x: number; y: number } = { x: 4, y: 2 }
     ): { x: number; y: number; width: number; height: number } {
         const bbox = textElement.getBBox();

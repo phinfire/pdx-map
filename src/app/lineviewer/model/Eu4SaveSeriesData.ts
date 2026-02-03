@@ -35,7 +35,7 @@ class CountryEntity implements LineableEntity {
 }
 
 @Injectable({ providedIn: 'root' })
-export class Eu4SaveSeriesData implements LineViewerData {
+export class Eu4SaveSeriesData implements LineViewerData<Date> {
 
     private apiService = inject(SkanderbegProxyService);
 
@@ -68,7 +68,7 @@ export class Eu4SaveSeriesData implements LineViewerData {
         this.playerData$ = this.apiService.getPlayerData();
     }
 
-    private buildSeriesMap(valueAccessor: (countryFacade: CountryDataFacade) => Array<{ year: number; value: any }>): Observable<Map<LineableEntity, DataSeries>> {
+    private buildSeriesMap(valueAccessor: (countryFacade: CountryDataFacade) => Array<{ year: number; value: any }>): Observable<Map<LineableEntity, DataSeries<Date>>> {
         return forkJoin(this.playerData$).pipe(
             map(allDumps => {
                 this.allDumps = allDumps;
@@ -96,17 +96,17 @@ export class Eu4SaveSeriesData implements LineViewerData {
     private buildSeriesForEntities(
         entities: LineableEntity[],
         valueAccessor: (countryFacade: CountryDataFacade) => Array<{ year: number; value: any }>
-    ): Map<LineableEntity, DataSeries> {
-        const seriesMap = new Map<LineableEntity, DataSeries>();
+    ): Map<LineableEntity, DataSeries<Date>> {
+        const seriesMap = new Map<LineableEntity, DataSeries<Date>>();
         entities.forEach((entity) => {
             const countryEntity = entity as any;
             const countryFacade = countryEntity.getCountryFacade();
             const timeSeries = valueAccessor(countryFacade);
-            const series: DataSeries = {
+            const series: DataSeries<Date> = {
                 name: entity.getName(),
                 color: entity.getColor(),
                 values: timeSeries.map(point => ({
-                    x: point.year,
+                    x: new Date(point.year, 0, 1),
                     y: typeof point.value === 'number' ? point.value : 0
                 }))
             };
@@ -119,7 +119,7 @@ export class Eu4SaveSeriesData implements LineViewerData {
         return this.entities ?? [];
     }
 
-    getOptions(): Map<string, LineAccessor> {
+    getOptions(): Map<string, LineAccessor<Date>> {
         return this.options;
     }
 }

@@ -61,7 +61,7 @@ export class MegaCampaignComponent {
 
     user2Ruler: Map<DiscordUser, CustomRulerFile> = new Map();
     currentView: VIEW = VIEW.ASSIGNMENT_TABLE;
-    seriesData: LineViewerData | null = null;
+    seriesData: LineViewerData<Date> | null = null;
 
     private cachedColumns: Map<number, TableColumn<StartAssignment>[]> = new Map();
 
@@ -80,8 +80,8 @@ export class MegaCampaignComponent {
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(campaigns => {
                 this.campaign = campaigns[0];
-                this.saveSaver.getSaveFileByIdentifier$(this.campaign.getVic3SaveIdentifiersInChronologicalOrder()[0]).subscribe(save => {
-                    this.seriesData = new Vic3SaveSeriesData(save);
+                this.saveSaver.getSaveFileByIdentifier$(this.campaign.getVic3SaveIdentifiersInChronologicalOrder()[2]).subscribe(save => {
+                    this.seriesData = Vic3SaveSeriesData.fromSaves([save]);
                 });
             });
         combineLatest([this.assignmentService.allAssignments$, this.ck3Service.initializeCK3()])

@@ -43,6 +43,10 @@ export class MegaCampaign {
     }
 
     getVic3SaveIdentifiersInChronologicalOrder() {
-        return ["cceb9db2-7f3c-4d59-8775-4aaa6bacafd9"];
+        return ["7084c6ef-8165-4b1b-8be0-c69b0557b825", // 36
+            "0b1d6c77-37fb-4308-861a-7929fc98e776", //  76
+            "cdd91f98-b124-4d50-831c-472a5df6b54f", // 88
+            "cceb9db2-7f3c-4d59-8775-4aaa6bacafd9"]
+            ;
     }
 }

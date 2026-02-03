@@ -5,6 +5,7 @@ import { LineableEntity } from "./LineableEntity";
 import { LineAccessor } from "./LineAccessor";
 import { LineViewerData } from "./LineViewerData";
 import { DataSeries } from "./DataSeries";
+import { CurveBuffer } from "../../../model/vic/CurveBuffer";
 
 class CountryEntity implements LineableEntity {
     private visible = true;
@@ -32,9 +33,9 @@ class CountryEntity implements LineableEntity {
     }
 }
 
-export class Vic3SaveSeriesData implements LineViewerData {
+export class Vic3SaveSeriesData implements LineViewerData<Date> {
 
-    private entities: LineableEntity[] | null = null;
+    private entities: LineableEntity[] = [];
     private save: Vic3Save | null = null;
 
     private readonly options = new Map([
@@ -44,38 +45,71 @@ export class Vic3SaveSeriesData implements LineViewerData {
         ["Avg. Standard of Living", () => of(this.buildSeriesForCurve((country: Country) => country.getAvgSolTrendCurve()))],
     ]);
 
-    private buildSeriesForCurve(curveAccessor: (country: Country) => any, valueTransformation: (value: number) => number = (value) => value): Map<LineableEntity, DataSeries> {
-        const seriesMap = new Map<LineableEntity, DataSeries>();
-        
+    private buildSeriesForCurve(curveAccessor: (country: Country) => CurveBuffer, valueTransformation: (value: number) => number = (value) => value) {
+        const seriesMap = new Map<LineableEntity, DataSeries<Date>>();
+
         this.entities?.forEach((entity) => {
             const countryEntity = entity as any;
             const country = countryEntity.getCountry();
-            const curve = curveAccessor(country); 
-            const dateValuePairs = curve.getDateValuePairs();
-            const yearMap = new Map<number, number>();
-            dateValuePairs.forEach((pair: any) => {
-                const year = pair.date.getFullYear();
-                yearMap.set(year, pair.value);
-            });
-            const values = Array.from(yearMap.entries())
-                .sort((a, b) => a[0] - b[0])
-                .map(([year, value]) => ({
-                    x: year,
-                    y: parseFloat(valueTransformation(value).toFixed(2))
-                }));
-            
-            const series: DataSeries = {
+            const curve = curveAccessor(country);
+            const tuples = this.getMonthlyMedianTuples(curve.getDateValuePairs(), valueTransformation);
+
+            const series: DataSeries<Date> = {
                 name: entity.getName(),
                 color: entity.getColor(),
-                values: values
+                values: tuples
             };
             seriesMap.set(entity, series);
         });
-        
+
         return seriesMap;
     }
 
-    constructor(save: Vic3Save) {
+    private getMonthlyMedianTuples(
+        dateValuePairs: Array<{ date: Date; value: number }>,
+        valueTransformation: (value: number) => number
+    ): Array<{ x: Date; y: number }> {
+        const monthlyGroups = new Map<string, number[]>();
+        dateValuePairs.forEach(({ date, value }) => {
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const transformedValue = valueTransformation(value);
+
+            if (!monthlyGroups.has(monthKey)) {
+                monthlyGroups.set(monthKey, []);
+            }
+            monthlyGroups.get(monthKey)!.push(transformedValue);
+        });
+        const tuples: Array<{ x: Date; y: number }> = [];
+        const sortedMonths = Array.from(monthlyGroups.entries()).sort();
+
+        sortedMonths.forEach(([monthKey, values]) => {
+            const median = this.calculateMedian(values);
+            const [year, month] = monthKey.split('-');
+            const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+            tuples.push({ x: date, y: median });
+        });
+        return tuples;
+    }
+
+    private calculateMedian(values: number[]): number {
+        if (values.length === 0) return 0;
+
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+
+        if (sorted.length % 2 === 0) {
+            return (sorted[mid - 1] + sorted[mid]) / 2;
+        }
+
+        return sorted[mid];
+    }
+
+    static fromSaves(saves: Vic3Save[], tag2color: Map<string, string> = new Map()): Vic3SaveSeriesData {
+        const targetSave = saves[saves.length - 1];
+        return new Vic3SaveSeriesData(targetSave);
+    }
+
+    private constructor(save: Vic3Save) {
         this.save = save;
         this.entities = this.buildEntities(save);
         return this;
@@ -84,7 +118,7 @@ export class Vic3SaveSeriesData implements LineViewerData {
     private buildEntities(save: Vic3Save): LineableEntity[] {
         const countries = save.getCountries(false);
         const colors = this.generateColors(countries.length);
-        
+
         return countries.map((country, index) => {
             return new CountryEntity(country, colors[index]);
         });
@@ -99,15 +133,15 @@ export class Vic3SaveSeriesData implements LineViewerData {
             const hue = (colors.length * 360 / count) % 360;
             colors.push(`hsl(${hue}, 70%, 50%)`);
         }
-        
+
         return colors.slice(0, count);
     }
 
     getLineableEntities(): LineableEntity[] {
-        return this.entities ?? [];
+        return this.entities;
     }
 
-    getOptions(): Map<string, LineAccessor> {
+    getOptions(): Map<string, LineAccessor<Date>> {
         return this.options;
     }
 }

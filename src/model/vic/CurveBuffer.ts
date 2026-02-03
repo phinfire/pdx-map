@@ -57,6 +57,7 @@ export class CurveBuffer {
             sampleDate.setDate(sampleDate.getDate() - daysAgo);
             pairs.push({ date: sampleDate, value: this.values[sampleIndex] });
         }
-        return pairs;
+        // TODO: remove. this is sadly necessary until all the saves have been refreshed
+        return pairs.sort((a, b) => a.date.getTime() - b.date.getTime());
     }
 }
