@@ -14,6 +14,7 @@ import { LineAccessor } from './model/LineAccessor';
 import { LineViewerData } from './model/LineViewerData';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSliderModule } from '@angular/material/slider';
 import { Scaling } from './Scaling';
 
 interface SeriesWithEntity extends DataSeries<Date> {
@@ -22,7 +23,7 @@ interface SeriesWithEntity extends DataSeries<Date> {
 
 @Component({
     selector: 'app-lineviewer',
-    imports: [MatCheckboxModule, MatToolbarModule, MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule, FormsModule, MatButtonToggleModule, MatTooltipModule],
+    imports: [MatCheckboxModule, MatToolbarModule, MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule, FormsModule, MatButtonToggleModule, MatTooltipModule, MatSliderModule],
     templateUrl: './lineviewer.component.html',
     styleUrl: './lineviewer.component.scss',
 })
@@ -48,6 +49,11 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     showDataPointMarkers = false;
     scaling: Scaling = Scaling.LINEAR;
     readonly Scaling = Scaling;
+
+    rangeMin: number = 0;
+    rangeMax: number = 100;
+    private allDataMinDate: Date | null = null;
+    private allDataMaxDate: Date | null = null;
 
     get allSeriesVisible(): boolean {
         return this.series.length > 0 && this.series.every(s => s.entity?.isVisible?.() ?? false);
@@ -126,6 +132,23 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         this.redrawChart();
     }
 
+    onRangeChange() {
+        this.redrawChart();
+    }
+
+    formatDateLabel(value: number): string {
+        if (!this.allDataMinDate || !this.allDataMaxDate) {
+            return '';
+        }
+
+        const minMs = this.allDataMinDate.getTime();
+        const maxMs = this.allDataMaxDate.getTime();
+        const rangeMs = maxMs - minMs;
+        const date = new Date(minMs + (rangeMs * value / 100));
+
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    }
+
     getVisibility(series: SeriesWithEntity): boolean {
         return series.entity?.isVisible?.() ?? false;
     }
@@ -150,8 +173,44 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
             const previousState = previousVisibility.get(s.entity);
             s.entity?.setVisible?.(previousState ?? true);
         });
+        this.updateDateRange();
         this.sortSeriesByLastValue();
         this.cdr.markForCheck();
+    }
+
+    private updateDateRange() {
+        let minDate: Date | null = null;
+        let maxDate: Date | null = null;
+
+        this.series.forEach(s => {
+            s.values.forEach(point => {
+                if (!minDate || point.x < minDate) minDate = point.x;
+                if (!maxDate || point.x > maxDate) maxDate = point.x;
+            });
+        });
+
+        this.allDataMinDate = minDate;
+        this.allDataMaxDate = maxDate;
+        this.rangeMin = 0;
+        this.rangeMax = 100;
+    }
+
+    private getFilteredSeries(): SeriesWithEntity[] {
+        if (!this.allDataMinDate || !this.allDataMaxDate) {
+            return this.series;
+        }
+
+        const minMs = this.allDataMinDate.getTime();
+        const maxMs = this.allDataMaxDate.getTime();
+        const rangeMs = maxMs - minMs;
+
+        const filterMinDate = new Date(minMs + (rangeMs * this.rangeMin / 100));
+        const filterMaxDate = new Date(minMs + (rangeMs * this.rangeMax / 100));
+
+        return this.series.map(s => ({
+            ...s,
+            values: s.values.filter(point => point.x >= filterMinDate && point.x <= filterMaxDate)
+        }));
     }
 
     private getLastValue(series: SeriesWithEntity): number | null {
@@ -177,7 +236,8 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         if (this.svgElement) {
             this.svgElement.remove();
         }
-        const visibleSeries = this.series.filter(s => s.entity?.isVisible?.() ?? false);
+        const filteredSeries = this.getFilteredSeries();
+        const visibleSeries = filteredSeries.filter(s => s.entity?.isVisible?.() ?? false);
         const chartContainer = this.elementRef.nativeElement.querySelector('.chart-container');
         this.svgElement = this.plotterService.redrawChart(visibleSeries, chartContainer, this.showDataPointMarkers, this.scaling);
         if (chartContainer && this.svgElement) {

@@ -23,6 +23,7 @@
     @include mat.form-field-overrides((outlined-label-text-color:var(--text-color),
         ));
     --header-font: "Permanent Marker", cursive;
+    --warning-color: rgb(255, 193, 7);
 }
 
 h2 {

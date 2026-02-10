@@ -1,24 +1,26 @@
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, of, catchError, from, shareReplay } from 'rxjs';
+import { map, Observable, of, catchError, from, shareReplay, Subject, forkJoin } from 'rxjs';
 import { MegaCampaign } from './MegaCampaign';
-import { CustomRulerFile } from '../../services/gamedata/CustomRulerFile';
-import { Trait } from '../../model/ck3/Trait';
-import { TraitType } from '../../model/ck3/enum/TraitType';
 import { HttpClient } from '@angular/common/http';
 import { DiscordAuthenticationService } from '../../services/discord-auth.service';
 import { PdxFileService } from '../../services/pdx-file.service';
 import { Eu4Save } from '../../model/games/eu4/Eu4Save';
+import { LegacyCampaignService } from './legacy-campaign.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class MegaService {
-    private readonly legacyCampaignsEndpoint = `${DiscordAuthenticationService.getApiUrl()}/megacampaigns`;
+    private readonly campaignsEndpoint = `http://localhost:8085`;
 
     private pdxFileService = inject(PdxFileService);
     private authService = inject(DiscordAuthenticationService);
+    private legacyCampaignService = inject(LegacyCampaignService);
 
     private lastEu4Save$: Observable<Eu4Save>;
+
+    private campaignsCacheInvalidated$ = new Subject<void>();
+    private combinedCampaigns$?: Observable<MegaCampaign[]>;
 
     constructor(private http: HttpClient) {
         const eu4SaveURL = "https://codingafterdark.de/pdx-map-gamedata/Convert2_local.eu4";
@@ -53,31 +55,107 @@ export class MegaService {
     }
 
     getAvailableCampaigns$(): Observable<MegaCampaign[]> {
-        return this.http.get<any[]>(this.legacyCampaignsEndpoint).pipe(
-            map(campaigns =>
-                campaigns
-                    .filter(c =>
-                        c &&
-                        c.name &&
-                        c.regionDeadlineDate &&
-                        c.startDeadlineDate &&
-                        c.firstSessionDate
-                    )
-                    .map(c =>
-                        new MegaCampaign(
-                            c.name,
-                            this.utcToLocalDate(c.regionDeadlineDate),
-                            this.utcToLocalDate(c.startDeadlineDate),
-                            this.utcToLocalDate(c.firstSessionDate),
-                            c.firstEu4Session ? this.utcToLocalDate(c.firstEu4Session) : null
-                        )
-                    )
-            ),
-            catchError(() => {
-                console.warn(
-                    'MegaService: Failed to fetch campaigns from backend, returning empty list'
-                );
-                return of([]);
+        if (!this.combinedCampaigns$) {
+            this.combinedCampaigns$ = forkJoin({
+                legacy: this.legacyCampaignService.getLegacyCampaigns$(),
+                new: this.http.get<any[]>(`${this.campaignsEndpoint}/campaigns`).pipe(
+                    catchError(() => of([]))
+                )
+            }).pipe(
+                map(({ legacy, new: newCampaigns }) => {
+                    const newTransformed = newCampaigns
+                        .map(c => this.transformNewApiCampaign(c))
+                        .filter((c): c is MegaCampaign => c !== null);
+
+                    const campaignMap = new Map<string, MegaCampaign>();
+
+                    legacy.forEach((c: MegaCampaign) => {
+                        campaignMap.set(c.getName(), c);
+                    });
+
+                    newTransformed.forEach(c => {
+                        campaignMap.set(c.getName(), c);
+                    });
+
+                    return Array.from(campaignMap.values());
+                }),
+                shareReplay(1)
+            );
+        }
+        return this.combinedCampaigns$;
+    }
+
+    private transformNewApiCampaign(campaign: any): MegaCampaign | null {
+        try {
+            if (!campaign || !campaign.name) {
+                return null;
+            }
+            const regionDeadlineDate = campaign.signupDeadlineDate ? new Date(campaign.signupDeadlineDate) : new Date(0);
+            const startDeadlineDate = campaign.pickDeadline ? new Date(campaign.pickDeadline) : new Date(0);
+            const firstSessionDate = campaign.firstSessionDate ? new Date(campaign.firstSessionDate) : new Date(0);
+
+            const result = new MegaCampaign(
+                campaign.name,
+                regionDeadlineDate,
+                startDeadlineDate,
+                firstSessionDate,
+                campaign.firstEu4SessionDate ? new Date(campaign.firstEu4SessionDate) : null,
+                campaign.id
+            );
+            return result;
+        } catch (error) {
+            console.error('Error transforming campaign:', error);
+            return null;
+        }
+    }
+
+    private invalidateCampaignsCache(): void {
+        this.combinedCampaigns$ = undefined;
+        this.legacyCampaignService.invalidateCache();
+        this.campaignsCacheInvalidated$.next();
+    }
+
+    createCampaign$(name: string): Observable<any> {
+        const headers = this.authService.getAuthenticationHeader();
+        return this.http.post<any>(`${this.campaignsEndpoint}/campaigns?name=${encodeURIComponent(name)}`, {}, { headers }).pipe(
+            map(result => {
+                this.invalidateCampaignsCache();
+                return result;
+            })
+        );
+    }
+
+    updateCampaign$(id: number, updates: any): Observable<any> {
+        console.log('Updating campaign with ID', id, 'and updates', updates);
+        const headers = this.authService.getAuthenticationHeader();
+        return this.http.patch<any>(`${this.campaignsEndpoint}/campaigns/${id}`, updates, { headers }).pipe(
+            map(result => {
+                this.invalidateCampaignsCache();
+                return result;
+            })
+        );
+    }
+
+    updateCampaignDates$(id: number, updates: { signupDeadlineDate?: Date; pickDeadline?: Date; firstSessionDate?: Date }): Observable<any> {
+        const isoUpdates: any = {};
+        if (updates.signupDeadlineDate) {
+            isoUpdates.signupDeadlineDate = updates.signupDeadlineDate.toISOString();
+        }
+        if (updates.pickDeadline) {
+            isoUpdates.pickDeadline = updates.pickDeadline.toISOString();
+        }
+        if (updates.firstSessionDate) {
+            isoUpdates.firstSessionDate = updates.firstSessionDate.toISOString();
+        }
+        return this.updateCampaign$(id, isoUpdates);
+    }
+
+    deleteCampaign$(id: number): Observable<any> {
+        const headers = this.authService.getAuthenticationHeader();
+        return this.http.delete<any>(`${this.campaignsEndpoint}/campaigns/${id}`, { headers }).pipe(
+            map(result => {
+                this.invalidateCampaignsCache();
+                return result;
             })
         );
     }
@@ -91,48 +169,11 @@ export class MegaService {
         );
     }
 
-    getIllegalityReport(ruler: CustomRulerFile) {
-        const negativeTraits = ruler.traits.filter(t => t.getRulerDesignerCost() < 0);
-        const incompatibleTraits = this.getIncomptaibleTraits(ruler.traits);
-        const illegalTraits = this.getIllegalTraits(ruler.traits);
-        let message = "";
-        if (negativeTraits.length > 1) {
-            message += `You have ${negativeTraits.length} negative traits: ${negativeTraits.map(t => t.getName()).join(", ")}, but only 1 is allowed.`;
-        }
-        if (illegalTraits.length > 0) {
-            message += `The following traits are not allowed: ${illegalTraits.map(t => t.getName()).join(", ")}. `;
-        }
-        if (incompatibleTraits.length > 1) {
-            message += `You have ${incompatibleTraits.length} inheritable traits: ${incompatibleTraits.map(t => t.getName()).join(", ")}, but only 1 is allowed.`;
-        }
-        return message;
-    }
-
-    private getIllegalTraits(traits: Trait[]) {
-        return traits.filter(t => t.getTraitType() === TraitType.LIFESTYLE ||
-            (t.getName().endsWith("3") && t.getName().indexOf("education") == -1 && t.getRulerDesignerCost() > 0));
-    }
-
-    private getIncomptaibleTraits(traits: Trait[]) {
-        const inheritableTraits = traits.filter(t => t.getTraitType() === TraitType.INHERITABLE && t.getRulerDesignerCost() > 0);
-        if (inheritableTraits.length <= 1) {
-            return [];
-        }
-        return inheritableTraits;
-    }
-
-
     getLastEu4Save() {
         return this.lastEu4Save$;
     }
 
     getFlagUrl(nationKey: string): string {
         return `https://codingafterdark.de/mc/ideas/flags/${nationKey}.webp`;
-    }
-
-    private utcToLocalDate(dateString: string | Date): Date {
-        const date = new Date(dateString);
-        const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-        return localDate;
     }
 }

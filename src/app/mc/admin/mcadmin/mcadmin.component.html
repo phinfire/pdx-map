@@ -4,7 +4,9 @@
             <h3>Campaigns</h3>
         </mat-panel-title>
     </mat-expansion-panel-header>
-    <app-mcadmin-campaigneditor></app-mcadmin-campaigneditor>
+    <div class="expansion-content">
+        <app-mcadmin-campaigneditor></app-mcadmin-campaigneditor>
+    </div>
 </mat-expansion-panel>
 <mat-expansion-panel class="assignments expansion-panel" [expanded]="true">
     <mat-expansion-panel-header>
@@ -12,5 +14,7 @@
             <h3>Region Assignments</h3>
         </mat-panel-title>
     </mat-expansion-panel-header>
-    <app-mcadmin-startassignments></app-mcadmin-startassignments>
+    <div class="expansion-content">
+        <app-mcadmin-startassignments></app-mcadmin-startassignments>
+    </div>
 </mat-expansion-panel>

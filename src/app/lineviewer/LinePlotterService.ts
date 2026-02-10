@@ -221,24 +221,27 @@ export class LinePlotterService {
         height: number,
         scaling: Scaling
     ): d3.ScaleLinear<number, number> | d3.ScaleLogarithmic<number, number> | d3.ScalePower<number, number> {
-        const minValue = yExtent[0] - yPadding;
+        const minValue = Math.max(0, yExtent[0] - yPadding);
         const maxValue = yExtent[1] + yPadding;
 
         switch (scaling) {
             case Scaling.LOGARITHMIC:
                 return d3.scaleLog()
                     .domain([Math.max(minValue, 1), maxValue])
-                    .range([height, 0]) as any;
-            case Scaling.POWER:
+                    .range([height, 0])
+                    .nice();
+            case Scaling.SQRT:
                 return d3.scalePow()
                     .exponent(0.5)
                     .domain([minValue, maxValue])
-                    .range([height, 0]) as any;
+                    .range([height, 0])
+                    .nice();
             case Scaling.LINEAR:
             default:
                 return d3.scaleLinear()
                     .domain([minValue, maxValue])
-                    .range([height, 0]);
+                    .range([height, 0])
+                    .nice();
         }
     }
 

@@ -1,8 +1,4 @@
 <mat-toolbar>
-    <!--<button mat-icon-button class="menu-button" aria-label="Menu" (click)="drawer.toggle()">
-        <mat-icon>menu</mat-icon>
-    </button>
--->
     <div class="spacer">
         <div class="hello-wrapper">
             @if (authService.loggedInUser$ | async; as user) {
@@ -61,28 +57,4 @@
     </div>
 </mat-toolbar>
 
-<mat-drawer-container class="container" autosize>
-    <mat-drawer #drawer class="sidenav" mode="side" [opened]="false">
-        <div class="sidenav-top">
-            <div class="panorama">
-                <button mat-icon-button (click)="setTheme(false); toggleAnimation('day')"
-                    class="theme-button day-button" [class.sink]="currentTheme === 'day'" [class.hover-effect]="true">
-                    <mat-icon>wb_sunny</mat-icon>
-                </button>
-                <button mat-icon-button (click)="setTheme(true); toggleAnimation('night')"
-                    class="theme-button night-button" [class.sink]="currentTheme === 'night'"
-                    [class.hover-effect]="true">
-                    <mat-icon>nightlight</mat-icon>
-                </button>
-            </div>
-        </div>
-        <div class="sidenav-content">
-            @for (action of sideNavContentProvider.actions$ | async; track action.label) {
-            <button mat-button (click)="action.action()">{{ action.label }}</button>
-            <mat-divider></mat-divider>
-            }
-        </div>
-    </mat-drawer>
-    <router-outlet></router-outlet>
-
-</mat-drawer-container>
+<router-outlet></router-outlet>

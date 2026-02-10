@@ -1,27 +1,63 @@
 <div class="left">
-    <mat-list>
+    <mat-action-list>
         @if ((campaigns$ | async); as campaigns) {
         @for (campaign of campaigns; track campaign.getName()) {
-        <mat-list-item>
-            <mat-icon matListItemIcon>folder</mat-icon>
-            <div matListItemTitle>{{campaign.getName()}}</div>
-            <div matListItemLine class="date-line">
-                <mat-icon matTooltip="Region Deadline" class="material-symbols-outlined date-icon">public</mat-icon>
-                <span>{{campaign.getRegionDeadlineDate() | date: 'short'}}</span>
-            </div>
-            <div matListItemLine class="date-line">
-                <mat-icon matTooltip="Start Deadline" class="material-symbols-outlined date-icon">schedule</mat-icon>
-                <span>{{campaign.getStartDeadlineDate() | date: 'short'}}</span>
-            </div>
-            <div matListItemLine class="date-line">
-                <mat-icon matTooltip="First Session" class="material-symbols-outlined date-icon">castle</mat-icon>
-                <span>{{campaign.getFirstSessionDate() | date: 'short'}}</span>
-            </div>
-        </mat-list-item>
+        <button mat-list-item [class.selected]="selectedCampaign === campaign" (click)="selectCampaign(campaign)">
+            {{campaign.getName()}}
+        </button>
         }
         }
-    </mat-list>
+    </mat-action-list>
+    <div class="button-bar">
+        <button mat-flat-button color="primary" (click)="addExampleCampaign()">
+            <mat-icon>add</mat-icon>
+            Add Example Campaign
+        </button>
+    </div>
 </div>
 <div class="right">
+    @if (selectedCampaign) {
+    <div class="campaign-details">
+        <div class="header-with-actions">
+            <h2>{{selectedCampaign.getName()}}</h2>
+            <div class="title-button-panel">
+                <button mat-icon-button (click)="renameCampaign(selectedCampaign)"
+                    [disabled]="!selectedCampaign.canBeEdited()" matTooltip="Rename Campaign">
+                    <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="deleteSelectedCampaign()" [disabled]="!selectedCampaign.canBeEdited()"
+                    matTooltip="Delete Campaign">
+                    <mat-icon>delete</mat-icon>
+                </button>
+            </div>
+        </div>
 
+        <div class="unsaved-alert" [class.hidden]="!hasUnsavedChanges()">
+            <mat-icon>warning</mat-icon>
+            <span>Changes have not been saved to the server yet</span>
+            <button mat-icon-button (click)="resetEditors()" matTooltip="Discard changes">
+                <mat-icon>restart_alt</mat-icon>
+            </button>
+        </div>
+        <div class="date-wrapper">
+
+            <app-date-time-picker title="Region Deadline:" [(ngModel)]="editingDates.regionDeadline"
+                (ngModelChange)="onDateTimeChange()">
+            </app-date-time-picker>
+
+            <app-date-time-picker title="Start Deadline:" [(ngModel)]="editingDates.startDeadline"
+                (ngModelChange)="onDateTimeChange()">
+            </app-date-time-picker>
+
+            <app-date-time-picker title="First Session:" [(ngModel)]="editingDates.firstSession"
+                (ngModelChange)="onDateTimeChange()">
+            </app-date-time-picker>
+        </div>
+
+        <button mat-flat-button color="primary" (click)="updateCampaignDates()" class="save-btn">
+            <mat-icon>save</mat-icon>
+            Save Dates
+        </button>
+    </div>
+    }
 </div>

@@ -5,40 +5,6 @@
         ));
 }
 
-.discord {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
-.avatar-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0.5em;
-}
-
-.avatar-img {
-    clip-path: circle(50% at 50% 50%);
-    object-fit: cover;
-    width: 64px;
-    height: 64px;
-}
-
-.name-container {
-    width: 75%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5em;
-}
-
-.profile-name {
-    text-align: center;
-    width: 100%;
-}
-
 .login-button {
     display: flex !important;
     flex-direction: row-reverse !important;

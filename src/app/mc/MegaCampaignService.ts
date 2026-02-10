@@ -36,7 +36,8 @@ export class MegaCampaignService {
                                 this.utcToLocalDate(c.regionDeadlineDate),
                                 this.utcToLocalDate(c.startDeadlineDate),
                                 this.utcToLocalDate(c.firstSessionDate),
-                                c.firstEu4Session ? this.utcToLocalDate(c.firstEu4Session) : null
+                                c.firstEu4Session ? this.utcToLocalDate(c.firstEu4Session) : null,
+                                c.id                // API response includes id
                             )
                         ),
                     shareReplay({ bufferSize: 1, refCount: true })

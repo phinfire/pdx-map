@@ -9,10 +9,6 @@
     justify-content: center;
     align-items: center;
     $toolbar-font: "Permanent Marker", cursive;
-
-    @include mat.sidenav-overrides((container-text-color: var(--text-color),
-            content-background-color: var(--void-color)));
-
     mat-toolbar {
         @include mat.toolbar-overrides((container-background-color: var(--header-background-color),
                 container-text-color: var(--text-color),
@@ -101,78 +97,6 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-}
-
-.sidenav {
-    padding: 1em;
-    padding-top: 2em;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.sidenav-top {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-bottom: 4em;
-}
-
-.sidenav-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.panorama {
-    width: 6em;
-    height: 2em;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-sizing: border-box;
-    background: linear-gradient(to right,
-            var(--light-theme-background-color) 0%,
-            var(--light-theme-background-color) 40%,
-            var(--light-theme-background-color) 35%,
-            var(--dark-theme-background-color) 65%,
-            var(--dark-theme-background-color) 60%,
-            var(--dark-theme-background-color) 100%);
-    border: 1px solid var(--faded-border-color);
-}
-
-.theme-button {
-    transition: transform 0.5s ease, opacity 0.5s ease;
-
-    mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-        line-height: 20px;
-    }
-}
-
-.theme-button.day-button mat-icon {
-    color: var(--light-theme-text-color);
-}
-
-.theme-button.night-button mat-icon {
-    color: var(--dark-theme-text-color);
-}
-
-.sink {
-    transform: translateY(50px);
-    opacity: 0;
-}
-
-::ng-deep .mat-drawer-content {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    height: 100%;
-    overflow: hidden;
-    background-color: var(--void-color);
 }
 
 .hello-wrapper {

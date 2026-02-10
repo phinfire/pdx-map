@@ -11,10 +11,19 @@
                 </mat-select>
             </mat-form-field>
             <span class="toolbar-spacer"></span>
-            <mat-button-toggle-group [value]="scaling" (change)="onScalingChange($event.value)" name="scalingMode" aria-label="Scaling Mode">
+            <div class="range-slider-container">
+                <span>Range:</span>
+                <mat-slider min="0" max="100" discrete [displayWith]="formatDateLabel.bind(this)">
+                    <input matSliderStartThumb [(ngModel)]="rangeMin" (input)="onRangeChange()" />
+                    <input matSliderEndThumb [(ngModel)]="rangeMax" (input)="onRangeChange()" />
+                </mat-slider>
+            </div>
+            <span>Y-Scale:</span>
+            <mat-button-toggle-group [value]="scaling" (change)="onScalingChange($event.value)" name="scalingMode"
+                aria-label="Scaling Mode">
                 <mat-button-toggle [value]="Scaling.LINEAR" matTooltip="Linear scale">LIN</mat-button-toggle>
                 <mat-button-toggle [value]="Scaling.LOGARITHMIC" matTooltip="Logarithmic scale">LOG</mat-button-toggle>
-                <mat-button-toggle [value]="Scaling.POWER" matTooltip="Power scale">POW</mat-button-toggle>
+                <mat-button-toggle [value]="Scaling.SQRT" matTooltip="Square root scale">SQRT</mat-button-toggle>
             </mat-button-toggle-group>
             <mat-checkbox [(ngModel)]="showDataPointMarkers" (change)="toggleDataPointMarkers()">
                 Show sample markers

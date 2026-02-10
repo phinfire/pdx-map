@@ -18,6 +18,11 @@ html {
             filled-with-label-container-padding-bottom: 0em,
             container-height: 1em,
         ));
+
+    @include mat.datepicker-overrides((calendar-container-background-color: var(--background-color),
+            toggle-icon-color: var(--text-color)));
+    @include mat.timepicker-overrides((container-background-color: var(--header-background-color),
+        ));
 }
 
 :root {
@@ -70,7 +75,7 @@ html {
     --faded-border-color: rgba(0, 0, 0, 0.2);
     --faded-text-color: rgba(0, 0, 0, 0.5);
     --void-color: rgb(240, 240, 240);
-    --header-background-color: rgb(240,240,255);
+    --header-background-color: rgb(240, 240, 255);
 
     --mat-sys-surface: var(--light-theme-background-color);
     --mat-sys-on-surface: var(--light-theme-text-color);
@@ -103,6 +108,9 @@ html {
 
     --mat-sys-surface: var(--dark-theme-background-color);
     --mat-sys-on-surface: var(--dark-theme-text-color);
+
+    @include mat.datepicker-overrides((calendar-container-background-color: rgb(32, 32, 32),
+        ));
 }
 
 .mat-mdc-form-field {
@@ -128,4 +136,8 @@ html {
 
 .mat-mdc-option.mdc-list-item--selected {
     background-color: var(--faded-border-color) !important;
+}
+
+.mat-timepicker-toggle button {
+    color: var(--text-color) !important;
 }

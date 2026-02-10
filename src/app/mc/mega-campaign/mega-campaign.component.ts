@@ -23,11 +23,12 @@ import { StartAssignment } from '../StartAssignment';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import JSZip from 'jszip';
 import { TableColumnBuilder } from '../../../util/table/TableColumnBuilder';
-import { MatDivider, MatDividerModule } from '@angular/material/divider';
 import { SaveSaverService } from '../../save-saver.service';
 import { LineViewerData } from '../../lineviewer/model/LineViewerData';
 import { Vic3SaveSeriesData } from '../../lineviewer/model/Vic3SaveSeriesData';
 import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
+import { MegaUtilService } from '../../../services/megacampaign/mega-util.service';
+import { MatDividerModule } from '@angular/material/divider';
 
 enum VIEW {
     ASSIGNMENT_TABLE,
@@ -53,6 +54,7 @@ export class MegaCampaignComponent {
     ck3Service = inject(CK3Service);
     destroyRef = inject(DestroyRef);
     saveSaver = inject(SaveSaverService);
+    megaUtils = inject(MegaUtilService);
 
     campaign: MegaCampaign | null = null;
     userAssignment: StartAssignment | null = null;
@@ -107,7 +109,7 @@ export class MegaCampaignComponent {
                             const ruler = ck3Service.parseCustomCharacter(json, ck3);
                             if (ruler) {
                                 this.user2Ruler.set(a.user, ruler);
-                                const message = this.megaService.getIllegalityReport(ruler);
+                                const message = this.megaUtils.getIllegalityReport(ruler);
                                 if (message.length > 0) {
                                     console.log(`Illegality report for ${a.user.getName()}: ${message}`);
                                 }
@@ -157,7 +159,7 @@ export class MegaCampaignComponent {
                     if (!ruler) {
                         return '';
                     }
-                    const illegalityReport = this.megaService.getIllegalityReport(ruler);
+                    const illegalityReport = this.megaUtils.getIllegalityReport(ruler);
                     return illegalityReport.length === 0 ? '✅' : '❌';
                 })
                 .isSortable(false)

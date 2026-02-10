@@ -86,3 +86,16 @@
     position: relative;
     min-height: 100px;
 }
+
+.range-slider-container {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    min-height: 56px;
+    width: 50%;
+    
+    mat-slider {
+        flex: 1;
+        margin: 0 16px;
+    }
+}

@@ -1,16 +1,102 @@
+@use '@angular/material' as mat;
 
 :host {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    @include mat.list-overrides((list-item-container-shape: 0.5em,
+        ));
 }
-.date-line {
+
+.left {
+    display: flex;
+    flex-direction: column;
+    padding-right: 2em;
+    justify-content: space-between;
+}
+
+.right {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 16px;
+    border-left: 1px solid var(--text-color);
+    padding-left: 4em;
+}
+
+.campaign-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    h2 {
+        margin: 0 0 1em 0;
+        padding: 0;
+    }
+}
+
+.header-with-actions {
+    display: flex;
+    align-items: center;
+    gap: 2em;
+
+    h2 {
+        margin: 0;
+    }
+}
+
+.title-button-panel {
+    gap: 0em;
+}
+
+button {
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.unsaved-alert {
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 12px;
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 4px;
+    color: var(--text-color);
+    transition: opacity 0.3s ease;
+    opacity: 1;
+
+    mat-icon {
+        color: var(--warning-color);
+    }
+
+    span {
+        flex: 1;
+    }
+
+    button {
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    &.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
 }
 
-.date-icon {
-    font-size: 20px;
-    height: 20px;
-    width: 20px;
+.date-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    width: fit-content;
+    margin-bottom: 5em;
+}
+
+.button-bar {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    flex-wrap: wrap;
 }
