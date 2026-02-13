@@ -44,7 +44,15 @@ export class LegacyCampaignService {
                     new Date(c.startDeadlineDate),
                     new Date(c.firstSessionDate),
                     c.firstEu4Session ? new Date(c.firstEu4Session) : null,
-                    undefined
+                    undefined,
+                    c.ck3MapGeoJsonUrl || '',
+                    c.nationsJsonUrl || 'https://codingafterdark.de/mc/ideas/flags/nations.json',
+                    c.signupsOpen || false,
+                    c.moderatorIds || [],
+                    c.ck3LobbiesIdentifiers || [],
+                    c.eu4LobbiesIdentifiers || [],
+                    c.vic3LobbyIdentifiers || [],
+                    c.possibleKeys || []
                 )
             );
     }

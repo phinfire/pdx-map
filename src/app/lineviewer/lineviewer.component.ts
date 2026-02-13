@@ -16,6 +16,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSliderModule } from '@angular/material/slider';
 import { Scaling } from './Scaling';
+import { gaussianSmooth } from '../../utils';
 
 interface SeriesWithEntity extends DataSeries<Date> {
     entity: LineableEntity;
@@ -47,11 +48,13 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     selectedMetric: string = '';
     optionsList: Array<[string, LineAccessor<Date>]> = [];
     showDataPointMarkers = false;
+    deltaViewMode = false;
     scaling: Scaling = Scaling.LINEAR;
     readonly Scaling = Scaling;
 
     rangeMin: number = 0;
     rangeMax: number = 100;
+    gaussianRadius: number = 0;
     private allDataMinDate: Date | null = null;
     private allDataMaxDate: Date | null = null;
 
@@ -61,6 +64,16 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
 
     get someSeriesVisible(): boolean {
         return this.series.some(s => s.entity?.isVisible?.() ?? false);
+    }
+
+    get gaussianRadiusMax(): number {
+        const filteredSeries = this.getFilteredSeries();
+        const visibleSeries = filteredSeries.filter(s => s.entity?.isVisible?.() ?? false);
+        if (visibleSeries.length === 0) {
+            return 10;
+        }
+        const maxLength = Math.max(...visibleSeries.map(s => s.values.length));
+        return Math.max(1, Math.floor(maxLength / 5));
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -123,10 +136,6 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         this.redrawChart();
     }
 
-    toggleDataPointMarkers() {
-        this.redrawChart();
-    }
-
     onScalingChange(newScaling: Scaling) {
         this.scaling = newScaling;
         this.redrawChart();
@@ -140,13 +149,15 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         if (!this.allDataMinDate || !this.allDataMaxDate) {
             return '';
         }
-
         const minMs = this.allDataMinDate.getTime();
         const maxMs = this.allDataMaxDate.getTime();
         const rangeMs = maxMs - minMs;
         const date = new Date(minMs + (rangeMs * value / 100));
-
         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    }
+
+    formatGaussianRadiusLabel(value: number): string {
+        return value.toFixed(1);
     }
 
     getVisibility(series: SeriesWithEntity): boolean {
@@ -232,19 +243,41 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
         });
     }
 
-    private redrawChart() {
+    protected redrawChart() {
         if (this.svgElement) {
             this.svgElement.remove();
         }
         const filteredSeries = this.getFilteredSeries();
         const visibleSeries = filteredSeries.filter(s => s.entity?.isVisible?.() ?? false);
+        if (!visibleSeries.some(s => s.values.length > 0)) {
+            return;
+        }
         const chartContainer = this.elementRef.nativeElement.querySelector('.chart-container');
-        this.svgElement = this.plotterService.redrawChart(visibleSeries, chartContainer, this.showDataPointMarkers, this.scaling);
+        const seriesToUse = this.deltaViewMode ? visibleSeries.map(s => this.toGrowthSeries(s)) : visibleSeries;
+        const smoothedSeries = seriesToUse.map(s => ({
+            ...s,
+            values: this.gaussianRadius > 0 ? gaussianSmooth(s.values, Math.round(this.gaussianRadius)) : s.values
+        }));
+        this.svgElement = this.plotterService.redrawChart(smoothedSeries, chartContainer, this.showDataPointMarkers, this.scaling);
         if (chartContainer && this.svgElement) {
             chartContainer.appendChild(this.svgElement);
         } else {
             throw new Error('Chart container or SVG element is null');
         }
     }
-}
 
+    private toGrowthSeries(series: SeriesWithEntity): SeriesWithEntity {
+        const growthValues = series.values.map((point, index) => {
+            const previousY = index > 0 ? series.values[index - 1].y : point.y;
+            const growth = point.y / previousY - 1;
+            return {
+                x: point.x,
+                y: growth
+            };
+        });
+        return {
+            ...series,
+            values: growthValues
+        };
+    }
+}

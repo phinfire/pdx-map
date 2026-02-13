@@ -11,11 +11,10 @@
                 </mat-select>
             </mat-form-field>
             <span class="toolbar-spacer"></span>
-            <div class="range-slider-container">
-                <span>Range:</span>
-                <mat-slider min="0" max="100" discrete [displayWith]="formatDateLabel.bind(this)">
-                    <input matSliderStartThumb [(ngModel)]="rangeMin" (input)="onRangeChange()" />
-                    <input matSliderEndThumb [(ngModel)]="rangeMax" (input)="onRangeChange()" />
+            <div class="slider-control">
+                <span>Smoothing:</span>
+                <mat-slider min="0" [max]="gaussianRadiusMax" discrete style="width: 150px;" [displayWith]="formatGaussianRadiusLabel.bind(this)">
+                    <input matSliderThumb [(ngModel)]="gaussianRadius" (input)="redrawChart()"/>
                 </mat-slider>
             </div>
             <span>Y-Scale:</span>
@@ -25,9 +24,21 @@
                 <mat-button-toggle [value]="Scaling.LOGARITHMIC" matTooltip="Logarithmic scale">LOG</mat-button-toggle>
                 <mat-button-toggle [value]="Scaling.SQRT" matTooltip="Square root scale">SQRT</mat-button-toggle>
             </mat-button-toggle-group>
-            <mat-checkbox [(ngModel)]="showDataPointMarkers" (change)="toggleDataPointMarkers()">
+            <mat-checkbox [(ngModel)]="deltaViewMode" (change)="redrawChart()">
+                Yearly Growth Rate
+            </mat-checkbox>
+            <mat-checkbox [(ngModel)]="showDataPointMarkers" (change)="redrawChart()">
                 Show sample markers
             </mat-checkbox>
+        </mat-toolbar>
+        <mat-toolbar class="chart-toolbar">
+            <div class="range-slider-container">
+                <span>Range:</span>
+                <mat-slider min="0" max="100" discrete [displayWith]="formatDateLabel.bind(this)">
+                    <input matSliderStartThumb [(ngModel)]="rangeMin" (input)="onRangeChange()" />
+                    <input matSliderEndThumb [(ngModel)]="rangeMax" (input)="onRangeChange()" />
+                </mat-slider>
+            </div>
         </mat-toolbar>
         <div class="chart-container">
             @if (isLoading) {

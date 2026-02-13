@@ -44,9 +44,7 @@ export class LinePlotterService {
         const yExtent = d3.extent(allData, d => d.y) as [number, number];
 
         const ONE_YEAR_MS = 365.25 * 24 * 60 * 60 * 1000;
-        const yPadding =
-            (yExtent[1] - yExtent[0]) * 0.05;
-
+        const yPadding = yExtent[0] >= 0 ? 0 : (yExtent[1] - yExtent[0]) * 0.05;
         const xDomain: [Date, Date] = [
             new Date(xExtent[0].getTime() - ONE_YEAR_MS),
             new Date(xExtent[1].getTime() + ONE_YEAR_MS)
@@ -221,7 +219,7 @@ export class LinePlotterService {
         height: number,
         scaling: Scaling
     ): d3.ScaleLinear<number, number> | d3.ScaleLogarithmic<number, number> | d3.ScalePower<number, number> {
-        const minValue = Math.max(0, yExtent[0] - yPadding);
+        const minValue = yExtent[0] - yPadding;
         const maxValue = yExtent[1] + yPadding;
 
         switch (scaling) {

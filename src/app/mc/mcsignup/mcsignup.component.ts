@@ -1,4 +1,4 @@
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Component, inject, ViewChild, OnInit, HostListener, Input } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -20,6 +20,7 @@ import { MegaCampaign } from '../MegaCampaign';
 import { MegaService } from '../MegaService';
 import { MCSignupService } from '../MCSignupService';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
+import { getMeshStatistics } from '../../../util/geometry/threeGeometry';
 
 export interface TableItem {
     key: string;
@@ -43,13 +44,13 @@ export class MCSignupComponent implements OnInit {
     private _snackBar = inject(MatSnackBar);
 
     megaService = inject(MegaService);
+    activatedRoute = inject(ActivatedRoute);
 
     displayedColumns: string[] = ['index', 'value'];
     dataSource: TableItem[] = [];
     subsToUnsubFromOnDestroy: any[] = [];
     aggregatedSignupsCount: number = 0;
     perRegionSignups: Map<string, number> = new Map();
-
     private key2Value: Map<string, number> = new Map();
 
     get tableDataSource(): TableItem[] {
@@ -102,17 +103,14 @@ export class MCSignupComponent implements OnInit {
     ) { }
 
     goBack() {
-        // Remove '/signup' from the end of the current URL and navigate
         const url = this.router.url.replace(/\/signup$/, '');
         this.router.navigateByUrl(url);
     }
 
     ngOnInit() {
         if (!this.campaign) {
-            this.megaService.getCurrentCampaign$().subscribe(campaign => {
-                if (this.campaign || campaign === null) {
-                    return;
-                }
+            const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
+            this.megaService.getCampaignOfDefault$(campaignId).subscribe(campaign => {
                 this.campaign = campaign;
             });
         }
@@ -174,7 +172,7 @@ export class MCSignupComponent implements OnInit {
             const reprKey = data.clusterManager.getCluster2Keys(key)[0];
             this.polygonSelectComponent.setLockedState(reprKey, true, false);
         }
-        const stats = this.signupAssetsService.getMeshStatistics(data.meshes);
+        const stats = getMeshStatistics(data.meshes);
         console.info(`Loaded ${stats.meshCount} polygon meshes with ${stats.triangleCount.toLocaleString()} triangles total`);
     }
 

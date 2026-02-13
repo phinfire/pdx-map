@@ -1,21 +1,15 @@
 <div class="date-time-title">
     <h3>{{ title }}</h3>
 </div>
-
 <div class="date-time-group">
-
     <mat-form-field appearance="outline" class="time-field">
         <input matInput [matTimepicker]="timePicker" [ngModel]="value" (ngModelChange)="onValueChange($event)">
-
         <mat-timepicker-toggle matIconSuffix [for]="timePicker"></mat-timepicker-toggle>
         <mat-timepicker #timePicker></mat-timepicker>
     </mat-form-field>
-
     <mat-form-field appearance="outline" class="date-field">
         <input matInput [matDatepicker]="picker" [ngModel]="value" (ngModelChange)="onValueChange($event)">
-
         <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
     </mat-form-field>
-
 </div>

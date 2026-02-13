@@ -26,20 +26,15 @@
 .campaign-details {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-
-    h2 {
-        margin: 0 0 1em 0;
-        padding: 0;
-    }
+    gap: 3em;
 }
 
 .header-with-actions {
     display: flex;
     align-items: center;
     gap: 2em;
-
-    h2 {
+    font-family: var(--header-font-family);
+    h1 {
         margin: 0;
     }
 }
@@ -55,48 +50,23 @@ button {
     }
 }
 
-.unsaved-alert {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background-color: rgba(255, 193, 7, 0.1);
-    border: 1px solid rgba(255, 193, 7, 0.3);
-    border-radius: 4px;
-    color: var(--text-color);
-    transition: opacity 0.3s ease;
-    opacity: 1;
-
-    mat-icon {
-        color: var(--warning-color);
-    }
-
-    span {
-        flex: 1;
-    }
-
-    button {
-        margin-left: auto;
-        flex-shrink: 0;
-    }
-
-    &.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-}
-
-.date-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5em;
-    width: fit-content;
-    margin-bottom: 5em;
-}
-
 .button-bar {
     display: flex;
     gap: 8px;
     padding: 16px;
     flex-wrap: wrap;
+}
+
+.campaign-details-content {
+    display: flex;
+    flex-direction: row;
+    gap: 4em;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    width: fit-content;
+    margin-bottom: 5em;
 }

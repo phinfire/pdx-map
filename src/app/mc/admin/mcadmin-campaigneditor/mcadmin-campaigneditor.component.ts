@@ -35,17 +35,19 @@ export class MCAdminCampaigneditorComponent {
         })
     );
     selectedCampaign: MegaCampaign | null = null;
-    editingDates = {
+    editingCampaignData = {
         regionDeadline: new Date(),
         startDeadline: new Date(),
-        firstSession: new Date()
+        firstSession: new Date(),
+        ck3MapGeoJsonUrl: '',
+        nationsJsonUrl: ''
     };
 
-    addExampleCampaign(): void {
+    createNewCampaign(): void {
         const now = new Date();
-        const regionDeadline = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        const startDeadline = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-        const firstSession = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000);
+        const regionDeadline = new Date(now.getTime());
+        const startDeadline = new Date(now.getTime());
+        const firstSession = new Date(now.getTime());
 
         this.megaService.createCampaign$(`Example Campaign ${Date.now()}`).subscribe({
             next: (result) => {
@@ -74,10 +76,12 @@ export class MCAdminCampaigneditorComponent {
 
     selectCampaign(campaign: MegaCampaign): void {
         this.selectedCampaign = campaign;
-        this.editingDates = {
+        this.editingCampaignData = {
             regionDeadline: new Date(campaign.getRegionDeadlineDate()),
             startDeadline: new Date(campaign.getStartDeadlineDate()),
-            firstSession: new Date(campaign.getFirstSessionDate())
+            firstSession: new Date(campaign.getFirstSessionDate()),
+            ck3MapGeoJsonUrl: campaign.getCk3MapGeoJsonUrl() || '',
+            nationsJsonUrl: campaign.getNationsJsonUrl() || ''
         };
     }
 
@@ -128,9 +132,9 @@ export class MCAdminCampaigneditorComponent {
 
         const campaignId = this.selectedCampaign.getId()!;
         const updatePayload = {
-            signupDeadlineDate: this.editingDates.regionDeadline,
-            pickDeadline: this.editingDates.startDeadline,
-            firstSessionDate: this.editingDates.firstSession
+            signupDeadlineDate: this.editingCampaignData.regionDeadline,
+            pickDeadline: this.editingCampaignData.startDeadline,
+            firstSessionDate: this.editingCampaignData.firstSession
         };
 
         this.megaService.updateCampaignDates$(campaignId, updatePayload).subscribe({
@@ -147,19 +151,41 @@ export class MCAdminCampaigneditorComponent {
         });
     }
 
-    hasUnsavedChanges(): boolean {
-        return this.selectedCampaign != null && (
-            this.selectedCampaign.getRegionDeadlineDate().getTime() !== this.editingDates.regionDeadline.getTime() ||
-            this.selectedCampaign.getStartDeadlineDate().getTime() !== this.editingDates.startDeadline.getTime() ||
-            this.selectedCampaign.getFirstSessionDate().getTime() !== this.editingDates.firstSession.getTime()
-        );
+    updateCampaignUrls(): void {
+        if (!this.selectedCampaign || !this.selectedCampaign.getId()) {
+            return;
+        }
+
+        const campaignId = this.selectedCampaign.getId()!;
+        const updatePayload: any = {};
+        
+        if (this.editingCampaignData.ck3MapGeoJsonUrl) {
+            updatePayload.ck3MapGeoJsonUrl = this.editingCampaignData.ck3MapGeoJsonUrl;
+        }
+        if (this.editingCampaignData.nationsJsonUrl) {
+            updatePayload.nationsJsonUrl = this.editingCampaignData.nationsJsonUrl;
+        }
+
+        if (Object.keys(updatePayload).length === 0) {
+            return;
+        }
+
+        this.megaService.updateCampaign$(campaignId, updatePayload).subscribe({
+            next: () => {
+                this.campaigns$ = this.megaService.getAvailableCampaigns$().pipe(
+                    tap(campaigns => {
+                        const updatedCampaign = campaigns.find(c => c.getId() === campaignId);
+                        if (updatedCampaign) {
+                            this.selectedCampaign = updatedCampaign;
+                        }
+                    })
+                );
+            }
+        });
     }
 
     deleteSelectedCampaign(): void {
-        if (!this.selectedCampaign) {
-            return;
-        }
-        if (confirm(`Delete campaign "${this.selectedCampaign.getName()}"?`)) {
+        if (this.selectedCampaign && confirm(`Delete campaign "${this.selectedCampaign.getName()}"?`)) {
             const campaignId = this.selectedCampaign.getId();
             if (!campaignId) {
                 return;
@@ -173,17 +199,15 @@ export class MCAdminCampaigneditorComponent {
         }
     }
 
-    resetEditors(): void {
+    onDateTimeChange(): void {
         if (this.selectedCampaign) {
-            this.selectCampaign(this.selectedCampaign);
+            this.updateCampaignDates();
         }
     }
 
-    onDateTimeChange(): void {
-        console.log("Editing dates changed:" + [
-            this.editingDates.regionDeadline.toISOString(),
-            this.editingDates.startDeadline.toISOString(),
-            this.editingDates.firstSession.toISOString()
-        ].join('\n'));
+    onUrlChange(): void {
+        if (this.selectedCampaign) {
+            this.updateCampaignUrls();
+        }
     }
 }

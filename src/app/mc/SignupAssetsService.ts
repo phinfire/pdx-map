@@ -45,6 +45,7 @@ export class SignupAssetsService {
 
     private _dataSubject = new BehaviorSubject<SignupAssetsData | null>(null);
     private _loadingSubject = new BehaviorSubject<boolean>(false);
+    private _loadMapData$: Observable<SignupAssetsData> | null = null;
 
     private fetchRegionConfig$(): Observable<RegionConfig> {
         return new Observable<RegionConfig>(observer => {
@@ -63,8 +64,6 @@ export class SignupAssetsService {
             map(config => config.regions.map(region => region.name))
         );
     }
-
-    private _loadMapData$: Observable<SignupAssetsData> | null = null;
 
     loadMapData$(): Observable<SignupAssetsData> {
         const currentData = this._dataSubject.value;
@@ -318,33 +317,7 @@ export class SignupAssetsService {
         return new RegionConfig(regions, keysToExclude);
     }
 
-    isDataReady(): boolean {
-        const data = this._dataSubject.value;
-        return data !== null && data.geoJsonData && data.ck3SaveData && data.meshes && data.configProviders.length > 0;
-    }
-
     getCurrentData(): SignupAssetsData | null {
         return this._dataSubject.value;
-    }
-
-    isLoading(): boolean {
-        return this._loadingSubject.value;
-    }
-
-    getMeshStatistics(meshes: (THREE.Mesh & { targetZ?: number, locked?: boolean, interactive?: boolean, key: string })[]): { meshCount: number, triangleCount: number } {
-        const totalTriangles = meshes.reduce((total, polygon) => {
-            const geometry = polygon.geometry;
-            if (geometry.index) {
-                return total + (geometry.index.count / 3);
-            } else {
-                const positions = geometry.attributes['position'] as THREE.BufferAttribute;
-                return total + (positions.count / 3);
-            }
-        }, 0);
-
-        return {
-            meshCount: meshes.length,
-            triangleCount: Math.floor(totalTriangles)
-        };
     }
 }

@@ -1,4 +1,5 @@
 import { Component, inject, Input, ViewChild, AfterViewInit } from '@angular/core';
+    import { ActivatedRoute } from '@angular/router';
 import { MegaCampaign } from '../MegaCampaign';
 import { PolygonSelectComponent } from '../../viewers/polygon-select/polygon-select.component';
 import { TimerComponent } from '../../timer/timer.component';
@@ -20,6 +21,7 @@ import { AssignmentService } from '../AssignmentService';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
+import { MegaService } from '../MegaService';
 
 @Component({
     selector: 'app-mcstartselect',
@@ -38,6 +40,8 @@ export class McstartselectComponent implements AfterViewInit {
     fileService = inject(PdxFileService);
     assignmentService = inject(AssignmentService);
     snackBar = inject(MatSnackBar);
+    megaService = inject(MegaService);
+    activatedRoute = inject(ActivatedRoute);
 
     @Input() campaign: MegaCampaign | null = null;
     @Input() assignment!: StartAssignment;
@@ -70,6 +74,12 @@ export class McstartselectComponent implements AfterViewInit {
     }
 
     ngOnInit() {
+        if (!this.campaign) {
+            const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
+            this.megaService.getCampaignOfDefault$(campaignId).subscribe(campaign => {
+                this.campaign = campaign;
+            });
+        }
         if (!this.assignment || !this.assignment.region_key) {
             console.error('McstartselectComponent: No assignment or region key provided');
             return;
@@ -100,14 +110,6 @@ export class McstartselectComponent implements AfterViewInit {
                         }
                     })
                 });
-            }
-        }
-    }
-
-    ngOnChanges(changes: any) {
-        if (changes.assignment) {
-            if (!(this.assignment && this.prepackagedLocalAssignment && this.assignment.start_key !== this.prepackagedLocalAssignment.start_key)) {
-
             }
         }
     }

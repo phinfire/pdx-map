@@ -9,7 +9,7 @@
         }
     </mat-action-list>
     <div class="button-bar">
-        <button mat-flat-button color="primary" (click)="addExampleCampaign()">
+        <button mat-flat-button color="primary" (click)="createNewCampaign()">
             <mat-icon>add</mat-icon>
             Add Example Campaign
         </button>
@@ -19,7 +19,7 @@
     @if (selectedCampaign) {
     <div class="campaign-details">
         <div class="header-with-actions">
-            <h2>{{selectedCampaign.getName()}}</h2>
+            <h1>{{selectedCampaign.getName()}}</h1>
             <div class="title-button-panel">
                 <button mat-icon-button (click)="renameCampaign(selectedCampaign)"
                     [disabled]="!selectedCampaign.canBeEdited()" matTooltip="Rename Campaign">
@@ -31,33 +31,35 @@
                 </button>
             </div>
         </div>
+        <div class="campaign-details-content">
+            <div class="wrapper">
 
-        <div class="unsaved-alert" [class.hidden]="!hasUnsavedChanges()">
-            <mat-icon>warning</mat-icon>
-            <span>Changes have not been saved to the server yet</span>
-            <button mat-icon-button (click)="resetEditors()" matTooltip="Discard changes">
-                <mat-icon>restart_alt</mat-icon>
-            </button>
+                <app-date-time-picker title="Region Deadline:" [(ngModel)]="editingCampaignData.regionDeadline"
+                    (ngModelChange)="onDateTimeChange()">
+                </app-date-time-picker>
+
+                <app-date-time-picker title="Start Deadline:" [(ngModel)]="editingCampaignData.startDeadline"
+                    (ngModelChange)="onDateTimeChange()">
+                </app-date-time-picker>
+
+                <app-date-time-picker title="First Session:" [(ngModel)]="editingCampaignData.firstSession"
+                    (ngModelChange)="onDateTimeChange()">
+                </app-date-time-picker>
+            </div>
+            <div class="wrapper">
+                <mat-form-field appearance="outline">
+                    <mat-label>CK3 Map GeoJSON URL</mat-label>
+                    <input matInput type="url" [(ngModel)]="editingCampaignData.ck3MapGeoJsonUrl" 
+                        (ngModelChange)="onUrlChange()" placeholder="https://...">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Nations JSON URL</mat-label>
+                    <input matInput type="url" [(ngModel)]="editingCampaignData.nationsJsonUrl" 
+                        (ngModelChange)="onUrlChange()" placeholder="https://...">
+                </mat-form-field>
+            </div>
         </div>
-        <div class="date-wrapper">
-
-            <app-date-time-picker title="Region Deadline:" [(ngModel)]="editingDates.regionDeadline"
-                (ngModelChange)="onDateTimeChange()">
-            </app-date-time-picker>
-
-            <app-date-time-picker title="Start Deadline:" [(ngModel)]="editingDates.startDeadline"
-                (ngModelChange)="onDateTimeChange()">
-            </app-date-time-picker>
-
-            <app-date-time-picker title="First Session:" [(ngModel)]="editingDates.firstSession"
-                (ngModelChange)="onDateTimeChange()">
-            </app-date-time-picker>
-        </div>
-
-        <button mat-flat-button color="primary" (click)="updateCampaignDates()" class="save-btn">
-            <mat-icon>save</mat-icon>
-            Save Dates
-        </button>
     </div>
     }
 </div>

@@ -10,6 +10,7 @@ import { ResourcemapComponent } from './resourcemap/resourcemap.component';
 import { SaveViewSplashComponent } from './saveanalysis/save-view-splash/save-view-splash.component';
 import { SavefileadminComponent } from './savefileadmin/savefileadmin.component';
 import { WelcomeComponent } from './welcome/welcome.component';
+import { MCSignupComponent } from './mc/mcsignup/mcsignup.component';
 
 export const routes: Routes = [
     {
@@ -21,9 +22,11 @@ export const routes: Routes = [
             { path: 'save/:game/:saveId', component: SaveViewSplashComponent },
             { path: 'map', component: ResourcemapComponent },
             { path: 'stonks', component: CampaignLinesComponent },
-            { path: 'mc', component: MegaCampaignComponent },
             { path: 'mc/admin', component: MCAdminComponent },
             { path: 'mc/modder', component: MegaModderComponent },
+            { path: 'mc/:campaignId', component: MegaCampaignComponent },
+            { path: 'mc', component: MegaCampaignComponent },
+            { path: 'mc/signup', component: MCSignupComponent },
             { path: 'jomini', component: JominiKioskComponent },
             { path: 'bloc', component: AlliancehelperComponent },
             { path: 'db', component: SavefileadminComponent },

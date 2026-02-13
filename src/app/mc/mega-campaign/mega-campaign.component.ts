@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Title } from '@angular/platform-browser';
+import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { DiscordUser } from '../../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
@@ -55,6 +56,7 @@ export class MegaCampaignComponent {
     destroyRef = inject(DestroyRef);
     saveSaver = inject(SaveSaverService);
     megaUtils = inject(MegaUtilService);
+    activatedRoute = inject(ActivatedRoute);
 
     campaign: MegaCampaign | null = null;
     userAssignment: StartAssignment | null = null;
@@ -67,7 +69,6 @@ export class MegaCampaignComponent {
 
     private cachedColumns: Map<number, TableColumn<StartAssignment>[]> = new Map();
 
-
     goBackToPlayerList = () => this.setView(VIEW.ASSIGNMENT_TABLE);
     goToStartSelection = () => this.setView(VIEW.START_SELECTION);
     goToSignup = () => this.setView(VIEW.SIGNUP);
@@ -78,10 +79,11 @@ export class MegaCampaignComponent {
 
     ngOnInit() {
         this.titleService.setTitle('Mega Campaign');
-        this.megaService.getAvailableCampaigns$()
+        const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
+        this.megaService.getCampaignOfDefault$(campaignId)
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(campaigns => {
-                this.campaign = campaigns[0];
+            .subscribe(campaign => {
+                this.campaign = campaign;
                 this.saveSaver.getSaveFileByIdentifier$(this.campaign.getVic3SaveIdentifiersInChronologicalOrder()[2]).subscribe(save => {
                     this.seriesData = Vic3SaveSeriesData.fromSaves([save]);
                 });

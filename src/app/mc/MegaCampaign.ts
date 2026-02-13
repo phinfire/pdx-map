@@ -1,12 +1,58 @@
 
 export class MegaCampaign {
 
-    constructor(private name: string, private regionDeadlineDate: Date, private startDeadlineDate: Date, private firstSessionDate: Date, private firstEu4Session: Date | null, private id?: number) {
-
+    constructor(
+        private name: string,
+        private regionDeadlineDate: Date,
+        private startDeadlineDate: Date,
+        private firstSessionDate: Date,
+        private firstEu4Session: Date | null,
+        private id?: number,
+        private ck3MapGeoJsonUrl: string = '',
+        private nationsJsonUrl: string = '',
+        private signupsOpen: boolean = false,
+        private moderatorIds: number[] = [],
+        private ck3LobbiesIdentifiers: string[] = [],
+        private eu4LobbiesIdentifiers: string[] = [],
+        private vic3LobbyIdentifiers: string[] = [],
+        private possibleKeys: string[] = []
+    ) {
     }
 
     getName() {
         return this.name;
+    }
+
+    getCk3MapGeoJsonUrl(): string {
+        return this.ck3MapGeoJsonUrl;
+    }
+
+    getNationsJsonUrl(): string {
+        return this.nationsJsonUrl;
+    }
+
+    isSignupsOpen(): boolean {
+        return this.signupsOpen;
+    }
+
+    getModeratorIds(): number[] {
+        return this.moderatorIds;
+    }
+
+    getCk3LobbiesIdentifiers(): string[] {
+        return this.ck3LobbiesIdentifiers;
+    }
+
+    getEu4LobbiesIdentifiers(): string[] {
+        return this.eu4LobbiesIdentifiers;
+    }
+
+    getVic3LobbyIdentifiers(): string[] {
+        return this.vic3LobbyIdentifiers;
+    }
+
+    getPossibleKeys(): string[] {
+        return this.possibleKeys;
     }
 
     getRegionDeadlineDate() {

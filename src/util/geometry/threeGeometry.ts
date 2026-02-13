@@ -489,3 +489,20 @@ function hasEdgeOnBoundingBox(feature: any, boundingBox: { minX: number, maxX: n
     }
     return false;
 }
+
+export function getMeshStatistics(meshes: THREE.Mesh[]): { meshCount: number, triangleCount: number } {
+    const totalTriangles = meshes.reduce((total, polygon) => {
+        const geometry = polygon.geometry;
+        if (geometry.index) {
+            return total + (geometry.index.count / 3);
+        } else {
+            const positions = geometry.attributes['position'] as THREE.BufferAttribute;
+            return total + (positions.count / 3);
+        }
+    }, 0);
+
+    return {
+        meshCount: meshes.length,
+        triangleCount: Math.floor(totalTriangles)
+    };
+}

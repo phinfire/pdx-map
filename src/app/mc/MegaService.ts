@@ -63,6 +63,7 @@ export class MegaService {
                 )
             }).pipe(
                 map(({ legacy, new: newCampaigns }) => {
+                    console.log(newCampaigns);
                     const newTransformed = newCampaigns
                         .map(c => this.transformNewApiCampaign(c))
                         .filter((c): c is MegaCampaign => c !== null);
@@ -100,7 +101,15 @@ export class MegaService {
                 startDeadlineDate,
                 firstSessionDate,
                 campaign.firstEu4SessionDate ? new Date(campaign.firstEu4SessionDate) : null,
-                campaign.id
+                campaign.id,
+                campaign.ck3MapGeoJsonUrl || '',
+                campaign.nationsJsonUrl || 'https://codingafterdark.de/mc/ideas/flags/nations.json',
+                campaign.signupsOpen || false,
+                campaign.moderatorIds || [],
+                campaign.ck3LobbiesIdentifiers || [],
+                campaign.eu4LobbiesIdentifiers || [],
+                campaign.vic3LobbyIdentifiers || [],
+                campaign.possibleKeys || []
             );
             return result;
         } catch (error) {
@@ -166,6 +175,12 @@ export class MegaService {
                 ? campaigns.reduce((mostRecent, current) =>
                     current.getFirstSessionDate() > mostRecent.getFirstSessionDate() ? current : mostRecent)
                 : null)
+        );
+    }
+
+    getCampaignOfDefault$(id: string | null): Observable<MegaCampaign> {
+        return this.getAvailableCampaigns$().pipe(
+            map(campaigns => (id ? campaigns.find(c => c.getId() === Number(id)) : null) || campaigns[0])
         );
     }
 
