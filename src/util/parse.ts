@@ -1,17 +1,17 @@
-import { Character } from "../Character";
-import { Ck3Player } from "../Player";
-import { Faith } from "../Faith";
-import { Culture } from "../Culture";
-import { AbstractLandedTitle } from "../title/AbstractLandedTitle";
-import { CK3 } from "../game/CK3";
-import { ICk3Save } from "./ICk3Save";
-import { LandedTitle } from "../title/LandedTitle";
-import { CustomLandedTitle } from "../title/CustomLandedTitle";
-import { RulerTier } from "../RulerTier";
-import { RGB } from "../../../util/RGB";
-import { DynastyHouse } from "../DynastyHouse";
-import { County } from "../County";
-import { Holding } from "../Holding";
+import { Character } from "../model/ck3/Character";
+import { County } from "../model/ck3/County";
+import { Culture } from "../model/ck3/Culture";
+import { DynastyHouse } from "../model/ck3/DynastyHouse";
+import { Faith } from "../model/ck3/Faith";
+import { CK3 } from "../model/ck3/game/CK3";
+import { Holding } from "../model/ck3/Holding";
+import { Ck3Player } from "../model/ck3/Player";
+import { RulerTier } from "../model/ck3/RulerTier";
+import { ICk3Save } from "../model/ck3/save/ICk3Save";
+import { AbstractLandedTitle } from "../model/ck3/title/AbstractLandedTitle";
+import { CustomLandedTitle } from "../model/ck3/title/CustomLandedTitle";
+import { LandedTitle } from "../model/ck3/title/LandedTitle";
+import { RGB } from "./RGB";
 
 export function readPlayers(data: any, characterCreator: (id: string, data: any) => Character | null) {
         const players = [];

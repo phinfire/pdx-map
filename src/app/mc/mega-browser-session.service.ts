@@ -13,7 +13,7 @@ export class MegaBrowserSessionService {
     private megaService = inject(MegaService);
 
     private selectedMegaCampaignSubject = new BehaviorSubject<MegaCampaign | null>(null);
-    public  selectedMegaCampaign$ = this.selectedMegaCampaignSubject.asObservable();
+    public selectedMegaCampaign$ = this.selectedMegaCampaignSubject.asObservable();
 
     constructor() {
         this.megaService.getAvailableCampaigns$()
@@ -37,6 +37,30 @@ export class MegaBrowserSessionService {
                 }
             }),
             map(campaigns => campaigns.find(c => c.getId() === campaignIdNum) || this.selectedMegaCampaignSubject.value),
+            takeUntilDestroyed()
+        );
+    }
+
+    selectPreviousCampaign(): Observable<MegaCampaign | null> {
+        return this.megaService.getAvailableCampaigns$().pipe(
+            map(campaigns => {
+                const currentId = this.selectedMegaCampaignSubject.value?.getId();
+                const index = campaigns.findIndex(c => c.getId() === currentId);
+                return index > 0 ? campaigns[index - 1] : null;
+            }),
+            tap(prev => prev && this.selectedMegaCampaignSubject.next(prev)),
+            takeUntilDestroyed()
+        );
+    }
+
+    selectNextCampaign(): Observable<MegaCampaign | null> {
+        return this.megaService.getAvailableCampaigns$().pipe(
+            map(campaigns => {
+                const currentId = this.selectedMegaCampaignSubject.value?.getId();
+                const index = campaigns.findIndex(c => c.getId() === currentId);
+                return index >= 0 && index < campaigns.length - 1 ? campaigns[index + 1] : null;
+            }),
+            tap(next => next && this.selectedMegaCampaignSubject.next(next)),
             takeUntilDestroyed()
         );
     }

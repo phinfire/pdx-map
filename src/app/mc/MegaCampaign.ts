@@ -72,6 +72,10 @@ export class MegaCampaign {
         return this.firstSessionDate;
     }
 
+    getFirstEu4SessionDate(): Date | null {
+        return this.firstEu4SessionDate;
+    }
+
     getId(): number | undefined {
         return this.id;
     }

@@ -101,15 +101,15 @@ export class MegaService {
                 firstSessionDate,
                 campaign.firstEu4SessionDate ? new Date(campaign.firstEu4SessionDate) : null,
                 campaign.id,
-                campaign.ck3MapGeoJsonUrl || '',
-                campaign.nationsJsonUrl || 'https://codingafterdark.de/mc/ideas/flags/nations.json',
                 campaign.signupsOpen || false,
+                campaign.ck3MapGeoJsonUrl || '',
+                campaign.ck3RegionsConfigUrl || '',
+                campaign.nationsJsonUrl,
                 campaign.moderatorIds || [],
                 campaign.ck3LobbiesIdentifiers || [],
                 campaign.eu4LobbiesIdentifiers || [],
                 campaign.vic3LobbyIdentifiers || [],
-                campaign.possibleKeys || [],
-                campaign.ck3RegionsConfigUrl || ''
+                campaign.possibleKeys || []
             );
             return result;
         } catch (error) {
@@ -144,7 +144,7 @@ export class MegaService {
         );
     }
 
-    updateCampaignDates$(id: number, updates: { signupDeadlineDate?: Date; pickDeadline?: Date; firstSessionDate?: Date }): Observable<any> {
+    updateCampaignDates$(id: number, updates: { signupDeadlineDate?: Date; pickDeadline?: Date; firstSessionDate?: Date; firstEu4SessionDate?: Date }): Observable<any> {
         const isoUpdates: any = {};
         if (updates.signupDeadlineDate) {
             isoUpdates.signupDeadlineDate = updates.signupDeadlineDate.toISOString();
@@ -154,6 +154,9 @@ export class MegaService {
         }
         if (updates.firstSessionDate) {
             isoUpdates.firstSessionDate = updates.firstSessionDate.toISOString();
+        }
+        if (updates.firstEu4SessionDate) {
+            isoUpdates.firstEu4SessionDate = updates.firstEu4SessionDate.toISOString();
         }
         return this.updateCampaign$(id, isoUpdates);
     }

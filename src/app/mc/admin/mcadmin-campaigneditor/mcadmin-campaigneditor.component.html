@@ -45,6 +45,10 @@
                 <app-date-time-picker title="First Session:" [(ngModel)]="editingCampaignData.firstSession"
                     (ngModelChange)="onDateTimeChange()">
                 </app-date-time-picker>
+
+                <app-date-time-picker title="First EU4 Session:" [(ngModel)]="editingCampaignData.firstEu4Session"
+                    (ngModelChange)="onDateTimeChange()">
+                </app-date-time-picker>
             </div>
             <div class="wrapper">
                 <mat-form-field appearance="outline">
@@ -65,6 +69,41 @@
                         (ngModelChange)="onUrlChange()" placeholder="https://...">
                 </mat-form-field>
             </div>
+            <div class="wrapper">
+                <mat-slide-toggle [(ngModel)]="editingCampaignData.signupsOpen" 
+                    (ngModelChange)="onSettingsChange()">
+                    Signups Open
+                </mat-slide-toggle>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Moderator IDs (comma-separated)</mat-label>
+                    <input matInput [(ngModel)]="editingCampaignData.moderatorIds" 
+                        (ngModelChange)="onSettingsChange()" placeholder="123, 456, 789">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>CK3 Lobbies (comma-separated)</mat-label>
+                    <input matInput [(ngModel)]="editingCampaignData.ck3LobbiesIdentifiers" 
+                        (ngModelChange)="onSettingsChange()" placeholder="id1, id2, id3">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>EU4 Lobbies (comma-separated)</mat-label>
+                    <input matInput [(ngModel)]="editingCampaignData.eu4LobbiesIdentifiers" 
+                        (ngModelChange)="onSettingsChange()" placeholder="id1, id2, id3">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Vic3 Lobbies (comma-separated)</mat-label>
+                    <input matInput [(ngModel)]="editingCampaignData.vic3LobbyIdentifiers" 
+                        (ngModelChange)="onSettingsChange()" placeholder="id1, id2, id3">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Possible Keys (comma-separated)</mat-label>
+                    <input matInput [(ngModel)]="editingCampaignData.possibleKeys" 
+                        (ngModelChange)="onSettingsChange()" placeholder="key1, key2, key3">
+                </mat-form-field>
         </div>
     </div>
     }

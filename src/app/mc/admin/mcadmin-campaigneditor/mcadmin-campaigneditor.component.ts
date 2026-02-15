@@ -13,19 +13,22 @@ import { MatTimepickerModule } from '@angular/material/timepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MegaCampaign } from '../../MegaCampaign';
 import { DateTimePickerComponent } from '../../../date-time-picker/date-time-picker.component';
 
 @Component({
     selector: 'app-mcadmin-campaigneditor',
     imports: [
-        AsyncPipe, FormsModule, RouterModule, MatListModule, MatIconModule, MatTooltipModule, MatButtonModule, MatDatepickerModule, MatTimepickerModule, MatNativeDateModule, MatInputModule, MatFormFieldModule, DateTimePickerComponent,
+        AsyncPipe, FormsModule, RouterModule, MatListModule, MatIconModule, MatTooltipModule, MatButtonModule, MatDatepickerModule, MatTimepickerModule, MatNativeDateModule, MatInputModule, MatFormFieldModule, MatSnackBarModule, MatSlideToggleModule, DateTimePickerComponent,
     ],
     templateUrl: './mcadmin-campaigneditor.component.html',
     styleUrl: './mcadmin-campaigneditor.component.scss',
 })
 export class MCAdminCampaigneditorComponent {
     private megaService = inject(MegaService);
+    private snackBar = inject(MatSnackBar);
 
     campaigns$ = this.megaService.getAvailableCampaigns$().pipe(
         tap(campaigns => {
@@ -39,9 +42,16 @@ export class MCAdminCampaigneditorComponent {
         regionDeadline: new Date(),
         startDeadline: new Date(),
         firstSession: new Date(),
+        firstEu4Session: new Date(),
         ck3MapGeoJsonUrl: '',
         nationsJsonUrl: '',
-        ck3RegionsConfigUrl: ''
+        ck3RegionsConfigUrl: '',
+        signupsOpen: false,
+        moderatorIds: '',
+        ck3LobbiesIdentifiers: '',
+        eu4LobbiesIdentifiers: '',
+        vic3LobbyIdentifiers: '',
+        possibleKeys: ''
     };
 
     createNewCampaign(): void {
@@ -81,9 +91,16 @@ export class MCAdminCampaigneditorComponent {
             regionDeadline: new Date(campaign.getRegionDeadlineDate()),
             startDeadline: new Date(campaign.getStartDeadlineDate()),
             firstSession: new Date(campaign.getFirstSessionDate()),
+            firstEu4Session: campaign.getFirstEu4SessionDate() ? new Date(campaign.getFirstEu4SessionDate()!) : new Date(),
             ck3MapGeoJsonUrl: campaign.getCk3MapGeoJsonUrl() || '',
             nationsJsonUrl: campaign.getNationsJsonUrl() || '',
-            ck3RegionsConfigUrl: campaign.getCk3RegionsConfigUrl() || ''
+            ck3RegionsConfigUrl: campaign.getCk3RegionsConfigUrl() || '',
+            signupsOpen: campaign.isSignupsOpen(),
+            moderatorIds: campaign.getModeratorIds().join(', '),
+            ck3LobbiesIdentifiers: campaign.getCk3LobbiesIdentifiers().join(', '),
+            eu4LobbiesIdentifiers: campaign.getEu4LobbiesIdentifiers().join(', '),
+            vic3LobbyIdentifiers: campaign.getVic3LobbyIdentifiers().join(', '),
+            possibleKeys: campaign.getPossibleKeys().join(', ')
         };
     }
 
@@ -133,11 +150,15 @@ export class MCAdminCampaigneditorComponent {
         }
 
         const campaignId = this.selectedCampaign.getId()!;
-        const updatePayload = {
+        const updatePayload: any = {
             signupDeadlineDate: this.editingCampaignData.regionDeadline,
             pickDeadline: this.editingCampaignData.startDeadline,
             firstSessionDate: this.editingCampaignData.firstSession
         };
+
+        if (this.editingCampaignData.firstEu4Session) {
+            updatePayload.firstEu4SessionDate = this.editingCampaignData.firstEu4Session;
+        }
 
         this.megaService.updateCampaignDates$(campaignId, updatePayload).subscribe({
             next: () => {
@@ -149,6 +170,10 @@ export class MCAdminCampaigneditorComponent {
                         }
                     })
                 );
+                this.snackBar.open('Dates updated successfully', 'OK', { duration: 3000 });
+            },
+            error: (err) => {
+                this.snackBar.open('Failed to update dates: ' + (err?.message || 'Unknown error'), 'OK', { duration: 5000 });
             }
         });
     }
@@ -185,6 +210,69 @@ export class MCAdminCampaigneditorComponent {
                         }
                     })
                 );
+                this.snackBar.open('URLs updated successfully', 'OK', { duration: 3000 });
+            },
+            error: (err) => {
+                this.snackBar.open('Failed to update URLs: ' + (err?.message || 'Unknown error'), 'OK', { duration: 5000 });
+            }
+        });
+    }
+
+    updateCampaignSettings(): void {
+        if (!this.selectedCampaign || !this.selectedCampaign.getId()) {
+            return;
+        }
+
+        const campaignId = this.selectedCampaign.getId()!;
+        const updatePayload: any = {
+            signupsOpen: this.editingCampaignData.signupsOpen
+        };
+
+        if (this.editingCampaignData.moderatorIds.trim()) {
+            updatePayload.moderatorIds = this.editingCampaignData.moderatorIds
+                .split(',')
+                .map(id => parseInt(id.trim(), 10))
+                .filter(id => !isNaN(id));
+        }
+        if (this.editingCampaignData.ck3LobbiesIdentifiers.trim()) {
+            updatePayload.ck3LobbiesIdentifiers = this.editingCampaignData.ck3LobbiesIdentifiers
+                .split(',')
+                .map(id => id.trim())
+                .filter(id => id.length > 0);
+        }
+        if (this.editingCampaignData.eu4LobbiesIdentifiers.trim()) {
+            updatePayload.eu4LobbiesIdentifiers = this.editingCampaignData.eu4LobbiesIdentifiers
+                .split(',')
+                .map(id => id.trim())
+                .filter(id => id.length > 0);
+        }
+        if (this.editingCampaignData.vic3LobbyIdentifiers.trim()) {
+            updatePayload.vic3LobbyIdentifiers = this.editingCampaignData.vic3LobbyIdentifiers
+                .split(',')
+                .map(id => id.trim())
+                .filter(id => id.length > 0);
+        }
+        if (this.editingCampaignData.possibleKeys.trim()) {
+            updatePayload.possibleKeys = this.editingCampaignData.possibleKeys
+                .split(',')
+                .map(key => key.trim())
+                .filter(key => key.length > 0);
+        }
+
+        this.megaService.updateCampaign$(campaignId, updatePayload).subscribe({
+            next: () => {
+                this.campaigns$ = this.megaService.getAvailableCampaigns$().pipe(
+                    tap(campaigns => {
+                        const updatedCampaign = campaigns.find(c => c.getId() === campaignId);
+                        if (updatedCampaign) {
+                            this.selectedCampaign = updatedCampaign;
+                        }
+                    })
+                );
+                this.snackBar.open('Settings updated successfully', 'OK', { duration: 3000 });
+            },
+            error: (err) => {
+                this.snackBar.open('Failed to update settings: ' + (err?.message || 'Unknown error'), 'OK', { duration: 5000 });
             }
         });
     }
@@ -213,6 +301,12 @@ export class MCAdminCampaigneditorComponent {
     onUrlChange(): void {
         if (this.selectedCampaign) {
             this.updateCampaignUrls();
+        }
+    }
+
+    onSettingsChange(): void {
+        if (this.selectedCampaign) {
+            this.updateCampaignSettings();
         }
     }
 }
