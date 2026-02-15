@@ -3,7 +3,7 @@ import { Ck3Player } from "../Player";
 import { Faith } from "../Faith";
 import { Culture } from "../Culture";
 import { AbstractLandedTitle } from "../title/AbstractLandedTitle";
-import { CK3 } from "../CK3";
+import { CK3 } from "../game/CK3";
 import { ICk3Save } from "./ICk3Save";
 import { LandedTitle } from "../title/LandedTitle";
 import { CustomLandedTitle } from "../title/CustomLandedTitle";

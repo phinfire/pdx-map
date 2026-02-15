@@ -6,7 +6,7 @@ import { Trait } from "../../model/ck3/Trait";
 import { Plotable } from "../plot-view/Plotable";
 import { RGB } from "../../util/RGB";
 import { TraitType } from "../../model/ck3/enum/TraitType";
-import { CK3 } from "../../model/ck3/CK3";
+import { CK3 } from "../../model/ck3/game/CK3";
 
 @Injectable({
     providedIn: 'root'

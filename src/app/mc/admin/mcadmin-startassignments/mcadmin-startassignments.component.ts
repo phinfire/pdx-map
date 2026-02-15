@@ -8,7 +8,6 @@ import { calculateAssignments } from '../../../../util/lobby';
 import { SimpleTableColumn } from '../../../../util/table/SimpleTableColumn';
 import { TableColumn } from '../../../../util/table/TableColumn';
 import { AssignmentService } from '../../AssignmentService';
-import { MCSignupService } from '../../MCSignupService';
 import { SignupAssetsService } from '../../SignupAssetsService';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,6 +18,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TableComponent } from '../../../vic3-country-table/vic3-country-table.component';
 import { TableColumnBuilder } from '../../../../util/table/TableColumnBuilder';
+import { MCSignupService } from '../../../../services/megacampaign/legacy-mc-signup-service.service';
 
 @Component({
   selector: 'app-mcadmin-startassignments',

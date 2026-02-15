@@ -16,7 +16,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSliderModule } from '@angular/material/slider';
 import { Scaling } from './Scaling';
-import { gaussianSmooth } from '../../utils';
+import { gaussianSmooth } from '../../util/utils';
 
 interface SeriesWithEntity extends DataSeries<Date> {
     entity: LineableEntity;
@@ -59,16 +59,16 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     private allDataMaxDate: Date | null = null;
 
     get allSeriesVisible(): boolean {
-        return this.series.length > 0 && this.series.every(s => s.entity?.isVisible?.() ?? false);
+        return this.series.length > 0 && this.series.every(s => s.entity.isVisible?.() ?? false);
     }
 
     get someSeriesVisible(): boolean {
-        return this.series.some(s => s.entity?.isVisible?.() ?? false);
+        return this.series.some(s => s.entity.isVisible?.() ?? false);
     }
 
     get gaussianRadiusMax(): number {
         const filteredSeries = this.getFilteredSeries();
-        const visibleSeries = filteredSeries.filter(s => s.entity?.isVisible?.() ?? false);
+        const visibleSeries = filteredSeries.filter(s => s.entity.isVisible?.() ?? false);
         if (visibleSeries.length === 0) {
             return 10;
         }
@@ -161,28 +161,28 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
     }
 
     getVisibility(series: SeriesWithEntity): boolean {
-        return series.entity?.isVisible?.() ?? false;
+        return series.entity.isVisible?.() ?? false;
     }
 
     setVisibility(series: SeriesWithEntity, visible: boolean): void {
-        series.entity?.setVisible?.(visible);
+        series.entity.setVisible?.(visible);
         this.onSeriesToggle();
     }
 
     toggleAllSeries(visible: boolean): void {
-        this.series.forEach(s => s.entity?.setVisible?.(visible));
+        this.series.forEach(s => s.entity.setVisible?.(visible));
         this.onSeriesToggle();
     }
 
     private setSeriesFromMap(seriesMap: Map<LineableEntity, DataSeries<Date>>) {
-        const previousVisibility = new Map(this.series.map(s => [s.entity, s.entity?.isVisible?.() ?? false]));
+        const previousVisibility = new Map(this.series.map(s => [s.entity, s.entity.isVisible?.() ?? false]));
         this.series = Array.from(seriesMap.entries()).map(([entity, ds]) => ({
             ...ds,
             entity
         }));
         this.series.forEach(s => {
             const previousState = previousVisibility.get(s.entity);
-            s.entity?.setVisible?.(previousState ?? true);
+            s.entity.setVisible?.(previousState ?? true);
         });
         this.updateDateRange();
         this.sortSeriesByLastValue();
@@ -248,7 +248,7 @@ export class LineviewerComponent implements AfterViewInit, OnDestroy {
             this.svgElement.remove();
         }
         const filteredSeries = this.getFilteredSeries();
-        const visibleSeries = filteredSeries.filter(s => s.entity?.isVisible?.() ?? false);
+        const visibleSeries = filteredSeries.filter(s => s.entity.isVisible?.() ?? false);
         if (!visibleSeries.some(s => s.values.length > 0)) {
             return;
         }

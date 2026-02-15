@@ -1,8 +1,8 @@
 import JSZip from "jszip";
-import { Trait } from "./Trait";
-import { Skill } from "./enum/Skill";
-import { Building } from "./Building";
-import { RGB } from "../../util/RGB";
+import { Trait } from "../Trait";
+import { Skill } from "../enum/Skill";
+import { Building } from "../Building";
+import { RGB } from "../../../util/RGB";
 
 export class CK3 {
 
@@ -80,7 +80,9 @@ export class CK3 {
                 const locMap = new Map<string, string>();
                 data.split("\n").map(line => line.trim()).filter(line => line.indexOf(":") != -1 && !line.startsWith("#")).forEach(line => {
                     const parts = line.split(":");
-                    locMap.set(parts[0].trim(), parts[1].substring(3, parts[1].length - 1));
+                    const key = parts[0].trim();
+                    const value = line.indexOf("0") != -1 ? parts[1].substring(3, parts[1].length - 1) : parts[1].trim().replace("\"", "").replace("\"", "");
+                    locMap.set(key, value);
                 });
                 return locMap;
             });

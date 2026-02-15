@@ -1,5 +1,5 @@
 import { AccumulatableCurrenty as AccumulatableCurrency } from "./AccumulatableCurrency";
-import { CK3 } from "./CK3";
+import { CK3 } from "./game/CK3";
 import { RulerTier } from "./RulerTier";
 import { Skill } from "./enum/Skill";
 import { Trait } from "./Trait";

@@ -1,16 +1,14 @@
 <div class="top">
   <div class="header-container">
     <h1>
-      @if (goBackFunction) {
-        <button mat-button
-          class="back-button"
-          (click)="goBackFunction!()"
-          matTooltip="Go back"
-          matTooltipPosition="below"
-          aria-label="Go back">
-          <mat-icon class="back-icon">chevron_left</mat-icon>
-        </button>
-      }
+      <button mat-button
+        class="back-button"
+        (click)="goBack()"
+        matTooltip="Go back"
+        matTooltipPosition="below"
+        aria-label="Go back">
+        <mat-icon class="back-icon">chevron_left</mat-icon>
+      </button>
       Sign Up for the 2nd Mega Campaign! <span>({{ aggregatedSignupsCount }} already signed up)</span>
     </h1>
     Wählt 5 Regionen in der Reihenfolge eurer Präferenz aus. Die finale Zuordnung wird am 14. September bekannt

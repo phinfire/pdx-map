@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Title } from '@angular/platform-browser';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { DiscordUser } from '../../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
@@ -14,8 +14,6 @@ import { PlotViewComponent } from '../../plot-view/plot-view.component';
 import { Plotable } from '../../plot-view/Plotable';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
 import { AssignmentService } from '../AssignmentService';
-import { MCSignupComponent } from '../mcsignup/mcsignup.component';
-import { McstartselectComponent } from '../mcstartselect/mcstartselect.component';
 import { MegaCampaign } from '../MegaCampaign';
 import { MegaPlotService } from '../MegaPlotService';
 import { MegaService } from '../MegaService';
@@ -30,25 +28,21 @@ import { Vic3SaveSeriesData } from '../../lineviewer/model/Vic3SaveSeriesData';
 import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
 import { MegaUtilService } from '../../../services/megacampaign/mega-util.service';
 import { MatDividerModule } from '@angular/material/divider';
-
-enum VIEW {
-    ASSIGNMENT_TABLE,
-    SIGNUP,
-    START_SELECTION
-}
+import { MegaBrowserSessionService } from '../mega-browser-session.service';
 
 @Component({
     selector: 'app-mega-campaign',
-    imports: [MCSignupComponent, McstartselectComponent, MatButtonModule, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent, MatDividerModule, LineviewerComponent],
+    imports: [MatButtonModule, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent, MatDividerModule, LineviewerComponent],
     templateUrl: './mega-campaign.component.html',
     styleUrl: './mega-campaign.component.scss'
 })
 
 export class MegaCampaignComponent {
-    public VIEW = VIEW;
 
     titleService = inject(Title);
+    router = inject(Router);
     megaService = inject(MegaService);
+    megaSessionService = inject(MegaBrowserSessionService);
     assignmentService = inject(AssignmentService);
     authService = inject(DiscordAuthenticationService);
     megaPlotService = inject(MegaPlotService);
@@ -64,25 +58,20 @@ export class MegaCampaignComponent {
     traitPlotables: Plotable[] = [];
 
     user2Ruler: Map<DiscordUser, CustomRulerFile> = new Map();
-    currentView: VIEW = VIEW.ASSIGNMENT_TABLE;
     seriesData: LineViewerData<Date> | null = null;
 
     private cachedColumns: Map<number, TableColumn<StartAssignment>[]> = new Map();
 
-    goBackToPlayerList = () => this.setView(VIEW.ASSIGNMENT_TABLE);
-    goToStartSelection = () => this.setView(VIEW.START_SELECTION);
-    goToSignup = () => this.setView(VIEW.SIGNUP);
-
-    setView(view: VIEW) {
-        this.currentView = view;
-    }
+    goToSignup = () => this.router.navigate(['/mc/signup']);
+    goToStartSelection = () => this.router.navigate(['/mc/start-selection']);
 
     ngOnInit() {
         this.titleService.setTitle('Mega Campaign');
         const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
-        this.megaService.getCampaignOfDefault$(campaignId)
+        this.megaSessionService.selectedMegaCampaign$
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(campaign => {
+                if (!campaign) return;
                 this.campaign = campaign;
                 this.saveSaver.getSaveFileByIdentifier$(this.campaign.getVic3SaveIdentifiersInChronologicalOrder()[2]).subscribe(save => {
                     this.seriesData = Vic3SaveSeriesData.fromSaves([save]);

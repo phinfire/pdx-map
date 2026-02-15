@@ -63,7 +63,6 @@ export class MegaService {
                 )
             }).pipe(
                 map(({ legacy, new: newCampaigns }) => {
-                    console.log(newCampaigns);
                     const newTransformed = newCampaigns
                         .map(c => this.transformNewApiCampaign(c))
                         .filter((c): c is MegaCampaign => c !== null);
@@ -109,7 +108,8 @@ export class MegaService {
                 campaign.ck3LobbiesIdentifiers || [],
                 campaign.eu4LobbiesIdentifiers || [],
                 campaign.vic3LobbyIdentifiers || [],
-                campaign.possibleKeys || []
+                campaign.possibleKeys || [],
+                campaign.ck3RegionsConfigUrl || ''
             );
             return result;
         } catch (error) {
@@ -135,7 +135,6 @@ export class MegaService {
     }
 
     updateCampaign$(id: number, updates: any): Observable<any> {
-        console.log('Updating campaign with ID', id, 'and updates', updates);
         const headers = this.authService.getAuthenticationHeader();
         return this.http.patch<any>(`${this.campaignsEndpoint}/campaigns/${id}`, updates, { headers }).pipe(
             map(result => {
@@ -166,21 +165,6 @@ export class MegaService {
                 this.invalidateCampaignsCache();
                 return result;
             })
-        );
-    }
-
-    getCurrentCampaign$(): Observable<MegaCampaign | null> {
-        return this.getAvailableCampaigns$().pipe(
-            map(campaigns => campaigns.length > 0
-                ? campaigns.reduce((mostRecent, current) =>
-                    current.getFirstSessionDate() > mostRecent.getFirstSessionDate() ? current : mostRecent)
-                : null)
-        );
-    }
-
-    getCampaignOfDefault$(id: string | null): Observable<MegaCampaign> {
-        return this.getAvailableCampaigns$().pipe(
-            map(campaigns => (id ? campaigns.find(c => c.getId() === Number(id)) : null) || campaigns[0])
         );
     }
 

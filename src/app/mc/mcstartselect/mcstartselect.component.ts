@@ -1,5 +1,5 @@
 import { Component, inject, Input, ViewChild, AfterViewInit } from '@angular/core';
-    import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { MegaCampaign } from '../MegaCampaign';
 import { PolygonSelectComponent } from '../../viewers/polygon-select/polygon-select.component';
 import { TimerComponent } from '../../timer/timer.component';
@@ -15,13 +15,14 @@ import { CK3Service } from '../../../services/gamedata/CK3Service';
 import { PdxFileService } from '../../../services/pdx-file.service';
 import { CustomRulerFile } from '../../../services/gamedata/CustomRulerFile';
 import { ClusterManager } from '../mcsignup/ClusterManager';
-import { CK3 } from '../../../model/ck3/CK3';
-import { MCSignupService } from '../MCSignupService';
+import { CK3 } from '../../../model/ck3/game/CK3';
 import { AssignmentService } from '../AssignmentService';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
 import { MegaService } from '../MegaService';
+import { MegaBrowserSessionService } from '../mega-browser-session.service';
+import { MCSignupService } from '../../../services/megacampaign/legacy-mc-signup-service.service';
 
 @Component({
     selector: 'app-mcstartselect',
@@ -41,6 +42,7 @@ export class McstartselectComponent implements AfterViewInit {
     assignmentService = inject(AssignmentService);
     snackBar = inject(MatSnackBar);
     megaService = inject(MegaService);
+    megaSessionService = inject(MegaBrowserSessionService);
     activatedRoute = inject(ActivatedRoute);
 
     @Input() campaign: MegaCampaign | null = null;
@@ -76,7 +78,7 @@ export class McstartselectComponent implements AfterViewInit {
     ngOnInit() {
         if (!this.campaign) {
             const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
-            this.megaService.getCampaignOfDefault$(campaignId).subscribe(campaign => {
+            this.megaSessionService.selectCampaignById(campaignId).subscribe(campaign => {
                 this.campaign = campaign;
             });
         }
@@ -170,9 +172,8 @@ export class McstartselectComponent implements AfterViewInit {
     }
 
     getLocalizedTraitName(traitName: string): string {
-        const data = this.signupAssetsService.getCurrentData();
-        if (data?.ck3 && data.ck3.hasLocalisation(traitName)) {
-            return data.ck3.localise(traitName);
+        if (this.ck3 && this.ck3.hasLocalisation(traitName)) {
+            return this.ck3.localise(traitName);
         }
         return traitName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }

@@ -1,10 +1,8 @@
-
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Injectable, OnDestroy } from "@angular/core";
-import { BehaviorSubject, merge, Observable, of, Subject, Subscription } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject, Subscription, of, switchMap, map, catchError, merge } from "rxjs";
 import { DiscordUser } from "../../model/social/DiscordUser";
-import { DiscordAuthenticationService } from "../../services/discord-auth.service";
+import { DiscordAuthenticationService } from "../discord-auth.service";
 
 export interface Signup {
     user: DiscordUser,
@@ -100,7 +98,7 @@ export class MCSignupService implements OnDestroy {
             'Content-Type': 'application/json',
             ...authHeader
         });
-    }
+    }   
 
     private fetchUserPicks() {
         const headers = this.getAuthenticatedHeaders();

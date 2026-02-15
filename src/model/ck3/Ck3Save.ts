@@ -1,6 +1,6 @@
 import { ParadoxSave } from "../common/ParadoxSave";
 import { Character } from "./Character";
-import { CK3 } from "./CK3";
+import { CK3 } from "./game/CK3";
 import { County } from "./County";
 import { Culture } from "./Culture";
 import { DynastyHouse } from "./DynastyHouse";
@@ -8,8 +8,8 @@ import { Faith } from "./Faith";
 import { Holding } from "./Holding";
 import { Ck3Player } from "./Player";
 import { ICk3Save } from "./save/ICk3Save";
-import { readPlayers, readAllFaiths, readAllCultures, readCountries, readLandedTitles, createTitle, readAllHoldings, readDynasties } from "./save/Parse";
 import { AbstractLandedTitle } from "./title/AbstractLandedTitle";
+import { readPlayers, readAllFaiths, readAllCultures, readCountries, readLandedTitles, createTitle, readAllHoldings, readDynasties } from "./save/parse";
 
 export class Ck3Save implements ICk3Save, ParadoxSave {
 

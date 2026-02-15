@@ -48,3 +48,7 @@ These can be colored and color coded using input view modes.
     - Save contains Countries
     - Countries contain States
     - States contain Buildings
+
+
+## Input Data
+    - SlabMapView/PolygonSelectComponent need the respective GEOJSON

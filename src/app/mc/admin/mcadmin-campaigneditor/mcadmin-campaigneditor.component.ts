@@ -40,7 +40,8 @@ export class MCAdminCampaigneditorComponent {
         startDeadline: new Date(),
         firstSession: new Date(),
         ck3MapGeoJsonUrl: '',
-        nationsJsonUrl: ''
+        nationsJsonUrl: '',
+        ck3RegionsConfigUrl: ''
     };
 
     createNewCampaign(): void {
@@ -81,7 +82,8 @@ export class MCAdminCampaigneditorComponent {
             startDeadline: new Date(campaign.getStartDeadlineDate()),
             firstSession: new Date(campaign.getFirstSessionDate()),
             ck3MapGeoJsonUrl: campaign.getCk3MapGeoJsonUrl() || '',
-            nationsJsonUrl: campaign.getNationsJsonUrl() || ''
+            nationsJsonUrl: campaign.getNationsJsonUrl() || '',
+            ck3RegionsConfigUrl: campaign.getCk3RegionsConfigUrl() || ''
         };
     }
 
@@ -164,6 +166,9 @@ export class MCAdminCampaigneditorComponent {
         }
         if (this.editingCampaignData.nationsJsonUrl) {
             updatePayload.nationsJsonUrl = this.editingCampaignData.nationsJsonUrl;
+        }
+        if (this.editingCampaignData.ck3RegionsConfigUrl) {
+            updatePayload.ck3RegionsConfigUrl = this.editingCampaignData.ck3RegionsConfigUrl;
         }
 
         if (Object.keys(updatePayload).length === 0) {

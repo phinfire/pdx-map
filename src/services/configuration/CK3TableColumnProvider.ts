@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { Character } from "../../model/ck3/Character";
-import { CK3 } from "../../model/ck3/CK3";
+import { CK3 } from "../../model/ck3/game/CK3";
 import { TableColumn } from "../../util/table/TableColumn";
 import { TableColumnBuilder } from "../../util/table/TableColumnBuilder";
 

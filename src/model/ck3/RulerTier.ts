@@ -1,4 +1,4 @@
-import { CK3 } from "./CK3";
+import { CK3 } from "./game/CK3";
 
 export class RulerTier {
     public static readonly NONE = new RulerTier("NONE", 0);

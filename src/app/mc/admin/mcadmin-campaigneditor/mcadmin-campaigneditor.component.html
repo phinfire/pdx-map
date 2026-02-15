@@ -58,6 +58,12 @@
                     <input matInput type="url" [(ngModel)]="editingCampaignData.nationsJsonUrl" 
                         (ngModelChange)="onUrlChange()" placeholder="https://...">
                 </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>CK3 Regions Config URL</mat-label>
+                    <input matInput type="url" [(ngModel)]="editingCampaignData.ck3RegionsConfigUrl" 
+                        (ngModelChange)="onUrlChange()" placeholder="https://...">
+                </mat-form-field>
             </div>
         </div>
     </div>

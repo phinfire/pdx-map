@@ -1,5 +1,5 @@
 import { Character } from "../Character";
-import { CK3 } from "../CK3";
+import { CK3 } from "../game/CK3";
 import { County } from "../County";
 import { Culture } from "../Culture";
 import { DynastyHouse } from "../DynastyHouse";

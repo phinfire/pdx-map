@@ -1,5 +1,5 @@
 import { Building } from "./Building";
-import { CK3 } from "./CK3";
+import { CK3 } from "./game/CK3";
 
 export class Holding {
 

@@ -1,6 +1,5 @@
 import { Router, ActivatedRoute } from '@angular/router';
-import { Component, inject, ViewChild, OnInit, HostListener, Input } from '@angular/core';
-
+import { Component, inject, ViewChild, HostListener, Input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -11,16 +10,19 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SignupAssetsService, SignupAssetsData } from './../SignupAssetsService';
 import { DiscordFieldComponent } from '../../discord-field/discord-field.component';
 import { DiscordLoginComponent } from '../../discord-login/discord-login.component';
-import { combineLatest } from 'rxjs';
+import { combineLatestWith, switchMap, Observable, filter, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { PolygonSelectComponent } from '../../viewers/polygon-select/polygon-select.component';
 import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
 import { TimerComponent } from '../../timer/timer.component';
 import { MegaCampaign } from '../MegaCampaign';
-import { MegaService } from '../MegaService';
-import { MCSignupService } from '../MCSignupService';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
 import { getMeshStatistics } from '../../../util/geometry/threeGeometry';
+import { MegaBrowserSessionService } from '../mega-browser-session.service';
+import { MCSignupService } from '../../../services/megacampaign/legacy-mc-signup-service.service';
+import { CK3 } from '../../../model/ck3/game/CK3';
+import { CK3Service } from '../../../services/gamedata/CK3Service';
 
 export interface TableItem {
     key: string;
@@ -33,25 +35,32 @@ export interface TableItem {
     templateUrl: './mcsignup.component.html',
     styleUrl: './mcsignup.component.scss'
 })
-export class MCSignupComponent implements OnInit {
+export class MCSignupComponent {
+
+    private readonly SHOW_NUM_SIGNUPS_PER_REGION = true;
 
     @ViewChild(PolygonSelectComponent) polygonSelectComponent!: PolygonSelectComponent;
 
-    @Input() campaign?: MegaCampaign;
-    @Input() goBackFunction: (() => void) | null = null;
+    @Input() campaign: MegaCampaign | null = null;
 
     private readonly MAX_SELECTIONS = 5;
     private _snackBar = inject(MatSnackBar);
 
-    megaService = inject(MegaService);
+    megaSessionService = inject(MegaBrowserSessionService);
     activatedRoute = inject(ActivatedRoute);
+    discordAuthService = inject(DiscordAuthenticationService);
+    signupAssetsService = inject(SignupAssetsService);
+    mcSignupService = inject(MCSignupService);
+    router = inject(Router);
+    ck3Service = inject(CK3Service);
 
     displayedColumns: string[] = ['index', 'value'];
     dataSource: TableItem[] = [];
-    subsToUnsubFromOnDestroy: any[] = [];
     aggregatedSignupsCount: number = 0;
     perRegionSignups: Map<string, number> = new Map();
     private key2Value: Map<string, number> = new Map();
+    private currentMapData: SignupAssetsData | null = null;
+    private ck3$: Observable<CK3> | null = null;
 
     get tableDataSource(): TableItem[] {
         const emptyRowsCount = this.MAX_SELECTIONS - this.dataSource.length;
@@ -72,18 +81,15 @@ export class MCSignupComponent implements OnInit {
 
     selectionCallback = this.onSelect.bind(this);
     meshBuddiesProvider: (key: string) => string[] = (key: string) => {
-        const data = this.signupAssetsService.getCurrentData();
-        if (!data?.clusterManager) {
+        if (!this.currentMapData?.clusterManager) {
             return [key];
         }
-        return data.clusterManager.getBuddies(key);
+        return this.currentMapData.clusterManager.getBuddies(key);
     };
     tooltipProvider: (key: string) => string = (key: string) => {
-        const data = this.signupAssetsService.getCurrentData();
-        const ck3 = data!.ck3;
-        const clusterManager = data!.clusterManager!;
+        const clusterManager = this.currentMapData!.clusterManager!;
         const clusterKey = clusterManager.getClusterKey(key)!;
-        let tooltip = "<i>" + ck3.localise(key) + "</i><br><strong>" + clusterKey + "</strong>";
+        let tooltip = "<i>" + key + "</i><br><strong>" + clusterKey + "</strong>";
         if (this.perRegionSignups.has(clusterKey)) {
             const plural = this.perRegionSignups.get(clusterKey) !== 1 ? 's' : '';
             tooltip += `<br>(${this.perRegionSignups.get(clusterKey)} registered player${plural})`;
@@ -95,31 +101,35 @@ export class MCSignupComponent implements OnInit {
 
     colorConfigProviders: ColorConfigProvider[] = [new ColorConfigProvider(new Map<string, number>())]
 
-    constructor(
-        protected discordAuthService: DiscordAuthenticationService,
-        private signupAssetsService: SignupAssetsService,
-        private mcSignupService: MCSignupService,
-        private router: Router
-    ) { }
-
-    goBack() {
-        const url = this.router.url.replace(/\/signup$/, '');
-        this.router.navigateByUrl(url);
-    }
-
-    ngOnInit() {
-        if (!this.campaign) {
-            const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
-            this.megaService.getCampaignOfDefault$(campaignId).subscribe(campaign => {
-                this.campaign = campaign;
+    constructor() {
+        let campaignSource$: Observable<MegaCampaign>;
+        
+        if (this.campaign) {
+            campaignSource$ = new Observable<MegaCampaign>(observer => {
+                observer.next(this.campaign!);
+                observer.complete();
             });
+        } else {
+            campaignSource$ = this.megaSessionService.selectedMegaCampaign$.pipe(
+                filter((campaign): campaign is MegaCampaign => campaign !== null)
+            );
         }
-        combineLatest([
-            this.signupAssetsService.getRegionNameList$(),
-            this.mcSignupService.getAggregatedRegistrations$(),
-            this.signupAssetsService.loadMapData$()
-        ]).subscribe({
+        this.ck3$ = this.ck3Service.initializeCK3();
+
+        campaignSource$.pipe(
+            switchMap(campaign => {
+                this.campaign = campaign;
+                return this.signupAssetsService.getRegionNameList$().pipe(
+                    combineLatestWith(
+                        this.mcSignupService.getAggregatedRegistrations$(),
+                        this.signupAssetsService.mapData$
+                    )
+                );
+            }),
+            takeUntilDestroyed()
+        ).subscribe({
             next: ([regionNames, picks, currentData]) => {
+                this.currentMapData = currentData;
                 for (const name of regionNames) {
                     const regionValue = picks.get(name) || 0;
                     for (const clusterKey of currentData.clusterManager.getCluster2Keys(name)) {
@@ -127,10 +137,15 @@ export class MCSignupComponent implements OnInit {
                     }
                 }
                 this.launchPolygonSelect(currentData);
+            },
+            error: (err) => {
+                console.error('Error loading map data:', err);
             }
         });
 
-        this.mcSignupService.getAggregatedRegistrations$().subscribe({
+        this.mcSignupService.getAggregatedRegistrations$().pipe(
+            takeUntilDestroyed()
+        ).subscribe({
             next: (picks: Map<string, number>) => {
                 this.aggregatedSignupsCount = Array.from(picks.values()).reduce((a, b) => a + b, 0) / this.MAX_SELECTIONS;
                 this.perRegionSignups = picks;
@@ -140,7 +155,9 @@ export class MCSignupComponent implements OnInit {
             }
         });
 
-        const userPicksSub = this.mcSignupService.userPicks$.subscribe({
+        this.mcSignupService.userPicks$.pipe(
+            takeUntilDestroyed()
+        ).subscribe({
             next: (picks: string[]) => {
                 this.dataSource = picks.map((key: string) => ({
                     key,
@@ -151,12 +168,13 @@ export class MCSignupComponent implements OnInit {
                 console.error('Failed to load registration:', err);
             }
         });
-        this.subsToUnsubFromOnDestroy.push(userPicksSub);
     }
 
-    ngOnDestroy() {
-        for (const sub of this.subsToUnsubFromOnDestroy) {
-            sub.unsubscribe();
+    goBack() {
+        if (this.campaign) {
+            this.router.navigate(['/mc', this.campaign.getId()]);
+        } else {
+            this.router.navigate(['/mc']);
         }
     }
 
@@ -186,11 +204,10 @@ export class MCSignupComponent implements OnInit {
     onDragEnded(event: CdkDragEnd) { }
 
     onSelect(key: string, locked: boolean) {
-        const data = this.signupAssetsService.getCurrentData();
-        if (!data?.clusterManager) {
+        if (!this.currentMapData?.clusterManager) {
             return;
         }
-        const clusterKey = data.clusterManager.getClusterKey(key);
+        const clusterKey = this.currentMapData.clusterManager.getClusterKey(key);
         if (!clusterKey) {
             return;
         }

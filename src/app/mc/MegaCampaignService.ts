@@ -26,24 +26,34 @@ export class MegaCampaignService {
                         .filter(c =>
                             c &&
                             c.name &&
-                            c.regionDeadlineDate &&
-                            c.startDeadlineDate &&
-                            c.firstSessionDate
+                            c.signupDeadlineDate &&
+                            c.pickDeadline &&
+                            c.firstSessionDate &&
+                            c.id
                         )
                         .map(c =>
                             new MegaCampaign(
                                 c.name,
-                                this.utcToLocalDate(c.regionDeadlineDate),
-                                this.utcToLocalDate(c.startDeadlineDate),
+                                this.utcToLocalDate(c.signupDeadlineDate),
+                                this.utcToLocalDate(c.pickDeadline),
                                 this.utcToLocalDate(c.firstSessionDate),
-                                c.firstEu4Session ? this.utcToLocalDate(c.firstEu4Session) : null,
-                                c.id                // API response includes id
+                                c.firstEu4SessionDate ? this.utcToLocalDate(c.firstEu4SessionDate) : null,
+                                c.id,
+                                c.signupsOpen ?? false,
+                                c.ck3MapGeoJsonUrl ?? '',
+                                c.ck3RegionsConfigUrl ?? '',
+                                c.nationsJsonUrl ?? 'https://codingafterdark.de/mc/ideas/flags/nations.json',
+                                c.moderatorIds ?? [],
+                                c.ck3LobbiesIdentifiers ?? [],
+                                c.eu4LobbiesIdentifiers ?? [],
+                                c.vic3LobbyIdentifiers ?? [],
+                                c.possibleKeys ?? []
                             )
                         ),
                     shareReplay({ bufferSize: 1, refCount: true })
                 ), catchError(() => {
                     console.warn(
-                        'MegaService: Failed to fetch campaigns from backend, returning empty list'
+                        'MegaCampaignService: Failed to fetch campaigns from backend, returning empty list'
                     );
                     return of([]);
                 })
@@ -54,8 +64,8 @@ export class MegaCampaignService {
     createNewCampaign(campaign: MegaCampaign) {
         return this.http.post(this.API_URL + "/megacampaigns", {
             name: campaign.getName(),
-            regionDeadlineDate: campaign.getRegionDeadlineDate(),
-            startDeadlineDate: campaign.getStartDeadlineDate(),
+            signupDeadlineDate: campaign.getRegionDeadlineDate(),
+            pickDeadline: campaign.getStartDeadlineDate(),
             firstSessionDate: campaign.getFirstSessionDate(),
         }).pipe(
             tap(() => this.campaignsRefresh$.next())

@@ -1,10 +1,10 @@
-import { inject, Injectable, OnDestroy } from "@angular/core";
-import { Observable, map, catchError, of, switchMap, Subject, startWith, throwError, BehaviorSubject, Subscription } from "rxjs";
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { StartAssignment } from "./StartAssignment";
+import { Injectable, OnDestroy, inject } from "@angular/core";
+import { BehaviorSubject, Observable, Subject, Subscription, catchError, map, of } from "rxjs";
 import { DiscordUser } from '../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from "../../services/discord-auth.service";
-import { MCSignupService } from "./MCSignupService";
+import { StartAssignment } from "./StartAssignment";
+import { MCSignupService } from '../../services/megacampaign/legacy-mc-signup-service.service';
 
 @Injectable({
     providedIn: 'root'

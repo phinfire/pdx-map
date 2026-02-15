@@ -5,7 +5,7 @@ import { forkJoin, from, Observable } from 'rxjs';
 import { catchError, map, switchMap, shareReplay } from 'rxjs/operators';
 import { RGB } from '../../util/RGB';
 import { PdxFileService } from '../pdx-file.service';
-import { CK3 } from '../../model/ck3/CK3';
+import { CK3 } from '../../model/ck3/game/CK3';
 import { Trait } from '../../model/ck3/Trait';
 import { CustomRulerFile } from './CustomRulerFile';
 import { Ck3Save } from '../../model/ck3/Ck3Save';
@@ -57,6 +57,29 @@ export class CK3Service {
             }
         }
         return traits;
+    }
+
+    private parsePreparsedLandedTitles(jsonString: string) {
+        const titleData = JSON.parse(jsonString);
+        const titleKey2Color = new Map<string, RGB>();
+        const county2Baronies = new Map<string, string[]>();
+        const barony2provinceIndices = new Map<string, number>();
+        const vassalTitle2OverlordTitle = new Map<string, string>();
+        for (const filename of Object.keys(titleData)) {
+            const parsedContent = titleData[filename];
+            for (const key of Object.keys(parsedContent)) {
+                CK3.recursivelyInsertBaronyIndices(
+                    parsedContent[key],
+                    key,
+                    titleKey2Color,
+                    county2Baronies,
+                    barony2provinceIndices,
+                    vassalTitle2OverlordTitle
+                );
+            }
+        }
+
+        return { titleKey2Color, county2Baronies, barony2provinceIndices, vassalTitle2OverlordTitle };
     }
 
     private parseLandedTitles(data: string, parser: any): {
@@ -127,9 +150,9 @@ export class CK3Service {
                             d => this.parseTraits(d, parser)
                         ),
                         landedTitles: this.fetchAndParse(
-                            CK3.CK3_DATA_URL + "/common/landed_titles/00_landed_titles.txt",
+                            "https://codingafterdark.de/pdx/data/landed_titles.json",
                             parser,
-                            d => this.parseLandedTitles(d, parser)
+                            d => this.parsePreparsedLandedTitles(d)
                         ),
                         scriptedValues: this.fetchText(
                             CK3.CK3_DATA_URL + "/common/scripted_values/00_building_values.txt"
@@ -178,7 +201,8 @@ export class CK3Service {
     }
 
     openCk3ZeroSaveFromFile(): Observable<Ck3Save> {
-        return this.openCk3SaveFromFile("https://codingafterdark.de/pdx/mega/ZERO_WILLIAM.ck3").pipe(
+        //https://codingafterdark.de/pdx/mega/ZERO_WILLIAM.ck3
+        return this.openCk3SaveFromFile("https://codingafterdark.de/pdx/mega/Kaiser_Heinrich_IV_of_the_Holy_Roman_Empire_1066_09_15.ck3").pipe(
             shareReplay(1)
         );
     }

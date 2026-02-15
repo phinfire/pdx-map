@@ -3,19 +3,20 @@ export class MegaCampaign {
 
     constructor(
         private name: string,
-        private regionDeadlineDate: Date,
-        private startDeadlineDate: Date,
+        private signupDeadlineDate: Date,
+        private pickDeadline: Date,
         private firstSessionDate: Date,
-        private firstEu4Session: Date | null,
-        private id?: number,
-        private ck3MapGeoJsonUrl: string = '',
-        private nationsJsonUrl: string = '',
-        private signupsOpen: boolean = false,
-        private moderatorIds: number[] = [],
-        private ck3LobbiesIdentifiers: string[] = [],
-        private eu4LobbiesIdentifiers: string[] = [],
-        private vic3LobbyIdentifiers: string[] = [],
-        private possibleKeys: string[] = []
+        private firstEu4SessionDate: Date | null,
+        private id: number | undefined,
+        private signupsOpen: boolean,
+        private ck3MapGeoJsonUrl: string,
+        private ck3RegionsConfigUrl: string,
+        private nationsJsonUrl: string,
+        private moderatorIds: number[],
+        private ck3LobbiesIdentifiers: string[],
+        private eu4LobbiesIdentifiers: string[],
+        private vic3LobbyIdentifiers: string[],
+        private possibleKeys: string[]
     ) {
     }
 
@@ -55,12 +56,16 @@ export class MegaCampaign {
         return this.possibleKeys;
     }
 
+    getCk3RegionsConfigUrl(): string {
+        return this.ck3RegionsConfigUrl;
+    }
+
     getRegionDeadlineDate() {
-        return this.regionDeadlineDate;
+        return this.signupDeadlineDate;
     }
 
     getStartDeadlineDate() {
-        return this.startDeadlineDate;
+        return this.pickDeadline;
     }
 
     getFirstSessionDate() {
@@ -72,19 +77,19 @@ export class MegaCampaign {
     }
 
     isInRegionSignupStage(): boolean {
-        return new Date() <= this.getRegionDeadlineDate();
+        return new Date() <= this.signupDeadlineDate;
     }
 
     isInStartSelectionStage(): boolean {
-        return new Date() > this.getRegionDeadlineDate() && new Date() <= this.getStartDeadlineDate();
+        return new Date() > this.signupDeadlineDate && new Date() <= this.pickDeadline;
     }
 
     isInWaitingForFirstSessionStage(): boolean {
-        return new Date() > this.getStartDeadlineDate() && new Date() <= this.getFirstSessionDate();
+        return new Date() > this.pickDeadline && new Date() <= this.firstSessionDate;
     }
 
     isPlayingCk3(): boolean {
-        return new Date() > this.getFirstSessionDate();
+        return new Date() > this.firstSessionDate;
     }
 
     getVic3SaveIdentifiersInChronologicalOrder() {
@@ -96,6 +101,6 @@ export class MegaCampaign {
     }
 
     canBeEdited(): boolean {
-        return this.getId() !== undefined;
+        return this.id !== undefined;
     }
 }

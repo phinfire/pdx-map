@@ -1,4 +1,4 @@
-import { Point2D } from "./util/Point2D";
+import { Point2D } from "./Point2D";
 
 export function simpleHash(str: string): number {
     let hash = 0;

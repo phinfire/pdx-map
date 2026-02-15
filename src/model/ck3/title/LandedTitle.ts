@@ -1,4 +1,4 @@
-import { CK3 } from "../CK3";
+import { CK3 } from "../game/CK3";
 import { RulerTier } from "../RulerTier";
 import { ICk3Save } from "../save/ICk3Save";
 import { AbstractLandedTitle } from "./AbstractLandedTitle";
