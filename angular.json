@@ -38,8 +38,7 @@
             ],
             "styles": [
               "src/styles.scss",
-              "src/styles/theme.scss",
-              "node_modules/leaflet/dist/leaflet.css"
+              "src/styles/theme.scss"
             ],
             "scripts": [],
             "baseHref": "/pdx/"
@@ -59,7 +58,6 @@
                 }
               ],
               "outputHashing": "all",
-              "commonChunk": false,
               "allowedCommonJsDependencies": [
                 "jszip"
               ]
