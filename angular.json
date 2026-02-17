@@ -50,7 +50,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "1.5MB",
-                  "maximumError": "2.5MB"
+                  "maximumError": "3.0MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -58,7 +58,11 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "commonChunk": false,
+              "allowedCommonJsDependencies": [
+                "jszip"
+              ]
             },
             "development": {
               "optimization": false,
