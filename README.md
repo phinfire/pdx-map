@@ -52,3 +52,5 @@ These can be colored and color coded using input view modes.
 
 ## Input Data
     - SlabMapView/PolygonSelectComponent need the respective GEOJSON
+    - MCSignup: Initial save file
+    - CK3: /landed_titles as JSON

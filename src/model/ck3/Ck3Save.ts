@@ -24,7 +24,6 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     private dynastyHouses: DynastyHouse[] = [];
     private counties: County[] = [];
     private index2Holding: Map<string, Holding> = new Map<string, Holding>();
-
     private titleKey2Index = new Map<string, number>();
 
     static fromRawData(data: any, ck3: CK3): Ck3Save {
@@ -52,7 +51,6 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     }
 
     private createAllCharacters(data: any) {
-        // Create all living characters
         const livingData = data.living || {};
         for (const characterId in livingData) {
             if (Object.prototype.hasOwnProperty.call(livingData, characterId)) {
@@ -60,8 +58,6 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
                 this.livingCharacters.set(characterId, char);
             }
         }
-
-        // Create all dead unprunable characters
         const deadUnprunableData = data.dead_unprunable || {};
         for (const characterId in deadUnprunableData) {
             if (Object.prototype.hasOwnProperty.call(deadUnprunableData, characterId)) {
@@ -69,8 +65,6 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
                 this.deadUnprunableCharacters.set(characterId, char);
             }
         }
-
-        // Create all dead prunable characters
         const deadPrunableData = data.dead_prunable || {};
         for (const characterId in deadPrunableData) {
             if (Object.prototype.hasOwnProperty.call(deadPrunableData, characterId)) {
@@ -85,7 +79,6 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     }
 
     findDataAndCreateCharacter(data: any, characterId: string): Character | null {
-        // Look up from pre-created characters
         if (this.livingCharacters.has(characterId)) {
             return this.livingCharacters.get(characterId)!;
         } else if (this.deadUnprunableCharacters.has(characterId)) {

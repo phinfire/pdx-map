@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, NgZone, Output, SimpleChanges, ViewChild, AfterViewInit, QueryList, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, NgZone, Output, SimpleChanges, ViewChild, AfterViewInit, QueryList, ViewChildren, ChangeDetectorRef } from '@angular/core';
 import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -65,7 +65,7 @@ export class PolygonSelectComponent {
     private colorConfigProviderIndex: number = 0;
     private lockedKeysWaitingForMeshes: Set<string> = new Set();
 
-    constructor(private ngZone: NgZone) {
+    constructor(private ngZone: NgZone, private cdr: ChangeDetectorRef) {
         this.tooltipManager.toggleTooltipEnabled();
     }
 
@@ -233,6 +233,7 @@ export class PolygonSelectComponent {
         this.containerRef.nativeElement.addEventListener('mousemove', this.onMouseMoveForRaycasting);
         this.containerRef.nativeElement.addEventListener('mouseleave', () => {
             this.tooltipManager.setTooltipVisibility(false);
+            this.cdr.markForCheck();
         });
         this.animate();
     }
@@ -289,7 +290,7 @@ export class PolygonSelectComponent {
         this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
         this.scene.rotation.x = -0.5;
         this.isRendererInitialized = true;
-        this.cameraMovementManager = new CameraMovementManager(this.camera, container, true, true, true, false);
+        this.cameraMovementManager = new CameraMovementManager(this.camera, container, true, true, true, false, this.ngZone);
         this.cameraMovementManager.zoomToCursor = this.zoomToCursor;
         this.cameraMovementManager.cameraHeight = this.cameraHeight;
         this.cameraMovementManager.setShouldIgnoreWheelEvent((event: WheelEvent) => {
@@ -353,10 +354,12 @@ export class PolygonSelectComponent {
         const isOverButton = (event.target as Element).closest('.button-group, .corner-button');
         if (isOverButton) {
             this.tooltipManager.setTooltipVisibility(false);
+            this.cdr.markForCheck();
             return;
         }
 
         this.tooltipManager.updateTooltipPosition();
+        this.cdr.markForCheck();
 
         const rect = container.getBoundingClientRect();
         const newMouseX = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
@@ -492,10 +495,12 @@ export class PolygonSelectComponent {
         const content = this.tooltipProvider(key);
         this.tooltipManager.setTooltipContent(content);
         this.tooltipManager.setTooltipVisibility(true);
+        this.cdr.markForCheck();
     }
 
     private hideTooltip() {
         this.tooltipManager.setTooltipVisibility(false);
+        this.cdr.markForCheck();
     }
 
     public toggleTooltips() {

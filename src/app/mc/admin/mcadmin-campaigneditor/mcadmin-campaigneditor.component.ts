@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { tap } from 'rxjs';
 import { MegaService } from '../../MegaService';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -21,7 +21,7 @@ import { DateTimePickerComponent } from '../../../date-time-picker/date-time-pic
 @Component({
     selector: 'app-mcadmin-campaigneditor',
     imports: [
-        AsyncPipe, FormsModule, RouterModule, MatListModule, MatIconModule, MatTooltipModule, MatButtonModule, MatDatepickerModule, MatTimepickerModule, MatNativeDateModule, MatInputModule, MatFormFieldModule, MatSnackBarModule, MatSlideToggleModule, DateTimePickerComponent,
+        AsyncPipe, CommonModule, FormsModule, RouterModule, MatListModule, MatIconModule, MatTooltipModule, MatButtonModule, MatDatepickerModule, MatTimepickerModule, MatNativeDateModule, MatInputModule, MatFormFieldModule, MatSnackBarModule, MatSlideToggleModule, DateTimePickerComponent
     ],
     templateUrl: './mcadmin-campaigneditor.component.html',
     styleUrl: './mcadmin-campaigneditor.component.scss',

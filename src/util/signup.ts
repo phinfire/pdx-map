@@ -68,9 +68,13 @@ export function buildKey2Cluster(ck3: CK3, ck3Save: Ck3Save, regions: Region[], 
             }
         }
         if (matchedRegionNames.length == 0) {
-            console.error(`Title\n${getPathToTheTop(title.getKey(), ck3).join(" -> ")} \ndoes not belong to any region`);
-        } else if (matchedRegionNames.length > 1) {
-            console.error(`Title\n${getPathToTheTop(title.getKey(), ck3).join(" -> ")} \nbelongs to multiple regions: ${matchedRegionNames.join(", ")}`);
+            if (title.getKey().indexOf("_nf_") == -1) {
+                console.error(`Title\n${getPathToTheTop(title.getKey(), ck3).join(" -> ")} \ndoes not belong to any region`);
+            }
+        } else if (matchedRegionNames.length > 1 && new Set(matchedRegionNames).size > 1) {
+            if (title.getKey().indexOf("_nf_") == -1) {
+                console.error(`Title\n${getPathToTheTop(title.getKey(), ck3).join(" -> ")} \nbelongs to multiple regions: ${matchedRegionNames.join(", ")}`);
+            }
         } else {
             key2ClusterKey.set(title.getKey(), matchedRegionNames[0]);
         }
@@ -137,5 +141,5 @@ export function buildColorConfigProvider(ck3Save: Ck3Save, ck3: CK3) {
         const deFactoTopLiege = title.getUltimateLiegeTitle();
         key2color.set(title.getKey(), deFactoTopLiege.getColor().toNumber());
     });
-    return new ColorConfigProvider(key2color);    
+    return new ColorConfigProvider(key2color);
 }

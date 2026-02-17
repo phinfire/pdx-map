@@ -6,10 +6,13 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: stretch;
     $toolbar-font: "Permanent Marker", cursive;
+
     mat-toolbar {
+        height: 64px;
+        flex-shrink: 0;
         @include mat.toolbar-overrides((container-background-color: var(--header-background-color),
                 container-text-color: var(--text-color),
                 title-text-size: 2em,
@@ -25,6 +28,10 @@
     .toolbar-action {
         font-family: $toolbar-font !important;
     }
+}
+
+router-outlet {
+    display: contents;
 }
 
 .menus-container {

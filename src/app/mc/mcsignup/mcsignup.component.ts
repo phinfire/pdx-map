@@ -1,5 +1,5 @@
 import { Router, ActivatedRoute } from '@angular/router';
-import { Component, inject, ViewChild, HostListener, Input } from '@angular/core';
+import { Component, inject, ViewChild, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -33,7 +33,8 @@ export interface TableItem {
     selector: 'app-mcsignup',
     imports: [PolygonSelectComponent, DiscordLoginComponent, MatButtonModule, MatIconModule, MatTableModule, DragDropModule, DiscordFieldComponent, MatProgressSpinnerModule, MatTooltipModule, TimerComponent],
     templateUrl: './mcsignup.component.html',
-    styleUrl: './mcsignup.component.scss'
+    styleUrl: './mcsignup.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MCSignupComponent {
 
@@ -45,6 +46,7 @@ export class MCSignupComponent {
 
     private readonly MAX_SELECTIONS = 5;
     private _snackBar = inject(MatSnackBar);
+    private cdr = inject(ChangeDetectorRef);
 
     megaSessionService = inject(MegaBrowserSessionService);
     activatedRoute = inject(ActivatedRoute);
@@ -60,7 +62,7 @@ export class MCSignupComponent {
     perRegionSignups: Map<string, number> = new Map();
     private key2Value: Map<string, number> = new Map();
     private currentMapData: SignupAssetsData | null = null;
-    private ck3$: Observable<CK3> | null = null;
+    private ck3: CK3 | null = null;
 
     get tableDataSource(): TableItem[] {
         const emptyRowsCount = this.MAX_SELECTIONS - this.dataSource.length;
@@ -89,7 +91,8 @@ export class MCSignupComponent {
     tooltipProvider: (key: string) => string = (key: string) => {
         const clusterManager = this.currentMapData!.clusterManager!;
         const clusterKey = clusterManager.getClusterKey(key)!;
-        let tooltip = "<i>" + key + "</i><br><strong>" + clusterKey + "</strong>";
+        const countyName = this.ck3 ? this.ck3.localise(key) : key;
+        let tooltip = "<i>" + countyName + "</i><br><strong>" + clusterKey + "</strong>";
         if (this.perRegionSignups.has(clusterKey)) {
             const plural = this.perRegionSignups.get(clusterKey) !== 1 ? 's' : '';
             tooltip += `<br>(${this.perRegionSignups.get(clusterKey)} registered player${plural})`;
@@ -110,11 +113,22 @@ export class MCSignupComponent {
                 observer.complete();
             });
         } else {
-            campaignSource$ = this.megaSessionService.selectedMegaCampaign$.pipe(
+            campaignSource$ = this.activatedRoute.params.pipe(
+                switchMap(params => {
+                    if (params['campaignId']) {
+                        console.log("Selecting campaign based on route param campaignId:", params['campaignId']);
+                        return this.megaSessionService.selectCampaignById(params['campaignId']);
+                    }
+                    return this.megaSessionService.selectedMegaCampaign$;
+                }),
                 filter((campaign): campaign is MegaCampaign => campaign !== null)
             );
         }
-        this.ck3$ = this.ck3Service.initializeCK3();
+        this.ck3Service.initializeCK3().subscribe(ck => {
+            console.log("CK3 data initialized");
+            this.ck3 = ck;
+            this.cdr.markForCheck();
+        });
 
         campaignSource$.pipe(
             switchMap(campaign => {
@@ -137,6 +151,7 @@ export class MCSignupComponent {
                     }
                 }
                 this.launchPolygonSelect(currentData);
+                this.cdr.markForCheck();
             },
             error: (err) => {
                 console.error('Error loading map data:', err);
@@ -149,6 +164,7 @@ export class MCSignupComponent {
             next: (picks: Map<string, number>) => {
                 this.aggregatedSignupsCount = Array.from(picks.values()).reduce((a, b) => a + b, 0) / this.MAX_SELECTIONS;
                 this.perRegionSignups = picks;
+                this.cdr.markForCheck();
             },
             error: () => {
                 this.aggregatedSignupsCount = -1;
@@ -163,6 +179,7 @@ export class MCSignupComponent {
                     key,
                     name: key
                 }));
+                this.cdr.markForCheck();
             },
             error: (err) => {
                 console.error('Failed to load registration:', err);
@@ -264,13 +281,6 @@ export class MCSignupComponent {
         return '';
     }
 
-    @HostListener('window:resize', ['$event'])
-    onWindowResize(event: any) {
-        if (this.polygonSelectComponent) {
-            this.polygonSelectComponent.handleResize();
-        }
-    }
-
     openSnackBar(message: string, action: string) {
         this._snackBar.open(message, action, {
             duration: 3000,
@@ -279,5 +289,10 @@ export class MCSignupComponent {
 
     getDeadline() {
         return this.campaign ? this.campaign.getRegionDeadlineDate() : new Date();
+    }
+
+    getFinalAssignmentDate() {
+        const date = new Date(this.getDeadline().getTime() + 24 * 60 * 60 * 1000);
+        return date.getDay() + ". " + (date.getMonth() + 1);
     }
 }

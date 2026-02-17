@@ -37,6 +37,12 @@
     h1 {
         margin: 0;
     }
+    .campaign-id {
+        margin: 0.25em 0 0 0;
+        font-size: 0.875em;
+        color: var(--text-color);
+        opacity: 0.6;
+    }
 }
 
 .title-button-panel {
@@ -69,4 +75,14 @@ button {
     gap: 1em;
     width: fit-content;
     margin-bottom: 5em;
+
+    h3 {
+        margin: 0.5em 0 0.5em 0;
+        font-size: 1em;
+        color: var(--text-color);
+        opacity: 0.7;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
 }

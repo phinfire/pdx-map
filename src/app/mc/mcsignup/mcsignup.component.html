@@ -9,9 +9,9 @@
         aria-label="Go back">
         <mat-icon class="back-icon">chevron_left</mat-icon>
       </button>
-      Sign Up for the 2nd Mega Campaign! <span>({{ aggregatedSignupsCount }} already signed up)</span>
+      Sign Up for {{ campaign?.getName() }}! <span>({{ aggregatedSignupsCount }} already signed up)</span>
     </h1>
-    Wählt 5 Regionen in der Reihenfolge eurer Präferenz aus. Die finale Zuordnung wird am 14. September bekannt
+    Wählt 5 Regionen in der Reihenfolge eurer Präferenz aus. Die finale Zuordnung wird am {{ getFinalAssignmentDate() }} bekannt
     gegeben. <br> Bitte beachtet, dass nicht garantiert werden kann, dass ihr eine der von euch ausgewählten
     Wunschregionen erhaltet.
   </div>

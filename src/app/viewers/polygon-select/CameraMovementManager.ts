@@ -1,3 +1,4 @@
+import { NgZone } from '@angular/core';
 import * as THREE from 'three';
 
 export class CameraMovementManager {
@@ -24,7 +25,8 @@ export class CameraMovementManager {
         public mouseDragEnabled: boolean,
         public mouseWheelZoomEnabled: boolean,
         public keyboardControlsEnabled: boolean,
-        public edgeScrollingEnabled: boolean
+        public edgeScrollingEnabled: boolean,
+        private ngZone: NgZone
     ) {
         this.setupEventListeners();
     }
@@ -38,23 +40,31 @@ export class CameraMovementManager {
     }
     
     private setupEventListeners() {
-        window.addEventListener('mousemove', this.onMouseMove);
-        window.addEventListener('mousedown', this.onMouseDown);
-        window.addEventListener('mouseup', this.onMouseUp);
-        window.addEventListener('wheel', this.onWheel, { passive: false });
-        window.addEventListener('keydown', this.onKeyDown);
-        window.addEventListener('keyup', this.onKeyUp);
-        this.containerElement.addEventListener('mouseleave', this.onMouseLeave);
+        this.ngZone.runOutsideAngular(() => {
+            // Spatial events - scoped to container
+            this.containerElement.addEventListener('mousemove', this.onMouseMove);
+            this.containerElement.addEventListener('mousedown', this.onMouseDown);
+            this.containerElement.addEventListener('mouseup', this.onMouseUp);
+            this.containerElement.addEventListener('wheel', this.onWheel, { passive: false });
+            this.containerElement.addEventListener('mouseleave', this.onMouseLeave);
+            
+            // Global keyboard events
+            window.addEventListener('keydown', this.onKeyDown);
+            window.addEventListener('keyup', this.onKeyUp);
+        });
     }
     
     public destroy() {
-        window.removeEventListener('mousemove', this.onMouseMove);
-        window.removeEventListener('mousedown', this.onMouseDown);
-        window.removeEventListener('mouseup', this.onMouseUp);
-        window.removeEventListener('wheel', this.onWheel);
+        // Spatial events - remove from container
+        this.containerElement.removeEventListener('mousemove', this.onMouseMove);
+        this.containerElement.removeEventListener('mousedown', this.onMouseDown);
+        this.containerElement.removeEventListener('mouseup', this.onMouseUp);
+        this.containerElement.removeEventListener('wheel', this.onWheel);
+        this.containerElement.removeEventListener('mouseleave', this.onMouseLeave);
+        
+        // Global keyboard events
         window.removeEventListener('keydown', this.onKeyDown);
         window.removeEventListener('keyup', this.onKeyUp);
-        this.containerElement.removeEventListener('mouseleave', this.onMouseLeave);
         
         if (this.edgeScrollAnimationId) {
             cancelAnimationFrame(this.edgeScrollAnimationId);
@@ -128,6 +138,10 @@ export class CameraMovementManager {
     
     private onKeyDown = (event: KeyboardEvent) => {
         if (!this.keyboardControlsEnabled) return;
+        // Only respond to keyboard when container is relevant (optional focus check)
+        if (!this.containerElement.contains(document.activeElement) && document.activeElement !== document.body) {
+            return;
+        }
         
         const key = event.key.toLowerCase();
         if (['w', 's', 'a', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', '+', '=', '-'].includes(key)) {

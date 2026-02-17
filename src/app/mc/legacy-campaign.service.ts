@@ -38,8 +38,9 @@ export class LegacyCampaignService {
                 c.firstSessionDate
             )
             .map(c =>
+                // TODO: really not a great solution, but the service will be phased out anyway
                 new MegaCampaign(
-                    c.name,
+                    "2. Mega Campaign",
                     new Date(c.regionDeadlineDate),
                     new Date(c.startDeadlineDate),
                     new Date(c.firstSessionDate),

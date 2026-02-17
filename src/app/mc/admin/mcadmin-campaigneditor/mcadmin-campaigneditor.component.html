@@ -19,7 +19,10 @@
     @if (selectedCampaign) {
     <div class="campaign-details">
         <div class="header-with-actions">
-            <h1>{{selectedCampaign.getName()}}</h1>
+            <div>
+                <h1>{{selectedCampaign.getName()}}</h1>
+                <p class="campaign-id" *ngIf="selectedCampaign.getId()">ID: {{selectedCampaign.getId()}}</p>
+            </div>
             <div class="title-button-panel">
                 <button mat-icon-button (click)="renameCampaign(selectedCampaign)"
                     [disabled]="!selectedCampaign.canBeEdited()" matTooltip="Rename Campaign">
@@ -33,6 +36,7 @@
         </div>
         <div class="campaign-details-content">
             <div class="wrapper">
+                <h3>Dates & Times</h3>
 
                 <app-date-time-picker title="Region Deadline:" [(ngModel)]="editingCampaignData.regionDeadline"
                     (ngModelChange)="onDateTimeChange()">
@@ -51,6 +55,8 @@
                 </app-date-time-picker>
             </div>
             <div class="wrapper">
+                <h3>URLs & Configuration</h3>
+
                 <mat-form-field appearance="outline">
                     <mat-label>CK3 Map GeoJSON URL</mat-label>
                     <input matInput type="url" [(ngModel)]="editingCampaignData.ck3MapGeoJsonUrl" 
@@ -70,6 +76,8 @@
                 </mat-form-field>
             </div>
             <div class="wrapper">
+                <h3>Campaign Settings & Lobbies</h3>
+
                 <mat-slide-toggle [(ngModel)]="editingCampaignData.signupsOpen" 
                     (ngModelChange)="onSettingsChange()">
                     Signups Open
@@ -104,6 +112,7 @@
                     <input matInput [(ngModel)]="editingCampaignData.possibleKeys" 
                         (ngModelChange)="onSettingsChange()" placeholder="key1, key2, key3">
                 </mat-form-field>
+            </div>
         </div>
     </div>
     }

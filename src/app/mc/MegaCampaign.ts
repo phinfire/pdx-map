@@ -18,6 +18,7 @@ export class MegaCampaign {
         private vic3LobbyIdentifiers: string[],
         private possibleKeys: string[]
     ) {
+        console.log(id, name);
     }
 
     getName() {

@@ -25,6 +25,7 @@ export const routes: Routes = [
             { path: 'mc/admin', component: MCAdminComponent },
             { path: 'mc/modder', component: MegaModderComponent },
             { path: 'mc/signup', component: MCSignupComponent },
+            { path: 'mc/signup/:campaignId', component: MCSignupComponent },
             { path: 'mc/:campaignId', component: MegaCampaignComponent },
             { path: 'mc', component: MegaCampaignComponent },
             { path: 'jomini', component: JominiKioskComponent },
