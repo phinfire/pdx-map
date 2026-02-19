@@ -23,9 +23,6 @@ export class SlabMapViewComponent {
     @Input() viewModes: LabeledAndIconed<ViewMode>[] = [];
     protected colorConfigProviders: ColorConfigProvider[] = [];
     @Input() behaviorConfig: BehaviorConfigProvider = new BehaviorConfigProvider(0.75);
-    @Input() selectionCallback: (key: string) => void = (key: string) => {
-        this.polygonSelectComponent.setLockedState(key, false, false);
-    };
     @ViewChild('polygonSelect') polygonSelectComponent!: PolygonSelectComponent;
 
     customButtonsForPolySelect: CustomButton[] = [];

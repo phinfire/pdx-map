@@ -20,6 +20,7 @@ export interface SaveMetadata extends Record<string, any> {
 export interface SaveInfo {
     id: string;
     metadata: SaveMetadata;
+    updated_at: string;
 }
 
 export interface SaveUploadResponse {
@@ -54,10 +55,10 @@ export class SaveSaverService {
     public getAvailableSavesAndMetadata(): Observable<SaveInfo[]> {
         return this.saveDatabaseService.listFiles().pipe(
             map(files => files
-                .filter((file): file is { id: string; metadata: SaveMetadata } & typeof file =>
+                .filter((file): file is { id: string; metadata: SaveMetadata; updated_at: string } & typeof file =>
                     file.metadata?.['kind'] === 'save'
                 )
-                .map(file => ({ id: file.id, metadata: file.metadata }))
+                .map(file => ({ id: file.id, metadata: file.metadata, updated_at: file.updated_at }))
             )
         );
     }

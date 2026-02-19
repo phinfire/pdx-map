@@ -2,6 +2,8 @@ import { Component, ElementRef, inject, OnDestroy, ViewChild } from '@angular/co
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, firstValueFrom } from 'rxjs';
 import { SimplifiedDate } from '../../../model/common/SimplifiedDate';
@@ -19,7 +21,7 @@ import { Eu4SaveViewComponent } from '../eu4-save-view/eu4-save-view.component';
 
 @Component({
     selector: 'app-save-view-splash',
-    imports: [Ck3SaveViewComponent, Eu4SaveViewComponent, SaveViewComponent, MatButtonModule, MatProgressSpinnerModule, Ck3SaveViewComponent, MatIconModule],
+    imports: [Ck3SaveViewComponent, Eu4SaveViewComponent, SaveViewComponent, MatButtonModule, MatProgressSpinnerModule, MatIconModule, MatSelectModule, MatFormFieldModule],
     templateUrl: './save-view-splash.component.html',
     styleUrl: './save-view-splash.component.scss'
 })
@@ -36,6 +38,9 @@ export class SaveViewSplashComponent implements OnDestroy {
     activeSaveRawData?: any;
     isProcessing = false;
     isFromDatabase = false;
+    availableSaves: { id: string; metadata: any; updated_at?: string }[] = [];
+    selectedSaveId?: string;
+    savesByGameType: Map<string, { id: string; metadata: any; updated_at?: string }[]> = new Map();
     private clearSaveActionHandle?: string;
     private downloadSaveActionHandle?: string;
     private downloadProcessedSaveActionHandle?: string;
@@ -51,6 +56,8 @@ export class SaveViewSplashComponent implements OnDestroy {
             this.saveSaverService.getAvailableSavesAndMetadata(),
             this.route.params
         ]).subscribe(([saves, params]) => {
+            this.availableSaves = saves;
+            this.groupSavesByGameType(saves);
             const gameFromURL = params['game'];
             const saveIdFromURL = params['saveId'];
             if (saveIdFromURL) {
@@ -266,6 +273,56 @@ export class SaveViewSplashComponent implements OnDestroy {
 
     goToLatestSave() {
         this.router.navigate(['/save', 'latest']);
+    }
+
+    onSaveSelected(saveId: string) {
+        const save = this.availableSaves.find(s => s.id === saveId);
+        if (save) {
+            const game = this.saveSaverService.getGameFromSaveMetadata(save);
+            if (game) {
+                this.router.navigate(['/save', game, saveId]);
+            }
+        }
+    }
+
+    getSaveDisplayLabel(save: { id: string; metadata: any; updated_at?: string }): string {
+        const fileName = save.metadata?.fileName || 'Unknown save';
+        const uploadDate = save.updated_at ? this.formatDate(save.updated_at) : 'Unknown date';
+        return `${fileName} - ${uploadDate}`;
+    }
+
+    private formatDate(dateString: string): string {
+        return new Date(dateString).toISOString().split('T')[0];
+    }
+
+    private groupSavesByGameType(saves: { id: string; metadata: any; updated_at?: string }[]): void {
+        this.savesByGameType.clear();
+        saves.forEach(save => {
+            const game = this.saveSaverService.getGameFromSaveMetadata(save);
+            if (game) {
+                if (!this.savesByGameType.has(game)) {
+                    this.savesByGameType.set(game, []);
+                }
+                this.savesByGameType.get(game)!.push(save);
+            }
+        });
+    }
+
+    getGameTypeLabel(gameType: string): string {
+        switch (gameType?.toLowerCase()) {
+            case 'ck3':
+                return 'Crusader Kings III';
+            case 'eu4':
+                return 'Europa Universalis IV';
+            case 'vic3':
+                return 'Victoria 3';
+            default:
+                return gameType.toUpperCase();
+        }
+    }
+
+    getGameTypeKeys(): string[] {
+        return ['ck3', 'eu4', 'vic3'].filter(key => this.savesByGameType.has(key));
     }
 
     private async loadReferenceSave(url: string, fileType: SaveFileType): Promise<{ save: any, rawData: any }> {

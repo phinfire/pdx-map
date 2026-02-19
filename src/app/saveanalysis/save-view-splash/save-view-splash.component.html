@@ -22,6 +22,25 @@
         <mat-icon>history</mat-icon>
         Open Latest Save
     </button>
+    @if (availableSaves.length > 0) {
+    <span>or</span>
+    <div class="saves-selector">
+        <mat-form-field appearance="outline">
+            <mat-label>Select a save</mat-label>
+            <mat-select [value]="selectedSaveId" (selectionChange)="onSaveSelected($event.value)">
+                @for (gameType of getGameTypeKeys(); track gameType) {
+                <mat-optgroup [label]="getGameTypeLabel(gameType)">
+                    @for (save of savesByGameType.get(gameType); track save.id) {
+                    <mat-option [value]="save.id">
+                        {{ getSaveDisplayLabel(save) }}
+                    </mat-option>
+                    }
+                </mat-optgroup>
+                }
+            </mat-select>
+        </mat-form-field>
+    </div>
+    }
 </div>
 }
 }

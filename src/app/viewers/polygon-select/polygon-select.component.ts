@@ -10,6 +10,11 @@ import { ColorConfigProvider } from './ColorConfigProvider';
 import { CustomButton } from './CustomButton';
 import { TooltipManager } from './TooltipManager';
 
+export interface PolygonSelectionEvent {
+    key: string;
+    locked: boolean;
+}
+
 @Component({
     selector: 'app-polygon-select',
     imports: [MatIconModule, MatProgressSpinnerModule, MatExpansionModule, MatTooltipModule],
@@ -24,13 +29,11 @@ export class PolygonSelectComponent {
     @Input() clearColor = 0x000000;
     @Input() colorConfigProviders: ColorConfigProvider[] = [];
     colorConfigProvider: ColorConfigProvider | null = null;
-    @Input() selectionCallback: (key: string, locked: boolean) => void = (key: string, locked: boolean) => {
-        console.log("No callback provided");
-    };
     @Input() meshBuddiesProvider: (key: string) => string[] = (key: string) => [key];
     @Input() tooltipProvider: (key: string) => string = (key: string) => key;
     @Input() customButtons: CustomButton[] = [];
     @Output() buttonClicked = new EventEmitter<CustomButton>();
+    @Output() selectionChanged = new EventEmitter<PolygonSelectionEvent>();
     
     protected groupedCustomButtons: Map<string, CustomButton[]> = new Map();
 
@@ -227,15 +230,17 @@ export class PolygonSelectComponent {
 
     ngOnInit(): void {
         this.setupResizeObserver();
-        window.addEventListener('click', this.onClick);
-        window.addEventListener('mousedown', this.onMouseDown);
-        window.addEventListener('mouseup', this.onMouseUp);
-        this.containerRef.nativeElement.addEventListener('mousemove', this.onMouseMoveForRaycasting);
-        this.containerRef.nativeElement.addEventListener('mouseleave', () => {
-            this.tooltipManager.setTooltipVisibility(false);
-            this.cdr.markForCheck();
+        this.ngZone.runOutsideAngular(() => {
+            window.addEventListener('click', this.onClick);
+            window.addEventListener('mousedown', this.onMouseDown);
+            window.addEventListener('mouseup', this.onMouseUp);
+            this.containerRef.nativeElement.addEventListener('mousemove', this.onMouseMoveForRaycasting);
+            this.containerRef.nativeElement.addEventListener('mouseleave', () => {
+                this.tooltipManager.setTooltipVisibility(false);
+                this.ngZone.run(() => this.cdr.markForCheck());
+            });
+            this.animate();
         });
-        this.animate();
     }
 
     ngAfterViewInit(): void {
@@ -243,11 +248,13 @@ export class PolygonSelectComponent {
     }
 
     ngOnDestroy(): void {
-        window.removeEventListener('click', this.onClick);
-        window.removeEventListener('mousedown', this.onMouseDown);
-        window.removeEventListener('mouseup', this.onMouseUp);
-        this.containerRef.nativeElement.removeEventListener('mousemove', this.onMouseMoveForRaycasting);
-        cancelAnimationFrame(this.animationId);
+        this.ngZone.runOutsideAngular(() => {
+            window.removeEventListener('click', this.onClick);
+            window.removeEventListener('mousedown', this.onMouseDown);
+            window.removeEventListener('mouseup', this.onMouseUp);
+            this.containerRef.nativeElement.removeEventListener('mousemove', this.onMouseMoveForRaycasting);
+            cancelAnimationFrame(this.animationId);
+        });
         if (this.cameraMovementManager) {
             this.cameraMovementManager.destroy();
         }
@@ -321,17 +328,19 @@ export class PolygonSelectComponent {
     private setupResizeObserver() {
         if (typeof ResizeObserver !== 'undefined') {
             this.resizeObserver = new ResizeObserver((entries) => {
-                if (this.resizeTimeout) {
-                    clearTimeout(this.resizeTimeout);
-                }
-                this.resizeTimeout = window.setTimeout(() => {
-                    requestAnimationFrame(() => {
-                        for (const entry of entries) {
-                            this.handleResize();
-                        }
-                        this.resizeTimeout = null;
-                    });
-                }, 16);
+                this.ngZone.runOutsideAngular(() => {
+                    if (this.resizeTimeout) {
+                        clearTimeout(this.resizeTimeout);
+                    }
+                    this.resizeTimeout = window.setTimeout(() => {
+                        requestAnimationFrame(() => {
+                            for (const entry of entries) {
+                                this.handleResize();
+                            }
+                            this.resizeTimeout = null;
+                        });
+                    }, 16);
+                });
             });
             this.resizeObserver.observe(this.containerRef.nativeElement);
         }
@@ -353,13 +362,16 @@ export class PolygonSelectComponent {
         this.tooltipManager.updateMousePosition(event.clientX, event.clientY);
         const isOverButton = (event.target as Element).closest('.button-group, .corner-button');
         if (isOverButton) {
+            const wasVisible = this.tooltipManager.isTooltipVisible();
             this.tooltipManager.setTooltipVisibility(false);
-            this.cdr.markForCheck();
+            if (wasVisible) {
+                this.ngZone.run(() => this.cdr.markForCheck());
+            }
             return;
         }
 
         this.tooltipManager.updateTooltipPosition();
-        this.cdr.markForCheck();
+        this.ngZone.run(() => this.cdr.markForCheck());
 
         const rect = container.getBoundingClientRect();
         const newMouseX = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
@@ -435,7 +447,7 @@ export class PolygonSelectComponent {
     refreshButtonClicked() {
         this.polygons.forEach(poly => {
             this.applyLockedEffects(poly, false);
-            this.selectionCallback(poly.key, false);
+            this.ngZone.run(() => this.selectionChanged.emit({ key: poly.key, locked: false }));
         });
     }
 
@@ -495,12 +507,12 @@ export class PolygonSelectComponent {
         const content = this.tooltipProvider(key);
         this.tooltipManager.setTooltipContent(content);
         this.tooltipManager.setTooltipVisibility(true);
-        this.cdr.markForCheck();
+        this.ngZone.run(() => this.cdr.markForCheck());
     }
 
     private hideTooltip() {
         this.tooltipManager.setTooltipVisibility(false);
-        this.cdr.markForCheck();
+        this.ngZone.run(() => this.cdr.markForCheck());
     }
 
     public toggleTooltips() {
@@ -545,13 +557,13 @@ export class PolygonSelectComponent {
                 if (buddyMesh) {
                     this.applyLockedEffects(buddyMesh, locked);
                     if (triggerCallback) {
-                        this.selectionCallback(buddyMesh.key, locked);
+                        this.ngZone.run(() => this.selectionChanged.emit({ key: buddyMesh.key, locked }));
                     }
                 }
             }
         });
         if (triggerCallback) {
-            this.selectionCallback(poly.key, locked);
+            this.ngZone.run(() => this.selectionChanged.emit({ key: poly.key, locked }));
         }
     }
 }

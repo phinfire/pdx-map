@@ -81,7 +81,6 @@ export class MCSignupComponent {
     isDraggableRow = (index: number, item: TableItem) => item.key !== '';
     isEmptyRow = (index: number, item: TableItem) => item.key === '';
 
-    selectionCallback = this.onSelect.bind(this);
     meshBuddiesProvider: (key: string) => string[] = (key: string) => {
         if (!this.currentMapData?.clusterManager) {
             return [key];

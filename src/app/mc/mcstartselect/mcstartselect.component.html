@@ -22,7 +22,8 @@
 
 <div class="middle">
     <div class="render-wrapper">
-        <app-polygon-select #polygonSelect [colorConfigProviders]="[colorConfigProvider]" [selectionCallback]="selectionCallback"
+        <app-polygon-select #polygonSelect [colorConfigProviders]="[colorConfigProvider]"
+            (selectionChanged)="onSelect($event.key, $event.locked)"
             [tooltipProvider]="tooltipProvider" [meshBuddiesProvider]="meshBuddiesProvider"></app-polygon-select>
     </div>
     <div class="side-container">

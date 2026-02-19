@@ -61,7 +61,6 @@ export class McstartselectComponent implements AfterViewInit {
     protected rulerFileContent: string | null = null;
 
     colorConfigProvider = new ColorConfigProvider(new Map<string, number>());
-    selectionCallback = this.onSelect.bind(this);
     meshBuddiesProvider: (key: string) => string[] = (key: string) => {
         if (this.clusterManager) {
             return this.clusterManager.getBuddies(key);
