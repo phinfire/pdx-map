@@ -2,7 +2,6 @@ import { Injectable } from "@angular/core";
 import * as d3 from 'd3';
 import { Plotable } from "./Plotable";
 
-// Minimal default style for tooltip
 class DefaultPlotStyle {
     getTextColor() { return { toString: () => '#fff' }; }
     getBorderColor() { return { toString: () => '#222' }; }
@@ -15,6 +14,119 @@ class DefaultPlotStyle {
 export class PlottingService {
 
     private static readonly OTHER_LABEL = 'Other';
+
+    drawTimeBars(plotables: {label: string, startDate: Date, endDate: Date, rowName: string, color?: string}[], nativeElement: HTMLElement) {
+        const width = nativeElement.clientWidth || 1000;
+        const height = nativeElement.clientHeight || 500;
+        const margin = { top: 20, right: 30, bottom: 150, left: 150 };
+        const chartWidth = width - margin.left - margin.right;
+        const chartHeight = height - margin.top - margin.bottom;
+        const barGap = 8;
+        const uniqueRowNames = Array.from(new Set(plotables.map(p => p.rowName))).sort();
+        const xScale = d3.scaleTime()
+            .domain([
+                d3.min(plotables, d => new Date(d.startDate.getFullYear(), 0, 1)) || new Date(),
+                d3.max(plotables, d => new Date(d.endDate.getFullYear() + 1, 0, 1)) || new Date()
+            ])
+            .range([0, chartWidth]);
+
+        const yScale = d3.scaleBand<string>()
+            .domain(uniqueRowNames)
+            .range([0, chartHeight])
+            .padding(0.2);
+        const hostElement = d3.select(nativeElement);
+        hostElement.selectAll("svg").remove();
+
+        const svgRoot = hostElement.append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        const svg = svgRoot.append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const xAxis = d3.axisBottom(xScale)
+            .tickFormat(d3.timeFormat("%Y-%m-%d") as any);
+        
+        svg.append("g")
+            .attr("transform", `translate(0,${chartHeight})`)
+            .call(xAxis)
+            .selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end")
+
+        svg.append("g")
+            .call(d3.axisLeft(yScale))
+            .selectAll("text")
+            .style("font-size", "1.2em")
+
+        svg.selectAll(".time-bar")
+            .data(plotables)
+            .enter()
+            .append("rect")
+            .attr("class", "time-bar")
+            .attr("x", d => xScale(new Date(d.startDate)))
+            .attr("y", d => (yScale(d.rowName) || 0) + yScale.bandwidth() * 0.25)
+            .attr("width", d => Math.max(0, xScale(new Date(d.endDate)) - xScale(new Date(d.startDate)) - barGap))
+            .attr("height", yScale.bandwidth() * 0.5)
+            .attr("fill", (d: any) => d.color)
+            .attr("filter", "url(#drop-shadow)")
+            .style("cursor", "pointer");
+
+        svg.selectAll(".time-bar-label")
+            .data(plotables)
+            .enter()
+            .append("text")
+            .attr("class", "time-bar-label")
+            .attr("x", d => xScale(new Date(d.startDate)) + 4)
+            .attr("y", d => (yScale(d.rowName) || 0) + yScale.bandwidth() * 0.25 + yScale.bandwidth() * 0.5 / 2)
+            .attr("dominant-baseline", "middle")
+            .style("font-size", `${Math.max(10, yScale.bandwidth() * 0.4)}px`)
+            .style("font-weight", "bold")
+            .style("fill", "#fff")
+            .style("pointer-events", "none")
+            .text(d => d.label)
+            .each(function (d: any) {
+                const barWidth = Math.max(0, xScale(new Date(d.endDate)) - xScale(new Date(d.startDate)) - barGap - 8);
+                const textNode = this as SVGTextElement;
+                const bbox = textNode.getBBox();
+                if (bbox.width > barWidth) {
+                    let label = d.label;
+                    while (label.length > 0) {
+                        label = label.slice(0, -1);
+                        d3.select(textNode).text(label + "...");
+                        const newBbox = textNode.getBBox();
+                        if (newBbox.width <= barWidth) {
+                            break;
+                        }
+                    }
+                }
+            });
+        const defs = svgRoot.append("defs");
+        defs.append("filter")
+            .attr("id", "drop-shadow")
+            .attr("x", "-20%")
+            .attr("y", "-20%")
+            .attr("width", "140%")
+            .attr("height", "140%")
+            .append("feDropShadow")
+            .attr("dx", "2")
+            .attr("dy", "2")
+            .attr("stdDeviation", "3")
+            .attr("flood-color", "#000")
+            .attr("flood-opacity", "0.5");
+        const styleElement = hostElement.append("style");
+        styleElement.text(`
+            .time-bar-label {
+                font-family: var(--font-family), 'Titillium Web', 'Montserrat', sans-serif;
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        `);
+
+        return svgRoot.node();
+    }
 
     drawBarPlot(plotables: Plotable[], nativeElement: HTMLElement, showLabelsWithImages: boolean, showXAxisTickLabels: boolean) {
         const bars = plotables;

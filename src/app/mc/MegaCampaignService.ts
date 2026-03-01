@@ -10,7 +10,7 @@ import { MegaCampaign } from "./MegaCampaign";
 })
 export class MegaCampaignService {
 
-    private readonly API_URL = "http://localhost:8085"
+    private readonly API_URL = "https://codingafterdark.de/megacampaign"
 
     private discordAuthService = inject(DiscordAuthenticationService);
     private http = inject(HttpClient);

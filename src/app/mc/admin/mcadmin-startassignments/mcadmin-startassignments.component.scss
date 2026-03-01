@@ -37,13 +37,13 @@
     width: 100%;
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
     gap: 1em;
-    background-color: var(--header-background-color);
     padding: 1.5em 3em;
     height: fit-content;
     border-radius: 0.5rem;
-    gap: 1rem;
+    margin-bottom: 8px;
 }
 
 .toolbar-section {
@@ -103,5 +103,86 @@
         width: 100%;
         max-height: 100%;
         overflow: auto;
+    }
+}
+
+.warning-icon {
+    color: rgb(255, 152, 0) !important;
+    font-size: 20px;
+}
+
+.player-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.option-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.player-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.player-cell-with-avatar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-icon-spacing {
+    margin-right: 4px;
+}
+
+.action-cell {
+    display: flex;
+    gap: 4px;
+}
+
+.add-user-section {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-left: 12px;
+    border-left: 1px solid var(--faded-border-color);
+}
+
+.add-user-form {
+    width: 200px;
+}
+
+.tables-container {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+
+    h3 {
+        margin-left: 0;
+        margin-top: 0;
+        margin-bottom: 12px;
+    }
+}
+
+.players-section,
+.regions-section {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+
+    .table-container {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
     }
 }

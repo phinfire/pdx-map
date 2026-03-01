@@ -80,7 +80,7 @@ export class SaveViewSplashComponent implements OnDestroy {
                         if (gameFromURL == "eu4") {
                             localUrl = "http://localhost:5500/public/saves/mp_Palatinate1705_10_30.eu4";
                         } else if (gameFromURL == "ck3") {
-                            localUrl = "http://localhost:5500/public/Pope_Udalrich_of_die_The_Misanthropy_1262_04_18.ck3";
+                            localUrl = "http://localhost:5500/public/saves/Pope_Udalrich_of_die_The_Misanthropy_1262_04_18.ck3";
                         } else if (gameFromURL == "vic3") {
                             localUrl = "http://localhost:5500/public/saves/palatinate_1897_08_22.v3";
                         }

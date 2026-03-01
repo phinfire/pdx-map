@@ -29,6 +29,8 @@ import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
 import { MegaUtilService } from '../../../services/megacampaign/mega-util.service';
 import { MatDividerModule } from '@angular/material/divider';
 import { MegaBrowserSessionService } from '../mega-browser-session.service';
+import { PlottingService } from '../../plot-view/PlottingService';
+import { ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 
 @Component({
     selector: 'app-mega-campaign',
@@ -37,7 +39,7 @@ import { MegaBrowserSessionService } from '../mega-browser-session.service';
     styleUrl: './mega-campaign.component.scss'
 })
 
-export class MegaCampaignComponent {
+export class MegaCampaignComponent implements AfterViewInit {
 
     titleService = inject(Title);
     router = inject(Router);
@@ -51,6 +53,9 @@ export class MegaCampaignComponent {
     saveSaver = inject(SaveSaverService);
     megaUtils = inject(MegaUtilService);
     activatedRoute = inject(ActivatedRoute);
+    plottingService = inject(PlottingService);
+
+    @ViewChild('timebarContainer') timebarContainer: ElementRef | null = null;
 
     campaign: MegaCampaign | null = null;
     userAssignment: StartAssignment | null = null;
@@ -59,6 +64,18 @@ export class MegaCampaignComponent {
 
     user2Ruler: Map<DiscordUser, CustomRulerFile> = new Map();
     seriesData: LineViewerData<Date> | null = null;
+    timeBarData: {label: string, startDate: Date, endDate: Date, rowName: string, color?: string}[] = [
+        {label: "Angela Merkel", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 0, 31), rowName: "Germany", color: "#1F1F1F"},
+        {label: "Olaf Scholz", startDate: new Date(2024, 0, 31), endDate: new Date(2024, 1, 29), rowName: "Germany", color: "#E3000F"},
+        {label: "Konrad Adenauer", startDate: new Date(2024, 1, 29), endDate: new Date(2024, 3, 15), rowName: "Germany", color: "#1F1F1F"},
+        {label: "Emmanuel Macron", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 0, 31), rowName: "France", color: "#FFFFFF"},
+        {label: "Pierre Bérégovoy", startDate: new Date(2024, 0, 31), endDate: new Date(2024, 3, 15), rowName: "France", color: "#EE3340"},
+        {label: "Boris Johnson", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 1, 15), rowName: "UK", color: "#0087DC"},
+        {label: "Rishi Sunak", startDate: new Date(2024, 1, 15), endDate: new Date(2024, 5, 30), rowName: "UK", color: "#0087DC"},
+        {label: "Giuseppe Conte", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 1, 28), rowName: "Italy", color: "#FFEB3B"},
+        {label: "Mario Draghi", startDate: new Date(2024, 1, 28), endDate: new Date(2024, 4, 31), rowName: "Italy", color: "#808080"},
+        {label: "Pedro Sánchez", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 4, 30), rowName: "Spain", color: "#DA291C"}
+    ];
 
     private cachedColumns: Map<number, TableColumn<StartAssignment>[]> = new Map();
 
@@ -76,6 +93,7 @@ export class MegaCampaignComponent {
                 this.saveSaver.getSaveFileByIdentifier$(this.campaign.getVic3SaveIdentifiersInChronologicalOrder()[2]).subscribe(save => {
                     this.seriesData = Vic3SaveSeriesData.fromSaves([save]);
                 });
+                this.initializeTimeBarData();
             });
         combineLatest([this.assignmentService.allAssignments$, this.ck3Service.initializeCK3()])
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -176,6 +194,36 @@ export class MegaCampaignComponent {
 
     isPlayingCk3() {
         return this.campaign ? this.campaign.isPlayingCk3() : false;
+    }
+
+    private initializeTimeBarData() {
+        // Generate example time bar data based on assignments
+        const baseDate = new Date(2024, 0, 1); // January 1, 2024
+        this.timeBarData = this.assignments.map((assignment, index) => {
+            const startDate = new Date(baseDate);
+            startDate.setDate(startDate.getDate() + index * 5);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 10 + Math.random() * 20);
+            return {
+                label: assignment.user.getName(),
+                startDate,
+                endDate,
+                rowName: assignment.region_key || `Region ${index + 1}`
+            };
+        });
+    }
+
+    ngAfterViewInit() {
+        this.renderTimeBar();
+    }
+
+    private renderTimeBar() {
+        console.log("Rendering time bar with data:", this.timeBarData);
+        console.log(this.timebarContainer, "Time bar container element:");
+        if (this.timebarContainer && this.timeBarData.length > 0) {
+            console.log("Time bar container:", this.timebarContainer.nativeElement);
+            this.plottingService.drawTimeBars(this.timeBarData, this.timebarContainer.nativeElement);
+        }
     }
 
     async downloadAllRulersAsZip() {

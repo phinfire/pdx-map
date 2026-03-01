@@ -13,7 +13,7 @@ import { CustomLandedTitle } from "../model/ck3/title/CustomLandedTitle";
 import { LandedTitle } from "../model/ck3/title/LandedTitle";
 import { RGB } from "./RGB";
 
-export function readPlayers(data: any, characterCreator: (id: string, data: any) => Character | null) {
+export function readPlayers(data: any, characterCreator: (id: string) => Character | null) {
         const players = [];
         if (!data.played_character) {
             console.warn("No played_character data found in save file");
@@ -32,7 +32,7 @@ export function readPlayers(data: any, characterCreator: (id: string, data: any)
                 continue;
             }
             const playerName = playerData.name;
-            const characterObject = playerData.character === (32 ** 2 - 1) ? characterCreator("" + playerData.character, data) : null;
+            const characterObject = playerData.character === (32 ** 2 - 1) ? characterCreator("" + playerData.character) : null;
             if (!characterObject) {
                 //console.warn(`Skipping player '${playerName}' with invalid character ID: ${playerData.character}`);
                 //continue;
@@ -50,7 +50,7 @@ export function readPlayers(data: any, characterCreator: (id: string, data: any)
                 for (let i = 0; i < sortedLegacy.length; i++) {
                     const legacyEntry = sortedLegacy[i];
                     if (legacyEntry?.character) {
-                        const legacyCharacter = characterCreator("" + legacyEntry.character, data);
+                        const legacyCharacter = characterCreator("" + legacyEntry.character);
                         if (legacyCharacter) {
                             previousCharacters.set(legacyEntry.date, legacyCharacter);
                         }
@@ -183,3 +183,35 @@ export function readAllHoldings(data: any, parentSave: ICk3Save, ck3: CK3) {
     }
     return index2Holding;
 }
+
+export function createAllCharacters(data: any, save: ICk3Save, ck3: CK3) {
+        const livingCharacters = new Map<string, Character>();
+        const deadUnprunableCharacters = new Map<string, Character>();
+        const deadPrunableCharacters = new Map<string, Character>();
+        const livingData = data.living || {};
+        for (const characterId in livingData) {
+            if (Object.prototype.hasOwnProperty.call(livingData, characterId)) {
+                const char = Character.fromRawData(characterId, livingData[characterId], save, ck3);
+                livingCharacters.set(characterId, char);
+            }
+        }
+        const deadUnprunableData = data.dead_unprunable || {};
+        for (const characterId in deadUnprunableData) {
+            if (Object.prototype.hasOwnProperty.call(deadUnprunableData, characterId)) {
+                const char = Character.fromRawData(characterId, deadUnprunableData[characterId], save, ck3);
+                deadUnprunableCharacters.set(characterId, char);
+            }
+        }
+        const deadPrunableData = data.dead_prunable || {};
+        for (const characterId in deadPrunableData) {
+            if (Object.prototype.hasOwnProperty.call(deadPrunableData, characterId)) {
+                const char = Character.fromRawData(characterId, deadPrunableData[characterId], save, ck3);
+                deadPrunableCharacters.set(characterId, char);
+            }
+        }
+        return {
+            living: livingCharacters,
+            deadUnprunable: deadUnprunableCharacters,
+            deadPrunable: deadPrunableCharacters
+        };
+    }

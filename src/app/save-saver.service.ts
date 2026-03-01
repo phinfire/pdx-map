@@ -4,6 +4,8 @@ import { catchError, concatMap, map, tap } from 'rxjs/operators';
 import { Vic3Save } from '../model/vic/Vic3Save';
 import { DataStorageService, FileUploadResponse } from '../services/datastorage.service';
 import { Eu4Save } from '../model/games/eu4/Eu4Save';
+import { Ck3Save } from '../model/ck3/Ck3Save';
+import { CK3Service } from '../services/gamedata/CK3Service';
 
 export type GameType = 'ck3' | 'vic3' | 'eu4';
 
@@ -51,6 +53,7 @@ export interface UploadFileMeta {
 export class SaveSaverService {
 
     private saveDatabaseService = inject(DataStorageService);
+    private ck3Service = inject(CK3Service);
 
     public getAvailableSavesAndMetadata(): Observable<SaveInfo[]> {
         return this.saveDatabaseService.listFiles().pipe(
@@ -73,18 +76,23 @@ export class SaveSaverService {
         return this.saveDatabaseService.downloadFile(saveId).pipe(
             map(data => {
                 const decodedString = new TextDecoder().decode(data);
-                const parsed = JSON.parse(decodedString);
+                return JSON.parse(decodedString);
+            }),
+            concatMap(parsed => {
                 const game = this.getGameFromSaveMetadata({ metadata: parsed.metadata });
                 console.log(`Loaded save file of game type: ${game}`);
+
                 switch (game) {
                     case 'vic3':
-                        return Vic3Save.fromJSON(parsed);
+                        return of(Vic3Save.fromJSON(parsed));
                     case 'eu4':
-                        return Eu4Save.fromJSON(parsed);
+                        return of(Eu4Save.fromJSON(parsed));
                     case 'ck3':
-                        throw new Error('CK3 save loading not yet implemented');
+                        return this.ck3Service.initializeCK3().pipe(
+                            map(ck3 => Ck3Save.fromJSON(parsed, ck3))
+                        );
                     default:
-                        throw new Error(`Unknown or unsupported game type: ${game}`);
+                        return throwError(() => new Error(`Unknown or unsupported game type: ${game}`));
                 }
             })
         );
@@ -104,7 +112,7 @@ export class SaveSaverService {
     }
 
     storeVic3Save(save: Vic3Save, fileName: string): Observable<SaveUploadResponse> {
-        const mainData = save.toJson() as any;
+        const mainData = save.toJson();
         const serialized = JSON.stringify(mainData);
         return this.hashData(serialized).pipe(
             concatMap(hash => {
@@ -124,11 +132,22 @@ export class SaveSaverService {
     }
 
     storeEu4Save(save: Eu4Save, fileName: string, realDate: Date): Observable<SaveUploadResponse> {
-        const mainData = save.toJSON() as any;
+        const mainData = save.toJSON();
         const serialized = JSON.stringify(mainData);
         return this.hashData(serialized).pipe(
             concatMap(hash => {
                 const mainFileConfig = { kind: 'save' as const, game: 'eu4' as GameType, fileName, realDate: realDate.toISOString(), ingameDate: save.getIngameDate().toISOString() };
+                return this.uploadSaveWithSubfiles(mainData, mainFileConfig, [], hash);
+            })
+        );
+    }
+
+    storeCk3Save(save: Ck3Save, fileName: string): Observable<SaveUploadResponse> {
+        const mainData = save.toJSON();
+        const serialized = JSON.stringify(mainData);
+        return this.hashData(serialized).pipe(
+            concatMap(hash => {
+                const mainFileConfig = { kind: 'save' as const, game: 'ck3' as GameType, fileName, realDate: new Date().toISOString(), ingameDate: save.getIngameDate().toISOString() };
                 return this.uploadSaveWithSubfiles(mainData, mainFileConfig, [], hash);
             })
         );

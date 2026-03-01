@@ -23,7 +23,6 @@ export class DynastyHouse {
         return this.cachedHouseMembers;
     }
 
-
     public getName() {
         return this.data.localized_name ? this.data.localized_name : (this.data.name && this.data.name.startsWith("dynn_") ? this.data.name.substring(5) : this.data.name);
     }

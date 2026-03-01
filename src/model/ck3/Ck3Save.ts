@@ -9,7 +9,7 @@ import { Holding } from "./Holding";
 import { Ck3Player } from "./Player";
 import { ICk3Save } from "./save/ICk3Save";
 import { AbstractLandedTitle } from "./title/AbstractLandedTitle";
-import { readPlayers, readAllFaiths, readAllCultures, readCountries, readLandedTitles, createTitle, readAllHoldings, readDynasties } from "../../util/parse";
+import { readPlayers, readAllFaiths, readAllCultures, readCountries, readLandedTitles, createTitle, readAllHoldings, readDynasties, createAllCharacters } from "../../util/parse";
 
 export class Ck3Save implements ICk3Save, ParadoxSave {
 
@@ -26,19 +26,35 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     private index2Holding: Map<string, Holding> = new Map<string, Holding>();
     private titleKey2Index = new Map<string, number>();
 
+    private data: any;
+
     static fromRawData(data: any, ck3: CK3): Ck3Save {
-        const save = new Ck3Save(ck3, data.date);
+        const save = new Ck3Save(ck3, new Date(data.date));
+        for (let key of Object.keys(data)) {
+            console.log(`Key: ${key}, Size: ${JSON.stringify(data[key]).length.toLocaleString()} chars`);
+        }
         save.initialize(data);
         return save;
     }
 
-    private constructor(private ck3: CK3, private ingameDate: Date) {
+    static fromJSON(json: any, ck3: CK3): Ck3Save {
+        const save = new Ck3Save(ck3, new Date(json.date));
+        save.initialize(json);
+        return save;
+    }
 
+    private constructor(private ck3: CK3, private ingameDate: Date) {
+        if (!(ingameDate instanceof Date)) {
+            this.ingameDate = new Date(ingameDate as any);
+        }
     }
 
     private initialize(data: any) {
-        this.createAllCharacters(data);
-        this.players = readPlayers(data, (id, data) => this.findDataAndCreateCharacter(data, id));
+        const { living, deadUnprunable, deadPrunable } = createAllCharacters(data, this, this.ck3);
+        this.livingCharacters = living;
+        this.deadUnprunableCharacters = deadUnprunable;
+        this.deadPrunableCharacters = deadPrunable;
+        this.players = readPlayers(data, (id) => this.getCharacter(Number(id)));
         this.faiths = readAllFaiths(data);
         this.cultures = readAllCultures(data);
         this.counties = readCountries(data, this, this.ck3);
@@ -48,47 +64,15 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
             this.titleKey2Index.set(title.getKey(), index);
         });
         this.dynastyHouses = readDynasties(data, this);
-    }
-
-    private createAllCharacters(data: any) {
-        const livingData = data.living || {};
-        for (const characterId in livingData) {
-            if (Object.prototype.hasOwnProperty.call(livingData, characterId)) {
-                const char = Character.fromRawData(characterId, livingData[characterId], this, this.ck3);
-                this.livingCharacters.set(characterId, char);
-            }
-        }
-        const deadUnprunableData = data.dead_unprunable || {};
-        for (const characterId in deadUnprunableData) {
-            if (Object.prototype.hasOwnProperty.call(deadUnprunableData, characterId)) {
-                const char = Character.fromRawData(characterId, deadUnprunableData[characterId], this, this.ck3);
-                this.deadUnprunableCharacters.set(characterId, char);
-            }
-        }
-        const deadPrunableData = data.dead_prunable || {};
-        for (const characterId in deadPrunableData) {
-            if (Object.prototype.hasOwnProperty.call(deadPrunableData, characterId)) {
-                const char = Character.fromRawData(characterId, deadPrunableData[characterId], this, this.ck3);
-                this.deadPrunableCharacters.set(characterId, char);
-            }
-        }
+        this.data = data;
     }
 
     public getCK3(): CK3 {
         return this.ck3;
     }
 
-    findDataAndCreateCharacter(data: any, characterId: string): Character | null {
-        if (this.livingCharacters.has(characterId)) {
-            return this.livingCharacters.get(characterId)!;
-        } else if (this.deadUnprunableCharacters.has(characterId)) {
-            return this.deadUnprunableCharacters.get(characterId)!;
-        } else if (this.deadPrunableCharacters.has(characterId)) {
-            return this.deadPrunableCharacters.get(characterId)!;
-        } else {
-            console.warn(`Character with ID ${characterId} not found in pre-created characters.`);
-            return null;
-        }
+    toJSON() {
+        return this.data;
     }
 
     getCharacter(characterId: number) {

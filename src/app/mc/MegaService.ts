@@ -7,11 +7,28 @@ import { PdxFileService } from '../../services/pdx-file.service';
 import { Eu4Save } from '../../model/games/eu4/Eu4Save';
 import { LegacyCampaignService } from './legacy-campaign.service';
 
+interface AssignmentEntry {
+    userId: string;
+    regionKey: string;
+}
+
+interface AssignmentRequest {
+    assignments: AssignmentEntry[];
+}
+
+interface AssignmentView {
+    id: number;
+    userId: string;
+    regionKey: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
 export class MegaService {
+
     private readonly campaignsEndpoint = `http://localhost:8085`;
+    //private readonly campaignsEndpoint = `https://codingafterdark.de/megacampaign`;
 
     private pdxFileService = inject(PdxFileService);
     private authService = inject(DiscordAuthenticationService);
@@ -177,5 +194,19 @@ export class MegaService {
 
     getFlagUrl(nationKey: string): string {
         return `https://codingafterdark.de/mc/ideas/flags/${nationKey}.webp`;
+    }
+
+    getAssignments$(campaignId: number): Observable<AssignmentView[]> {
+        const headers = this.authService.getAuthenticationHeader();
+        return this.http.get<AssignmentView[]>(`${this.campaignsEndpoint}/campaigns/${campaignId}/assignments`, { headers }).pipe(
+            catchError(() => of([]))
+        );
+    }
+
+    updateAssignments$(campaignId: number, assignmentRequest: AssignmentRequest): Observable<AssignmentView[]> {
+        const headers = this.authService.getAuthenticationHeader();
+        return this.http.put<AssignmentView[]>(`${this.campaignsEndpoint}/campaigns/${campaignId}/assignments`, assignmentRequest, { headers }).pipe(
+            catchError(() => of([]))
+        );
     }
 }

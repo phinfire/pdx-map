@@ -37,8 +37,10 @@ export class Character {
         if (!this.data.birth) {
             throw new Error("Character " + this.getCharacterId() + " has no birth date set");
         }
-        this.birthDate = this.data.birth;
-        this.deathDate = this.data.dead_data ? this.data.dead_data.date : null;
+        this.birthDate = this.data.birth instanceof Date ? this.data.birth : new Date(this.data.birth);
+        this.deathDate = this.data.dead_data ?
+            (this.data.dead_data.date instanceof Date ? this.data.dead_data.date : new Date(this.data.dead_data.date)) :
+            null;
     }
 
     public getDynastyHouse() {

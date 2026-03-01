@@ -1,4 +1,8 @@
 <div class="main">
+        <div class="timebar-container">
+            <h2>Campaign Timeline</h2>
+            <div #timebarContainer class="timebar-plot"></div>
+        </div>
 @if (campaign && (isInStartSelectionStage() || isInWaitingForFirstSessionStage() || isPlayingCk3())) {
     @if (this.assignments.length >= 0) {
         <h1>{{ campaign.getName() }} Mega Campaign</h1>

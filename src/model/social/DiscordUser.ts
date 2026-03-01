@@ -3,9 +3,9 @@ export class DiscordUser {
     static fromApiJson(data: any) {
         return new DiscordUser(
             data.id,
-            data.global_name,
+            data.display_name || data.global_name || '',
             data.username,
-            data.avatar,
+            data.avatar_url || data.avatar || '',
             data.discriminator
         );
     }
@@ -19,8 +19,11 @@ export class DiscordUser {
     ) {}
 
     getAvatarImageUrl(): string {
-        if (this.avatar.length == 0) {
+        if (!this.avatar || this.avatar.length === 0) {
             return `https://cdn.discordapp.com/embed/avatars/0.png`;
+        }
+        if (this.avatar.startsWith('http')) {
+            return this.avatar;
         }
         return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.png`;
     }
