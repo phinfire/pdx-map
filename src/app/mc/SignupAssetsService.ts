@@ -30,20 +30,8 @@ export class SignupAssetsService {
     private megaSessionService = inject(MegaBrowserSessionService);
 
     private readonly selectedCampaignRegionConfig$ = this.megaSessionService.selectedMegaCampaign$.pipe(
-        filter((campaign): campaign is MegaCampaign => campaign != null && campaign.getId() != null),
-        switchMap(campaign => {
-            const regionConfigUrl = campaign.getCk3RegionsConfigUrl();
-            console.log("Loading region config from URL:", regionConfigUrl);
-            return new Observable<RegionConfig>(observer => {
-                fetch(regionConfigUrl)
-                    .then(res => res.text())
-                    .then(text => {
-                        observer.next(parseRegionConfig(text));
-                        observer.complete();
-                    })
-                    .catch(err => observer.error(err));
-            });
-        }),
+        filter((campaign): campaign is MegaCampaign => campaign != null && campaign.getId() != null && campaign.regionConfig$ != null),
+        switchMap(campaign => campaign.regionConfig$!),
         shareReplay(1)
     );
 
@@ -76,12 +64,6 @@ export class SignupAssetsService {
         shareReplay(1)
     );
 
-    getRegionNameList$() {
-        return this.selectedCampaignRegionConfig$.pipe(
-            map(config => config.regions.map(region => region.name))
-        );
-    }
-
     loadRegionMapData$(regionKey: string): Observable<SignupAssetsData> {
         return forkJoin({
             geoJson: this.mapService.fetchCK3GeoJson(true, false),
@@ -94,7 +76,6 @@ export class SignupAssetsService {
                 const key2ClusterKey = buildKey2Cluster(ck3, ck3Save, parsedRegionConfig.regions, keysToExclude);
                 const baseClusterManager = new ClusterManager(key2ClusterKey);
                 const countiesInRegion = baseClusterManager.getCluster2Keys(regionKey);
-
                 const countyRealms = findCountiesOwnedByAtMostDoubleCounts(ck3Save, 2);
                 const countyToRealmMap = new Map<string, string>();
                 countyRealms.forEach((realm, realmIndex) => {

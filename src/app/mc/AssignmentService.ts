@@ -4,13 +4,13 @@ import { BehaviorSubject, Observable, Subject, Subscription, catchError, map, of
 import { DiscordUser } from '../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from "../../services/discord-auth.service";
 import { StartAssignment } from "./StartAssignment";
-import { MCSignupService } from '../../services/megacampaign/legacy-mc-signup-service.service';
+import { McSignupService } from '../../services/megacampaign/mc-signup.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class AssignmentService implements OnDestroy {
-    mcSignupService = inject(MCSignupService);
+    mcSignupService = inject(McSignupService);
     discordAuthService = inject(DiscordAuthenticationService);
     http = inject(HttpClient);
 
@@ -29,10 +29,12 @@ export class AssignmentService implements OnDestroy {
     private authSubscription?: Subscription;
 
     constructor() {
+        /*
         this.mcSignupService.getAllRegisteredUser$().subscribe(users => {
             this.loadedUsers = users;
             this.fetchAllAssignments();
         });
+        */
     }
 
     ngOnDestroy() {
@@ -42,7 +44,8 @@ export class AssignmentService implements OnDestroy {
     }
 
     private getAuthenticatedHeaders(): HttpHeaders | null {
-        if (!this.discordAuthService.isLoggedIn()) {
+        const jwt = (this.discordAuthService as any)['_jwt$']?.value;
+        if (!jwt) {
             return null;
         }
 
@@ -94,6 +97,8 @@ export class AssignmentService implements OnDestroy {
     private fetchAllAssignments(): void {
         this.http.get<any>(this.endpoints.getAllRegionAssignments).pipe(
             map((result: any) => {
+                // TODO: this is legacy code. needs to be ripped out
+                /*
                 if (Array.isArray(result?.assignments)) {
                     return result.assignments.map((a: any) => {
                         const user = this.loadedUsers.find(u => u.id === a.discord_id);
@@ -108,6 +113,7 @@ export class AssignmentService implements OnDestroy {
                         return null;
                     }).filter(Boolean) as StartAssignment[];
                 }
+                */
                 console.warn('AssignmentService: Unexpected response format for assignments:', result);
                 return [];
             }),

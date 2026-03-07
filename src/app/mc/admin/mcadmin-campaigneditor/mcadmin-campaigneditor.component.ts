@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { tap } from 'rxjs';
 import { MegaService } from '../../MegaService';
+import { MegaBrowserSessionService } from '../../mega-browser-session.service';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
@@ -29,6 +30,7 @@ import { DateTimePickerComponent } from '../../../date-time-picker/date-time-pic
 export class MCAdminCampaigneditorComponent {
     private megaService = inject(MegaService);
     private snackBar = inject(MatSnackBar);
+    private megaBrowserSession = inject(MegaBrowserSessionService);
 
     campaigns$ = this.megaService.getAvailableCampaigns$().pipe(
         tap(campaigns => {
@@ -102,6 +104,19 @@ export class MCAdminCampaigneditorComponent {
             vic3LobbyIdentifiers: campaign.getVic3LobbyIdentifiers().join(', '),
             possibleKeys: campaign.getPossibleKeys().join(', ')
         };
+        // Propagate selection to shared service, only if campaign.getId() is not undefined/null
+        const campaignId = campaign.getId();
+        if (campaignId !== undefined && campaignId !== null) {
+            this.megaBrowserSession.selectCampaignById(campaignId).subscribe();
+        }
+    }
+    ngOnInit(): void {
+        // Listen for campaign selection changes from shared service
+        this.megaBrowserSession.selectedMegaCampaign$.subscribe(campaign => {
+            if (campaign && (!this.selectedCampaign || campaign.getId() !== this.selectedCampaign.getId())) {
+                this.selectCampaign(campaign);
+            }
+        });
     }
 
     renameCampaign(campaign: MegaCampaign): void {

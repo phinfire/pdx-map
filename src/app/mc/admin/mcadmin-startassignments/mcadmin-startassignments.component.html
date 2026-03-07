@@ -1,19 +1,18 @@
 <div class="tool-bar action-toolbar">
-    <button mat-flat-button color="primary" class="action-button" (click)="pullServerToLocal()"
-        matTooltip="Pull assignments from the server">Pull</button>
-    
-    <button mat-flat-button color="accent" class="action-button" (click)="swapSelectedFromTables()" 
-        [disabled]="!canSwapFromTable()" matTooltip="Swap assignments between selected players or regions">
-        <mat-icon class="action-icon-spacing">swap_horiz</mat-icon>
-        Swap
-    </button>
-
-    <button mat-flat-button color="primary" class="action-button" (click)="assignSelectedUsersAndRegions()"
-        [disabled]="!canAssignFromTables()" matTooltip="Assign selected user(s) to region(s)">Assign</button>
-    
-    <button mat-flat-button color="primary" class="action-button" (click)="confirmAssignments()"
-        [disabled]="!canConfirmAssignments()" matTooltip="Confirm the current assignments and publish them">Confirm
-        & Publish</button>
+    @for (action of tableActions; track action.label) {
+        <button 
+            mat-flat-button 
+            [color]="action.color"
+            class="action-button"
+            (click)="action.action()"
+            [disabled]="!action.predicate()"
+            [matTooltip]="action.tooltip">
+            @if (action.icon) {
+                <mat-icon class="action-icon-spacing">{{ action.icon }}</mat-icon>
+            }
+            {{ action.label }}
+        </button>
+    }
 
     <div class="add-user-section">
         <mat-form-field appearance="outline" class="add-user-form">
@@ -36,12 +35,10 @@
 </div>
 
 <div class="tables-container">
-    <!-- Players Table -->
     <div class="players-section">
         <h3>Players</h3>
         <div class="table-container">
-            <table mat-table [dataSource]="playerTableData" matSort #playerSort="matSort" class="mat-table-striped">
-                <!-- Select Column -->
+            <table mat-table [dataSource]="tableData" matSort #tableSort="matSort" class="mat-table-striped">
                 <ng-container matColumnDef="select">
                     <th mat-header-cell *matHeaderCellDef>
                         <mat-checkbox (change)="$event ? toggleAllPlayers() : null"
@@ -50,29 +47,29 @@
                                       matTooltip="Select all players">
                         </mat-checkbox>
                     </th>
-                    <td mat-cell *matCellDef="let element">
-                        <mat-checkbox [checked]="isUserSelected(element.id)" (change)="toggleUserSelection(element.id)"></mat-checkbox>
+                    <td mat-cell *matCellDef="let element; let i = index">
+                        <mat-checkbox [checked]="isUserSelected(i)" (change)="toggleUserSelection(i)"></mat-checkbox>
                     </td>
                 </ng-container>
 
-                <!-- Index Column -->
                 <ng-container matColumnDef="index">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>#</th>
                     <td mat-cell *matCellDef="let i = index">{{ i + 1 }}</td>
                 </ng-container>
 
-                <!-- Name Column (with Avatar) -->
                 <ng-container matColumnDef="name">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
                     <td mat-cell *matCellDef="let element">
                         <div class="player-name-cell">
-                            <img [src]="element.getAvatarImageUrl()" alt="avatar" class="player-avatar">
-                            <span>{{ element.global_name || element.username }}</span>
+                            @if (element.user) {
+                                <img [src]="element.user.getAvatarImageUrl()" alt="avatar" class="player-avatar">
+                            } @else {
+                                <mat-icon class="player-globe-icon">public</mat-icon>
+                            }
+                            <span>{{ getPlayerDisplayName(element) }}</span>
                         </div>
                     </td>
                 </ng-container>
-
-                <!-- Pick Columns -->
                 <ng-container matColumnDef="pick1">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>I</th>
                     <td mat-cell *matCellDef="let element">{{ getPick(element, 0) }}</td>
@@ -97,142 +94,47 @@
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>V</th>
                     <td mat-cell *matCellDef="let element">{{ getPick(element, 4) }}</td>
                 </ng-container>
-
-                <!-- Warning Column -->
                 <ng-container matColumnDef="warning">
                     <th mat-header-cell *matHeaderCellDef></th>
                     <td mat-cell *matCellDef="let element">
-                        @if (calculatedRegion2Player.size > 0 && !isUserHappy(element)) {
+                        @if ((hasAnyAssignments$ | async) && !isPlayerHappy(element)) {
                             <mat-icon class="warning-icon" matTooltip="User not assigned to a pick">warning</mat-icon>
                         }
                     </td>
                 </ng-container>
 
-                <!-- Server Assignment Column -->
                 <ng-container matColumnDef="regionServer">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Assigned Region (Server)</th>
                     <td mat-cell *matCellDef="let element"
-                        [matTooltip]="'Pick #: ' + getPickNumber(element)" matTooltipPosition="above">
+                        [matTooltip]="element.user ? ('Pick #: ' + getPickNumber(element)) : ''" matTooltipPosition="above">
                         {{ getServerAssignedRegion(element) }}
                     </td>
                 </ng-container>
 
-<!-- Local Assignment Column -->
                 <ng-container matColumnDef="region">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Assigned Region (Local)</th>
                     <td mat-cell *matCellDef="let element"
-                        [matTooltip]="'Pick #: ' + getPickNumber(element)" matTooltipPosition="above">
+                        [matTooltip]="element.user ? ('Pick #: ' + getPickNumber(element)) : ''" matTooltipPosition="above">
                         {{ getLocalAssignedRegion(element) }}
                     </td>
                 </ng-container>
 
-                <!-- Actions Column -->
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef>Actions</th>
                     <td mat-cell *matCellDef="let element">
                         <div class="action-cell">
-                            <button mat-icon-button (click)="removeUserRow(element)" 
-                                matTooltip="Remove user signup">
-                                <mat-icon color="primary">delete</mat-icon>
-                            </button>
+                            @if (element.user) {
+                                <button mat-icon-button (click)="removeUserRow(element)" 
+                                    matTooltip="Remove user signup">
+                                    <mat-icon color="primary">delete</mat-icon>
+                                </button>
+                            }
                         </div>
                     </td>
                 </ng-container>
 
-                <!-- Header and Row Definitions -->
-                <tr mat-header-row *matHeaderRowDef="playerDisplayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: playerDisplayedColumns;"></tr>
-            </table>
-        </div>
-    </div>
-
-    <!-- Regions Table -->
-    <div class="regions-section">
-        <h3>Regions</h3>
-        <div class="table-container">
-            <table mat-table [dataSource]="regionTableData" matSort #regionSort="matSort" class="mat-table-striped">
-                <!-- Select Column -->
-                <ng-container matColumnDef="select">
-                    <th mat-header-cell *matHeaderCellDef>
-                        <mat-checkbox (change)="$event ? toggleAllRegions() : null"
-                                      [checked]="isAllRegionsSelected()"
-                                      [indeterminate]="isRegionsIndeterminate()"
-                                      matTooltip="Select all regions">
-                        </mat-checkbox>
-                    </th>
-                    <td mat-cell *matCellDef="let element">
-                        <mat-checkbox [checked]="isRegionSelected(element)" (change)="toggleRegionSelection(element)"></mat-checkbox>
-                    </td>
-                </ng-container>
-
-                <!-- Index Column -->
-                <ng-container matColumnDef="index">
-                    <th mat-header-cell *matHeaderCellDef mat-sort-header>#</th>
-                    <td mat-cell *matCellDef="let i = index">{{ i + 1 }}</td>
-                </ng-container>
-
-                <!-- Name Column -->
-                <ng-container matColumnDef="name">
-                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Region</th>
-                    <td mat-cell *matCellDef="let element">{{ element }}</td>
-                </ng-container>
-
-                <!-- Assigned Player (Server) Column -->
-                <ng-container matColumnDef="assignedPlayerServer">
-                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Assigned Player (Server)</th>
-                    <td mat-cell *matCellDef="let element">
-                        @if (getServerAssignedPlayerForRegion(element)) {
-                            <div class="player-cell-with-avatar">
-                                <img [src]="getServerAssignedPlayerForRegion(element)!.getAvatarImageUrl()" alt="avatar" class="player-avatar">
-                                <span>{{ getServerAssignedPlayerForRegion(element)?.global_name || getServerAssignedPlayerForRegion(element)?.username }}</span>
-                            </div>
-                        } @else {
-                            <span>-</span>
-                        }
-                    </td>
-                </ng-container>
-
-                <!-- Assigned Player (Local) Column -->
-                <ng-container matColumnDef="assignedPlayerLocal">
-                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Assigned Player (Local)</th>
-                    <td mat-cell *matCellDef="let element">
-                        @if (getAssignedPlayerForRegion(element)) {
-                            <div class="player-cell-with-avatar">
-                                <img [src]="getAssignedPlayerForRegion(element)!.getAvatarImageUrl()" alt="avatar" class="player-avatar">
-                                <span>{{ getAssignedPlayerForRegion(element)?.global_name || getAssignedPlayerForRegion(element)?.username }}</span>
-                            </div>
-                        } @else {
-                            <span>-</span>
-                        }
-                    </td>
-                </ng-container>
-
-                <!-- Warning Column -->
-                <ng-container matColumnDef="warning">
-                    <th mat-header-cell *matHeaderCellDef></th>
-                    <td mat-cell *matCellDef="let element">
-                        @if (calculatedRegion2Player.size > 0 && !isRegionAssigned(element)) {
-                            <mat-icon class="warning-icon" matTooltip="No player assigned to this region">warning</mat-icon>
-                        }
-                    </td>
-                </ng-container> 
-
-                <!-- Actions Column -->
-                <ng-container matColumnDef="actions">
-                    <th mat-header-cell *matHeaderCellDef>Actions</th>
-                    <td mat-cell *matCellDef="let element">
-                        <div class="action-cell">
-                            <button mat-icon-button (click)="removeRegionRow(element)" 
-                                matTooltip="Unassign region">
-                                <mat-icon color="primary">delete</mat-icon>
-                            </button>
-                        </div>
-                    </td>
-                </ng-container>
-
-                <!-- Header and Row Definitions -->
-                <tr mat-header-row *matHeaderRowDef="regionDisplayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: regionDisplayedColumns;"></tr>
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
             </table>
         </div>
     </div>

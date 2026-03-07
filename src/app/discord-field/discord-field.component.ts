@@ -2,7 +2,10 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { DiscordAuthenticationService } from '../../services/discord-auth.service';
+import { DiscordUser } from '../../model/social/DiscordUser';
 
 @Component({
     selector: 'app-discord-field',
@@ -14,25 +17,15 @@ export class DiscordFieldComponent {
 
     private discordAuthService: DiscordAuthenticationService = inject(DiscordAuthenticationService);
 
-    isLoggedIn() {
-        return this.discordAuthService.isLoggedIn();
-    }
-
-    getAvatarUrl() {
-        if (this.isLoggedIn()) {
-            const user = this.discordAuthService.getLoggedInUser()!;
-            return user.getAvatarImageUrl();
-        }
-        return null;
-    }
-
-    getUserName() {
-        if (this.isLoggedIn()) {
-            const user = this.discordAuthService.getLoggedInUser()!;
-            return user.global_name;
-        }
-        return '-';
-    }
+    isLoggedIn$ = this.discordAuthService.isLoggedIn$();
+    
+    avatarUrl$ = this.discordAuthService.loggedInUser$.pipe(
+        map(user => user?.getAvatarImageUrl() || null)
+    );
+    
+    userName$ = this.discordAuthService.loggedInUser$.pipe(
+        map(user => user?.global_name || '-')
+    );
 
     logOut() {
         this.discordAuthService.logOut();

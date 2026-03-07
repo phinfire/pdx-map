@@ -6,6 +6,8 @@ import { DiscordAuthenticationService } from '../../services/discord-auth.servic
 import { PdxFileService } from '../../services/pdx-file.service';
 import { Eu4Save } from '../../model/games/eu4/Eu4Save';
 import { LegacyCampaignService } from './legacy-campaign.service';
+import { RegionConfig } from '../../model/megacampaign/RegionConfig';
+import { parseRegionConfig } from '../../util/signup';
 
 interface AssignmentEntry {
     userId: string;
@@ -27,7 +29,7 @@ interface AssignmentView {
 })
 export class MegaService {
 
-    private readonly campaignsEndpoint = `http://localhost:8085`;
+    public readonly campaignServiceRootUrl = `http://localhost:8085/megacampaign`;
     //private readonly campaignsEndpoint = `https://codingafterdark.de/megacampaign`;
 
     private pdxFileService = inject(PdxFileService);
@@ -45,6 +47,10 @@ export class MegaService {
     }
 
     private nations$?: Observable<any[]>;
+
+    getServiceURL() {
+        return this.campaignServiceRootUrl;
+    }
 
     getNations$(): Observable<any[]> {
         if (!this.nations$) {
@@ -75,7 +81,7 @@ export class MegaService {
         if (!this.combinedCampaigns$) {
             this.combinedCampaigns$ = forkJoin({
                 legacy: this.legacyCampaignService.getLegacyCampaigns$(),
-                new: this.http.get<any[]>(`${this.campaignsEndpoint}/campaigns`).pipe(
+                new: this.http.get<any[]>(`${this.campaignServiceRootUrl}/campaigns`).pipe(
                     catchError(() => of([]))
                 )
             }).pipe(
@@ -128,11 +134,25 @@ export class MegaService {
                 campaign.vic3LobbyIdentifiers || [],
                 campaign.possibleKeys || []
             );
+            // Enrich with regionConfig$ observable
+            result.regionConfig$ = this.createRegionConfig$(result.getCk3RegionsConfigUrl());
             return result;
         } catch (error) {
             console.error('Error transforming campaign:', error);
             return null;
         }
+    }
+
+    private createRegionConfig$(regionConfigUrl: string): Observable<RegionConfig> {
+        return new Observable<RegionConfig>(observer => {
+            fetch(regionConfigUrl)
+                .then(res => res.text())
+                .then(text => {
+                    observer.next(parseRegionConfig(text));
+                    observer.complete();
+                })
+                .catch(err => observer.error(err));
+        }).pipe(shareReplay(1));
     }
 
     private invalidateCampaignsCache(): void {
@@ -143,7 +163,7 @@ export class MegaService {
 
     createCampaign$(name: string): Observable<any> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.post<any>(`${this.campaignsEndpoint}/campaigns?name=${encodeURIComponent(name)}`, {}, { headers }).pipe(
+        return this.http.post<any>(`${this.campaignServiceRootUrl}/campaigns?name=${encodeURIComponent(name)}`, {}, { headers }).pipe(
             map(result => {
                 this.invalidateCampaignsCache();
                 return result;
@@ -153,7 +173,7 @@ export class MegaService {
 
     updateCampaign$(id: number, updates: any): Observable<any> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.patch<any>(`${this.campaignsEndpoint}/campaigns/${id}`, updates, { headers }).pipe(
+        return this.http.patch<any>(`${this.campaignServiceRootUrl}/campaigns/${id}`, updates, { headers }).pipe(
             map(result => {
                 this.invalidateCampaignsCache();
                 return result;
@@ -180,7 +200,7 @@ export class MegaService {
 
     deleteCampaign$(id: number): Observable<any> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.delete<any>(`${this.campaignsEndpoint}/campaigns/${id}`, { headers }).pipe(
+        return this.http.delete<any>(`${this.campaignServiceRootUrl}/campaigns/${id}`, { headers }).pipe(
             map(result => {
                 this.invalidateCampaignsCache();
                 return result;
@@ -198,14 +218,14 @@ export class MegaService {
 
     getAssignments$(campaignId: number): Observable<AssignmentView[]> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.get<AssignmentView[]>(`${this.campaignsEndpoint}/campaigns/${campaignId}/assignments`, { headers }).pipe(
+        return this.http.get<AssignmentView[]>(`${this.campaignServiceRootUrl}/campaigns/${campaignId}/assignments`, { headers }).pipe(
             catchError(() => of([]))
         );
     }
 
     updateAssignments$(campaignId: number, assignmentRequest: AssignmentRequest): Observable<AssignmentView[]> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.put<AssignmentView[]>(`${this.campaignsEndpoint}/campaigns/${campaignId}/assignments`, assignmentRequest, { headers }).pipe(
+        return this.http.put<AssignmentView[]>(`${this.campaignServiceRootUrl}/campaigns/${campaignId}/assignments`, assignmentRequest, { headers }).pipe(
             catchError(() => of([]))
         );
     }

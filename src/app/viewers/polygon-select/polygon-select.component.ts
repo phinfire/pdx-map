@@ -451,6 +451,13 @@ export class PolygonSelectComponent {
         });
     }
 
+    public resetSelection() {
+        this.polygons.forEach(poly => {
+            this.applyLockedEffects(poly, false);
+            this.ngZone.run(() => this.selectionChanged.emit({ key: poly.key, locked: false }));
+        });
+    }
+
     private applyLockedEffects(mesh: THREE.Mesh & { targetZ?: number, locked?: boolean, interactive?: boolean, key: string }, isLocked: boolean) {
         if (!mesh.interactive) return;
         mesh.locked = isLocked;

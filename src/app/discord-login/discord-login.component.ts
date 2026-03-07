@@ -18,18 +18,15 @@ import { IconRegistryService } from '../../services/icon-registry.service';
 export class DiscordLoginComponent {
 
     isApiOnline$: Observable<boolean>;
+    isLoggedIn$: Observable<boolean>;
 
     constructor(private discordAuth: DiscordAuthenticationService, iconRegistry: IconRegistryService) {
         iconRegistry.registerIcons();
         this.isApiOnline$ = this.discordAuth.isOnline$;
+        this.isLoggedIn$ = this.discordAuth.isLoggedIn$();
     }
 
     loginWithDiscord() {
-        console.log("Starting Discord login flow...", this.discordAuth.getRedirectUrl());
-        this.discordAuth.loginOnDiscord(this.discordAuth.getRedirectUrl());
-    }
-    
-    isLoggedIn(): boolean {
-        return this.discordAuth.getLoggedInUser() !== null;
+        this.discordAuth.loginOnDiscord();
     }
 }

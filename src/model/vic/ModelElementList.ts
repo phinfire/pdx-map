@@ -27,7 +27,7 @@ export class ModelElementList<T> implements SupportsAggregration<T> {
     }
 
     getTotalExplanation<R>(cacheKey: string, predicate: (element: T) => boolean, valueAccessor: (element: T) => number, keyFunction: (element: T) => R) {
-        if (true || !this.cachedTotalExplanations.has(cacheKey)) {
+        if (this.cachedTotalExplanations.has(cacheKey)) {
             const element2Value = new Map<R, number>();
             this.elements.filter(predicate).forEach(element => {
                 const key = keyFunction(element);

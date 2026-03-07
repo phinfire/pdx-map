@@ -1,5 +1,9 @@
 
+import { Observable, of, map } from 'rxjs';
+import { RegionConfig } from '../../model/megacampaign/RegionConfig';
+
 export class MegaCampaign {
+    regionConfig$?: Observable<RegionConfig>;
 
     constructor(
         private name: string,
@@ -18,7 +22,7 @@ export class MegaCampaign {
         private vic3LobbyIdentifiers: string[],
         private possibleKeys: string[]
     ) {
-        console.log(id, name);
+
     }
 
     getName() {
@@ -107,5 +111,14 @@ export class MegaCampaign {
 
     canBeEdited(): boolean {
         return this.id !== undefined;
+    }
+
+    getRegionNameList$(): Observable<string[]> {
+        if (!this.regionConfig$) {
+            return of([]);
+        }
+        return this.regionConfig$.pipe(
+            map(config => config.regions.map(region => region.name))
+        );
     }
 }

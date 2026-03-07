@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CustomRulerFile } from '../gamedata/CustomRulerFile';
+import { CustomRulerFile } from '../../model/megacampaign/CustomRulerFile';
 import { Trait } from '../../model/ck3/Trait';
 import { TraitType } from '../../model/ck3/enum/TraitType';
 

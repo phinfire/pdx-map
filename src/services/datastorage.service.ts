@@ -158,9 +158,6 @@ export class DataStorageService {
         method: 'post' | 'put',
         customId?: string
     ): Observable<any> {
-        if (this.authService.isLoggedIn() === false) {
-            return throwError(() => new Error('User is not authenticated'));
-        }
         const formData = new FormData();
         formData.append('file', new File([compressedData as any], fileName, { type: 'application/octet-stream' }));
         formData.append('metadata', JSON.stringify(metadata));

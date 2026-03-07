@@ -7,7 +7,7 @@ import { RGB } from '../../util/RGB';
 import { PdxFileService } from '../pdx-file.service';
 import { CK3 } from '../../model/ck3/game/CK3';
 import { Trait } from '../../model/ck3/Trait';
-import { CustomRulerFile } from './CustomRulerFile';
+import { CustomRulerFile } from '../../model/megacampaign/CustomRulerFile';
 import { Ck3Save } from '../../model/ck3/Ck3Save';
 
 @Injectable({

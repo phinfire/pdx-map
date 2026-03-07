@@ -30,9 +30,6 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
 
     static fromRawData(data: any, ck3: CK3): Ck3Save {
         const save = new Ck3Save(ck3, new Date(data.date));
-        for (let key of Object.keys(data)) {
-            console.log(`Key: ${key}, Size: ${JSON.stringify(data[key]).length.toLocaleString()} chars`);
-        }
         save.initialize(data);
         return save;
     }

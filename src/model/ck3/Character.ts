@@ -255,6 +255,10 @@ export class Character {
         return deathDate.getFullYear() - birthDate.getFullYear();
     }
 
+    public getDeathDate() {
+        return this.deathDate;
+    }
+
     public equals(other: Character) {
         return this.getCharacterId() === other.getCharacterId();
     }

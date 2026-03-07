@@ -20,7 +20,19 @@ Relevant per player (=country/character) values are displayed in a set of tables
 <img src="doc/screenshots/mapview.png" width="90%">
 Per state values (e.g. population, produced goods) can be visualized using an interactive map.
 
+## MegaCampaign Signup
 
+### Flow
+
+1. Admin creates a new campaign, sets dates (via mc/admin)
+2. Each User selects 5 prefered regions (via mc/signup)
+3. Admin triggers automatic player to region assignment (via mc/admin)
+    - Admin may manually adjust assignments
+4. Admin publishes assignments
+5. Users select a county in their assigned region and upload a custom character
+    - Only permitted counties can be selected
+    - Non permitted characters are rejected
+6. Admin downloads the collected custom characters and inserts them into the initial game state
 
 
 # Implementation

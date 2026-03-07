@@ -198,7 +198,6 @@ export class Vic3Save implements ParadoxSave {
                     overlordToVassals.set(overlord, []);
                 }
                 overlordToVassals.get(overlord)!.push(vassal);
-
                 return overlordToVassals;
             }, new Map<string, string[]>());
     }

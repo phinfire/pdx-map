@@ -1,4 +1,4 @@
-import { Trait } from "../../model/ck3/Trait";
+import { Trait } from "../ck3/Trait";
 
 export class CustomRulerFile {
 

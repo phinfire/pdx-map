@@ -13,7 +13,7 @@ import { StartAssignment } from '../StartAssignment';
 import { combineLatest } from 'rxjs';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
 import { PdxFileService } from '../../../services/pdx-file.service';
-import { CustomRulerFile } from '../../../services/gamedata/CustomRulerFile';
+import { CustomRulerFile } from '../../../model/megacampaign/CustomRulerFile';
 import { ClusterManager } from '../mcsignup/ClusterManager';
 import { CK3 } from '../../../model/ck3/game/CK3';
 import { AssignmentService } from '../AssignmentService';
@@ -22,7 +22,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
 import { MegaService } from '../MegaService';
 import { MegaBrowserSessionService } from '../mega-browser-session.service';
-import { MCSignupService } from '../../../services/megacampaign/legacy-mc-signup-service.service';
+import { LegacyMCSignupService } from '../../../services/megacampaign/legacy-mc-signup-service.service';
 
 @Component({
     selector: 'app-mcstartselect',
@@ -35,7 +35,7 @@ export class McstartselectComponent implements AfterViewInit {
     @ViewChild('polygonSelect') polygonSelectComponent!: PolygonSelectComponent;
 
     discordAuthService = inject(DiscordAuthenticationService);
-    signupService = inject(MCSignupService);
+    signupService = inject(LegacyMCSignupService);
     signupAssetsService = inject(SignupAssetsService);
     ck3Service = inject(CK3Service);
     fileService = inject(PdxFileService);

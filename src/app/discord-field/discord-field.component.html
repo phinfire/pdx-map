@@ -1,11 +1,11 @@
 <div class="discord">
   <div class="avatar-container">
-    <img [src]="getAvatarUrl()" class="avatar-img">
+    <img [src]="(avatarUrl$ | async)" class="avatar-img">
   </div>
-  <div class="name-container" [ngClass]="{'logged-out': !isLoggedIn()}">
-    <span class="profile-name">{{ getUserName() }}</span>
+  <div class="name-container" [ngClass]="{'logged-out': !(isLoggedIn$ | async)}">
+    <span class="profile-name">{{ (userName$ | async) }}</span>
 
-    @if (isLoggedIn()) {
+    @if (isLoggedIn$ | async) {
       <button mat-button (click)="logOut()" class="logout-button">
         <mat-icon>close</mat-icon>
       </button>

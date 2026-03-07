@@ -8,7 +8,7 @@ import { combineLatest } from 'rxjs';
 import { DiscordUser } from '../../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
-import { CustomRulerFile } from '../../../services/gamedata/CustomRulerFile';
+import { CustomRulerFile } from '../../../model/megacampaign/CustomRulerFile';
 import { TableColumn } from '../../../util/table/TableColumn';
 import { PlotViewComponent } from '../../plot-view/plot-view.component';
 import { Plotable } from '../../plot-view/Plotable';
@@ -95,13 +95,12 @@ export class MegaCampaignComponent implements AfterViewInit {
                 });
                 this.initializeTimeBarData();
             });
-        combineLatest([this.assignmentService.allAssignments$, this.ck3Service.initializeCK3()])
+        combineLatest([this.assignmentService.allAssignments$, this.ck3Service.initializeCK3(), this.authService.loggedInUser$])
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(([assignments, ck3]) => {
+            .subscribe(([assignments, ck3, loggedInUser]) => {
                 if (assignments != null) {
                     this.assignments = assignments.sort((a, b) => a.region_key < b.region_key ? -1 : (a.region_key > b.region_key ? 1 : 0));
                     this.cachedColumns.clear();
-                    const loggedInUser = this.authService.getLoggedInUser();
                     this.userAssignment = loggedInUser ? assignments.find(a => a.user.id === loggedInUser.id) || null : null;
                 }
                 if (assignments != null && ck3 != null) {

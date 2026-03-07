@@ -9,7 +9,7 @@
         aria-label="Go back">
         <mat-icon class="back-icon">chevron_left</mat-icon>
       </button>
-      Sign Up for {{ campaign?.getName() }}! <span>({{ aggregatedSignupsCount }} already signed up)</span>
+      Sign Up for {{ campaign?.getName() }}! <span>({{ aggregatedSignupsCount$ | async }} already signed up)</span>
     </h1>
     Wählt 5 Regionen in der Reihenfolge eurer Präferenz aus. Die finale Zuordnung wird am {{ getFinalAssignmentDate() }} bekannt
     gegeben. <br> Bitte beachtet, dass nicht garantiert werden kann, dass ihr eine der von euch ausgewählten
@@ -63,13 +63,13 @@
         }
       </div>
     </div>
-    @if (discordAuthService.isLoggedIn()) {
+    @if (isLoggedIn$ | async) {
       <button mat-flat-button color="primary" (click)="register()" [disabled]="!canRegister()" class="register-button"
         [matTooltip]="getDisabledTooltip()" [matTooltipDisabled]="canRegister()">Sign
       Up</button>
     }
     <div class="discord-container">
-      @if (!discordAuthService.isLoggedIn()) {
+      @if (!(isLoggedIn$ | async)) {
         <app-discord-login></app-discord-login>
       }
     </div>
