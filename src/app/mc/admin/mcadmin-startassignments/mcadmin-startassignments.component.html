@@ -66,38 +66,38 @@
                             } @else {
                                 <mat-icon class="player-globe-icon">public</mat-icon>
                             }
-                            <span>{{ getPlayerDisplayName(element) }}</span>
+                            <span>{{ element.user ? element.getDisplayName() : '-' }}</span>
                         </div>
                     </td>
                 </ng-container>
                 <ng-container matColumnDef="pick1">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>I</th>
-                    <td mat-cell *matCellDef="let element">{{ getPick(element, 0) }}</td>
+                    <td mat-cell *matCellDef="let element">{{ element.getPick(0) }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="pick2">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>II</th>
-                    <td mat-cell *matCellDef="let element">{{ getPick(element, 1) }}</td>
+                    <td mat-cell *matCellDef="let element">{{ element.getPick(1) }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="pick3">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>III</th>
-                    <td mat-cell *matCellDef="let element">{{ getPick(element, 2) }}</td>
+                    <td mat-cell *matCellDef="let element">{{ element.getPick(2) }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="pick4">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>IV</th>
-                    <td mat-cell *matCellDef="let element">{{ getPick(element, 3) }}</td>
+                    <td mat-cell *matCellDef="let element">{{ element.getPick(3) }}</td>
                 </ng-container>
 
                 <ng-container matColumnDef="pick5">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>V</th>
-                    <td mat-cell *matCellDef="let element">{{ getPick(element, 4) }}</td>
+                    <td mat-cell *matCellDef="let element">{{ element.getPick(4) }}</td>
                 </ng-container>
                 <ng-container matColumnDef="warning">
                     <th mat-header-cell *matHeaderCellDef></th>
                     <td mat-cell *matCellDef="let element">
-                        @if ((hasAnyAssignments$ | async) && !isPlayerHappy(element)) {
+                        @if ((hasAnyAssignments$ | async) && !element.isHappy()) {
                             <mat-icon class="warning-icon" matTooltip="User not assigned to a pick">warning</mat-icon>
                         }
                     </td>
@@ -106,16 +106,16 @@
                 <ng-container matColumnDef="regionServer">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Assigned Region (Server)</th>
                     <td mat-cell *matCellDef="let element"
-                        [matTooltip]="element.user ? ('Pick #: ' + getPickNumber(element)) : ''" matTooltipPosition="above">
-                        {{ getServerAssignedRegion(element) }}
+                        [matTooltip]="element.user ? ('Pick #: ' + element.getPickNumber()) : ''" matTooltipPosition="above">
+                        {{ element.regionServer || '' }}
                     </td>
                 </ng-container>
 
                 <ng-container matColumnDef="region">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Assigned Region (Local)</th>
                     <td mat-cell *matCellDef="let element"
-                        [matTooltip]="element.user ? ('Pick #: ' + getPickNumber(element)) : ''" matTooltipPosition="above">
-                        {{ getLocalAssignedRegion(element) }}
+                        [matTooltip]="element.user ? ('Pick #: ' + element.getPickNumber()) : ''" matTooltipPosition="above">
+                        {{ element.regionClient || '' }}
                     </td>
                 </ng-container>
 

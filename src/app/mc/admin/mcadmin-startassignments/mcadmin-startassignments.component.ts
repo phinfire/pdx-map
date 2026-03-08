@@ -16,12 +16,12 @@ import { combineLatest, map, Observable, Subscription } from 'rxjs';
 import { PlayerAndOrRegion } from '../../../../model/megacampaign/PlayerAndOrRegion';
 import { DiscordUser } from '../../../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from '../../../../services/discord-auth.service';
+import { AdminUserTableService } from '../../../../services/megacampaign/admin-user-table.service';
 import { McSignupService } from '../../../../services/megacampaign/mc-signup.service';
+import { MegaBrowserSessionService } from '../../../../services/megacampaign/mega-browser-session.service';
 import { DiscordService } from '../../../discord.service';
 import { AssignmentService } from '../../AssignmentService';
 import { MegaCampaign } from '../../MegaCampaign';
-import { MegaBrowserSessionService } from '../../mega-browser-session.service';
-import { AdminUserTableService } from '../../../../services/megacampaign/admin-user-table.service';
 
 interface TableAction {
     label: string;
@@ -100,7 +100,7 @@ export class McadminStartassignmentsComponent implements OnDestroy {
             icon: 'assignment',
             color: 'accent',
             tooltip: 'Assign selected player to selected region',
-            predicate: () => this.canAssignRowToRegion(),
+            predicate: () => this.adminUserTableService.canAssignRowToRegion(),
             action: () => this.assignSelectedRowToRegion()
         },
         {
@@ -108,15 +108,8 @@ export class McadminStartassignmentsComponent implements OnDestroy {
             icon: 'swap_horiz',
             color: 'accent',
             tooltip: 'Swap assignments between selected players',
-            predicate: () => this.canSwapRows(),
+            predicate: () => this.adminUserTableService.canSwapRows(),
             action: () => this.swapSelected()
-        },
-        {
-            label: 'Reset Selection',
-            color: 'primary',
-            tooltip: 'Clear all player selections',
-            predicate: () => this.hasSelection(),
-            action: () => this.resetSelectedPlayers()
         },
         {
             label: 'Confirm & Publish',
@@ -126,7 +119,6 @@ export class McadminStartassignmentsComponent implements OnDestroy {
             action: () => this.confirmAssignments()
         }
     ];
-
 
     protected availableUsers$: Observable<DiscordUser[]> = this.discordService.getGuildUsersAsDiscordUsers('749686922959388752');
 
@@ -256,7 +248,7 @@ export class McadminStartassignmentsComponent implements OnDestroy {
     ngAfterViewInit() {
         this.tableData.sort = this.tableSort;
         this.sortChangeSub = this.tableSort.sortChange.subscribe(() => {
-            this.adminUserTableService.resetSelectedPlayers();
+            this.adminUserTableService.clearSelection();
             this.cdr.markForCheck();
         });
     }
@@ -267,23 +259,12 @@ export class McadminStartassignmentsComponent implements OnDestroy {
         this.sortChangeSub?.unsubscribe();
     }
 
-    resetSelectedPlayers(): void {
-        this.adminUserTableService.resetSelectedPlayers();
-        this.cdr.markForCheck();
-    }
-
     canConfirmAssignments(): boolean {
         return this.adminUserTableService.canConfirmAssignments();
     }
 
     confirmAssignments() {
-        const player2region: Map<DiscordUser, string> = new Map();
-        this.adminUserTableService.getRows().forEach((playerRegion) => {
-            if (playerRegion.user && playerRegion.regionClient) {
-                player2region.set(playerRegion.user, playerRegion.regionClient);
-            }
-        });
-        this.assignmentService.setAllPlayerRegionAssignments$(player2region).subscribe({
+        this.assignmentService.setAllPlayerRegionAssignments$(this.adminUserTableService.getAssignmentsToPublish()).subscribe({
             next: (success) => {
                 if (success) {
                     this.openSnackBar("Assignments confirmed successfully!", "OK");
@@ -349,18 +330,6 @@ export class McadminStartassignmentsComponent implements OnDestroy {
                 console.error('Remove signup error:', err);
             }
         });
-    }
-
-    hasSelection(): boolean {
-        return this.adminUserTableService.hasSelection();
-    }
-
-    canAssignRowToRegion(): boolean {
-        return this.adminUserTableService.canAssignRowToRegion();
-    }
-
-    canSwapRows(): boolean {
-        return this.adminUserTableService.canSwapRows();
     }
 
     assignSelectedRowToRegion(): void {

@@ -6,16 +6,16 @@ import { DiscordUser } from '../../model/social/DiscordUser';
 import { calculateAssignments } from '../../util/lobby';
 
 @Injectable({
-  providedIn: 'root',
+    providedIn: 'root',
 })
 export class AdminUserTableService {
-  
+
     readonly rowsSubject = new BehaviorSubject<PlayerAndOrRegion[]>([]);
     readonly selectedRowIndicesSubject = new BehaviorSubject<Set<number>>(new Set());
 
     public readonly rows$: Observable<PlayerAndOrRegion[]> = this.rowsSubject.asObservable();
     public readonly selectedRowIndices$: Observable<Set<number>> = this.selectedRowIndicesSubject.asObservable();
-    
+
     public readonly selectedRows$: Observable<PlayerAndOrRegion[]> = this.selectedRowIndices$.pipe(
         map(indices => {
             const rows = this.rowsSubject.value;
@@ -43,7 +43,7 @@ export class AdminUserTableService {
     toggleAllPlayers(): void {
         const current = this.selectedRowIndicesSubject.value;
         const rows = this.rowsSubject.value;
-        
+
         if (current.size === rows.length) {
             this.selectedRowIndicesSubject.next(new Set());
         } else {
@@ -53,7 +53,7 @@ export class AdminUserTableService {
         }
     }
 
-    resetSelectedPlayers(): void {
+    clearSelection(): void {
         this.selectedRowIndicesSubject.next(new Set());
     }
 
@@ -116,37 +116,30 @@ export class AdminUserTableService {
         this.selectedRowIndicesSubject.next(new Set());
     }
 
-    // ==================== Action Methods ====================
-
     canConfirmAssignments(): boolean {
-        const rows = this.rowsSubject.value;
-        const selectedIndices = this.selectedRowIndicesSubject.value;
-        const selectedRows = selectedIndices.size > 0 && selectedIndices.size !== rows.length
-            ? Array.from(selectedIndices).map(i => rows[i])
-            : rows;
-        return selectedRows.filter(pr => pr.regionClient).length === selectedRows.length;
+        return true
     }
 
     canAssignRowToRegion(): boolean {
         const selectedIndices = this.selectedRowIndicesSubject.value;
         if (selectedIndices.size !== 2) return false;
-        
+
         const rows = this.rowsSubject.value;
         const selectedRows = Array.from(selectedIndices).map(i => rows[i]);
         const playersWithoutRegion = selectedRows.filter(r => r.user && !r.regionClient);
         const regionsWithoutPlayer = selectedRows.filter(r => !r.user && r.regionServer);
-        
+
         return playersWithoutRegion.length === 1 && regionsWithoutPlayer.length === 1;
     }
 
     canSwapRows(): boolean {
         const selectedIndices = this.selectedRowIndicesSubject.value;
         if (selectedIndices.size !== 2) return false;
-        
+
         const rows = this.rowsSubject.value;
         const selectedRows = Array.from(selectedIndices).map(i => rows[i]);
         const playersWithRegion = selectedRows.filter(r => r.user && r.regionClient);
-        
+
         return playersWithRegion.length === 2;
     }
 
@@ -171,7 +164,7 @@ export class AdminUserTableService {
 
         playerRow.regionClient = regionRow.regionServer!;
         this.rowsSubject.next([...rows]);
-        this.resetSelectedPlayers();
+        this.clearSelection();
         return true;
     }
 
@@ -191,7 +184,7 @@ export class AdminUserTableService {
         row2.regionClient = temp;
 
         this.rowsSubject.next([...rows]);
-        this.resetSelectedPlayers();
+        this.clearSelection();
         return true;
     }
 
@@ -200,7 +193,7 @@ export class AdminUserTableService {
         let regions: string[];
         const rows = this.rowsSubject.value;
         const selectedIndices = this.selectedRowIndicesSubject.value;
-        
+
         if (selectedIndices.size > 0) {
             const selectedRows = rows.filter((_, index) => selectedIndices.has(index));
             players = selectedRows.filter(pr => pr.user);
@@ -239,10 +232,23 @@ export class AdminUserTableService {
                 }
             }
             this.rowsSubject.next([...rows]);
-            this.resetSelectedPlayers();
+            this.clearSelection();
             return { success: true };
         } catch (error) {
             return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
     }
+
+    getAssignmentsToPublish() {
+        const player2region: Map<DiscordUser, string> = new Map();
+        this.rowsSubject.value.forEach((playerRegion) => {
+            if (playerRegion.user && playerRegion.regionClient) {
+                player2region.set(playerRegion.user, playerRegion.regionClient);
+            } else if (playerRegion.user && playerRegion.regionServer) {
+                player2region.set(playerRegion.user, playerRegion.regionServer);
+            }
+        });
+        return player2region;
+    }
+
 }

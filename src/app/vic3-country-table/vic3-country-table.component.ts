@@ -146,14 +146,12 @@ export class TableComponent<T> {
         if (!this.selectedColumn) {
             return;
         }
-
         try {
             const hackyNameColumn = this.getNameColumn();
             if (!hackyNameColumn) {
                 console.warn('No name column found for plotting');
                 return;
             }
-
             const plotables = this.rowElements.map(row => {
                 try {
                     const label = this.safeGetCellValue(hackyNameColumn, row, 0);
@@ -176,8 +174,8 @@ export class TableComponent<T> {
                 return;
             }
 
-            const width = 1400;
-            const height = 800;
+            const width = window.innerWidth * 0.8;
+            const height = window.innerHeight * 0.8;
             this.dialog.open(PlotViewComponent, {
                 data: {
                     plotables: Array.from(plotables),

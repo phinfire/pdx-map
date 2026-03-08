@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { LineviewerComponent } from '../lineviewer/lineviewer.component';
 import { Eu4SaveSeriesData } from '../lineviewer/model/Eu4SaveSeriesData';
-import { MegaCampaignService } from '../mc/MegaCampaignService';
-import { MegaService } from '../mc/MegaService';
+import { MegaCampaignService } from '../../services/megacampaign/MegaCampaignService';
+import { MegaService } from '../../services/megacampaign/MegaService';
 
 @Component({
     selector: 'app-campaign-lines',

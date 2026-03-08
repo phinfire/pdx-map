@@ -9,7 +9,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
-import { catchError, combineLatestWith, filter, map, Observable, of, switchMap } from 'rxjs';
+import { combineLatestWith, filter, Observable, switchMap } from 'rxjs';
 import { CK3 } from '../../../model/ck3/game/CK3';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
@@ -21,9 +21,9 @@ import { TimerComponent } from '../../timer/timer.component';
 import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
 import { PolygonSelectComponent } from '../../viewers/polygon-select/polygon-select.component';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
-import { MegaBrowserSessionService } from '../mega-browser-session.service';
 import { MegaCampaign } from '../MegaCampaign';
 import { SignupAssetsData, SignupAssetsService } from './../SignupAssetsService';
+import { MegaBrowserSessionService } from '../../../services/megacampaign/mega-browser-session.service';
 
 export interface TableItem {
     key: string;

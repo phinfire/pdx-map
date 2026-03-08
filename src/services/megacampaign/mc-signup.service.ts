@@ -2,13 +2,9 @@ import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { inject, Injectable, OnDestroy } from "@angular/core";
 import { Observable, Subject, of, switchMap, map, catchError, merge, combineLatest, startWith, shareReplay, distinctUntilChanged, filter, tap } from "rxjs";
 import { DiscordAuthenticationService } from "../discord-auth.service";
-import { MegaBrowserSessionService } from "../../app/mc/mega-browser-session.service";
-import { MegaService } from "../../app/mc/MegaService";
-
-export interface Signup {
-    userId: string;
-    picks: string[];
-}
+import { MegaService } from "./MegaService";
+import { MegaBrowserSessionService } from "./mega-browser-session.service";
+import { Signup } from "../../model/megacampaign/Signup";
 
 @Injectable({
     providedIn: 'root',
@@ -161,9 +157,6 @@ export class McSignupService implements OnDestroy {
         );
     }
 
-    /**
-     * Gets the current user's own signup (user endpoint)
-     */
     private fetchUserSignup(campaignId: number | null): Observable<string[]> {
         if (!campaignId) {
             return of([]);
@@ -184,11 +177,9 @@ export class McSignupService implements OnDestroy {
                         return Array.isArray(picks) ? picks : [];
                     }),
                     catchError((error) => {
-                        // 404 is expected for new users who haven't signed up yet - silently return empty
                         if (error.status === 404) {
                             return of([]);
                         }
-                        // For other errors, also return empty to gracefully degrade
                         console.warn('MCSignupService: Warning fetching user picks:', error?.message || error);
                         return of([]);
                     })

@@ -1,11 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, of, catchError, from, shareReplay, Subject, forkJoin } from 'rxjs';
-import { MegaCampaign } from './MegaCampaign';
+import { MegaCampaign } from '../../app/mc/MegaCampaign';
 import { HttpClient } from '@angular/common/http';
-import { DiscordAuthenticationService } from '../../services/discord-auth.service';
-import { PdxFileService } from '../../services/pdx-file.service';
+import { DiscordAuthenticationService } from '../discord-auth.service';
+import { PdxFileService } from '../pdx-file.service';
 import { Eu4Save } from '../../model/games/eu4/Eu4Save';
-import { LegacyCampaignService } from './legacy-campaign.service';
+import { LegacyCampaignService } from '../../app/mc/legacy-campaign.service';
 import { RegionConfig } from '../../model/megacampaign/RegionConfig';
 import { parseRegionConfig } from '../../util/signup';
 

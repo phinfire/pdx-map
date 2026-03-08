@@ -1,17 +1,15 @@
-import * as THREE from 'three';
 import { Injectable, inject } from "@angular/core";
-import { Observable, forkJoin, map, shareReplay, switchMap, filter } from "rxjs";
-import { CK3 } from "../../model/ck3/game/CK3";
+import { Observable, filter, forkJoin, map, shareReplay, switchMap } from "rxjs";
+import * as THREE from 'three';
 import { AbstractLandedTitle } from "../../model/ck3/title/AbstractLandedTitle";
 import { CK3Service } from "../../services/gamedata/CK3Service";
 import { makeGeoJsonPolygons } from "../../util/geometry/threeGeometry";
+import { buildColorConfigProvider, buildKey2Cluster, collectAllChildren, findCountiesOwnedByAtMostDoubleCounts } from '../../util/signup';
 import { MapService } from "../map.service";
 import { ColorConfigProvider } from "../viewers/polygon-select/ColorConfigProvider";
 import { ClusterManager } from "./mcsignup/ClusterManager";
-import { MegaBrowserSessionService } from './mega-browser-session.service';
 import { MegaCampaign } from './MegaCampaign';
-import { RegionConfig } from '../../model/megacampaign/RegionConfig';
-import { collectAllChildren, buildKey2Cluster, findCountiesOwnedByAtMostDoubleCounts, parseRegionConfig, buildColorConfigProvider } from '../../util/signup';
+import { MegaBrowserSessionService } from "../../services/megacampaign/mega-browser-session.service";
 
 export interface SignupAssetsData {
     ck3SaveData: any;

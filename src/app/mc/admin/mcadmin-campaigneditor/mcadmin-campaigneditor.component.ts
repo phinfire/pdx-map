@@ -2,8 +2,6 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { tap } from 'rxjs';
-import { MegaService } from '../../MegaService';
-import { MegaBrowserSessionService } from '../../mega-browser-session.service';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,6 +16,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MegaCampaign } from '../../MegaCampaign';
 import { DateTimePickerComponent } from '../../../date-time-picker/date-time-picker.component';
+import { MegaBrowserSessionService } from '../../../../services/megacampaign/mega-browser-session.service';
+import { MegaService } from '../../../../services/megacampaign/MegaService';
 
 @Component({
     selector: 'app-mcadmin-campaigneditor',

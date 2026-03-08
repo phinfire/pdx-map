@@ -9,13 +9,13 @@ import { Vic3GameFilesService } from '../../../model/vic/Vic3GameFilesService';
 import { PdxFileService } from '../../../services/pdx-file.service';
 import { TableColumn } from '../../../util/table/TableColumn';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
-import { MegaModderE2VService, MappingTableRow } from './MegaModderE2VService';
+import { MegaModderE2VService, MappingTableRow } from '../../../services/megacampaign/modding/MegaModderE2VService';
 import { ModPop } from '../../../model/vic/game/ModPop';
 import { Eu4Save } from '../../../model/games/eu4/Eu4Save';
 import { PopScaleDiagramComponent } from './pop-scale-diagram.component';
 import { forkJoin } from 'rxjs';
 import { MapStateRegion } from '../../../model/vic/game/MapStateRegion';
-import { MegaService } from '../../mc/MegaService';
+import { MegaService } from '../../../services/megacampaign/MegaService';
 
 
 @Component({

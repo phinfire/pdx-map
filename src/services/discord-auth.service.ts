@@ -76,29 +76,15 @@ export class DiscordAuthenticationService {
         const code = urlParams.get('code');
 
         if (code) {
-            console.log('[DEBUG] initializeAuth: Found code in URL, exchanging for JWT and fetching user data');
             this.exchangeCodeForJWT(redirectUrl)
                 .pipe(takeUntilDestroyed(this.destroyRef))
-                .subscribe(user => {
-                    if (user) {
-                        console.log('[DEBUG] initializeAuth: Code exchange and user fetch complete for user:', user.id);
-                    } else {
-                        console.warn('[WARN] initializeAuth: Code exchange or user fetch returned null user');
-                    }
-                });
-        } else {
-            console.log('[DEBUG] initializeAuth: No code in URL. JWT will be restored from localStorage if available.');
-            const jwt = localStorage.getItem(DiscordAuthenticationService.CONFIG.JWT_STORAGE_KEY);
-            if (jwt) {
-                console.log('[DEBUG] initializeAuth: JWT restored from localStorage, user will be fetched from backend');
-            }
+                .subscribe();
         }
     }
 
     private setupLogout(): void {
         this._logout$.pipe(
             tap(() => {
-                console.log('[DEBUG] setupLogout: Logging out user');
                 localStorage.removeItem(DiscordAuthenticationService.CONFIG.JWT_STORAGE_KEY);
                 this._jwt$.next(null);
             }),
@@ -145,18 +131,13 @@ export class DiscordAuthenticationService {
     }
 
     logOut(): void {
-        console.log('[DEBUG] logOut: Triggering logout');
         this._logout$.next();
     }
 
     loginOnDiscord(): void {
-        const jwt = this._jwt$.value;
-        if (!jwt) {
-            console.log('[DEBUG] loginOnDiscord: No JWT, redirecting to Discord');
+        if (!this._jwt$.value) {
             const discordAuthUrl = `${DiscordAuthenticationService.CONFIG.DISCORD_OAUTH_URL}?client_id=${DiscordAuthenticationService.CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(this.getRedirectUrl())}&response_type=code&scope=identify`;
             window.location.href = discordAuthUrl;
-        } else {
-            console.log('[DEBUG] loginOnDiscord: Already logged in');
         }
     }
 
@@ -180,23 +161,24 @@ export class DiscordAuthenticationService {
 
         return this.http.post<AuthResponse>(this.endpoints.auth, { code, redirectUri }, { headers }).pipe(
             tap(data => {
-                console.log('[DEBUG] exchangeCodeForJWT response:', data);
                 localStorage.setItem(DiscordAuthenticationService.CONFIG.JWT_STORAGE_KEY, data.token);
                 this._jwt$.next(data.token);
             }),
             switchMap(data => {
                 if (!data?.user?.id) {
-                    console.error('[ERROR] User ID is null/undefined in auth response.');
                     return of(null);
                 }
                 const userId = data.user.id;
-                console.log('[DEBUG] JWT received and stored. Fetching full user data for userId:', userId);
-                return this.fetchFullUserByUserId(userId);
+                return this.discordService.getUsersByIds([userId]).pipe(
+                    map(response => {
+                        if (!response?.users?.[userId]) {
+                            return null;
+                        }
+                        return DiscordUser.fromApiJson(response.users[userId]);
+                    })
+                );
             }),
             catchError((error: any) => {
-                console.error('[ERROR] Error exchanging code for JWT:', error);
-                console.error('[ERROR] Error status:', error?.status);
-                console.error('[ERROR] Error response:', error?.error);
                 this.logOut();
                 return of(null);
             })
@@ -211,43 +193,25 @@ export class DiscordAuthenticationService {
         });
 
         return this.http.get<{ user: any }>(this.endpoints.user, { headers }).pipe(
-            tap(data => {
-                console.log('[DEBUG] getUserFromJWT response:', data);
-                if (!data?.user?.id) {
-                    console.warn('[WARN] No user ID in response. Response:', JSON.stringify(data));
-                }
-            }),
             switchMap(data => {
                 if (!data?.user?.id) {
-                    console.error('[ERROR] User ID is null/undefined in response.');
                     return of(null);
                 }
                 const userId = data.user.id;
-                console.log('[DEBUG] Got user ID from JWT endpoint:', userId, 'Fetching full user data...');
-                return this.fetchFullUserByUserId(userId);
+                return this.discordService.getUsersByIds([userId]).pipe(
+                    map(response => {
+                        if (!response?.users?.[userId]) {
+                            return null;
+                        }
+                        return DiscordUser.fromApiJson(response.users[userId]);
+                    })
+                );
             }),
             catchError((error: any) => {
                 if (error.status === 401) {
-                    console.warn('[WARN] Unauthorized. JWT likely expired. Logging out.');
                     this.logOut();
-                } else {
-                    console.error('[ERROR] Error fetching user with JWT:', error);
-                    console.error('[ERROR] Error status:', error?.status);
-                    console.error('[ERROR] Error response:', error?.error);
                 }
                 return of(null);
-            })
-        );
-    }
-
-    private fetchFullUserByUserId(userId: string): Observable<DiscordUser | null> {
-        return this.discordService.getUsersByIds([userId]).pipe(
-            map(response => {
-                if (!response?.users?.[userId]) {
-                    console.error('[ERROR] Full user data not found for userId:', userId);
-                    return null;
-                }
-                return DiscordUser.fromApiJson(response.users[userId]);
             })
         );
     }

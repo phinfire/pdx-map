@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CountryShell } from './CountryShell';
 import { ImmutableCountryShell } from './ImmutableCountryShell';
-import { MegaModderE2VService } from '../../app/modding/mega-modder/MegaModderE2VService';
+import { MegaModderE2VService } from '../../services/megacampaign/modding/MegaModderE2VService';
 
 @Injectable({
     providedIn: 'root'

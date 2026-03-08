@@ -3,14 +3,13 @@ import { AlliancehelperComponent } from './alliancehelper/alliancehelper.compone
 import { CampaignLinesComponent } from './campaign-lines/campaign-lines.component';
 import { JominiKioskComponent } from './jomini-kiosk/jomini-kiosk.component';
 import { MCAdminComponent } from './mc/admin/mcadmin/mcadmin.component';
+import { MCSignupComponent } from './mc/mcsignup/mcsignup.component';
 import { MegaCampaignComponent } from './mc/mega-campaign/mega-campaign.component';
 import { MegaModderComponent } from './modding/mega-modder/mega-modder.component';
 import { ParadoxComponent } from './paradox/paradox.component';
 import { ResourcemapComponent } from './resourcemap/resourcemap.component';
 import { SaveViewSplashComponent } from './saveanalysis/save-view-splash/save-view-splash.component';
 import { SavefileadminComponent } from './savefileadmin/savefileadmin.component';
-import { WelcomeComponent } from './welcome/welcome.component';
-import { MCSignupComponent } from './mc/mcsignup/mcsignup.component';
 
 export const routes: Routes = [
     {
@@ -31,7 +30,7 @@ export const routes: Routes = [
             { path: 'jomini', component: JominiKioskComponent },
             { path: 'bloc', component: AlliancehelperComponent },
             { path: 'db', component: SavefileadminComponent },
-            { path: '', component: WelcomeComponent }
+            { path: '', component: MegaCampaignComponent } // TODO: WelcomeComponent here once finished
         ]
     }
 ];

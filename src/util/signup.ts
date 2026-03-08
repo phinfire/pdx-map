@@ -1,4 +1,3 @@
-import { SignupAssetsService } from "../app/mc/SignupAssetsService";
 import { ColorConfigProvider } from "../app/viewers/polygon-select/ColorConfigProvider";
 import { Ck3Save } from "../model/ck3/Ck3Save";
 import { CK3 } from "../model/ck3/game/CK3";

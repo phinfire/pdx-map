@@ -1,9 +1,7 @@
-import { inject, Injectable } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
-import { MegaService } from './MegaService';
-import { MegaCampaign } from './MegaCampaign';
+import { inject, Injectable } from "@angular/core";
+import { BehaviorSubject, Observable, tap, map } from "rxjs";
+import { MegaCampaign } from "../../app/mc/MegaCampaign";
+import { MegaService } from "./MegaService";
 
 @Injectable({
     providedIn: 'root',

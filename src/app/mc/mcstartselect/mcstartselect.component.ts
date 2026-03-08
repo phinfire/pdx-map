@@ -20,7 +20,7 @@ import { AssignmentService } from '../AssignmentService';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
-import { MegaService } from '../MegaService';
+import { MegaService } from '../../../services/megacampaign/MegaService';
 import { MegaBrowserSessionService } from '../mega-browser-session.service';
 import { LegacyMCSignupService } from '../../../services/megacampaign/legacy-mc-signup-service.service';
 

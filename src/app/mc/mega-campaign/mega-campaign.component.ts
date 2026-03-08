@@ -1,36 +1,34 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, inject, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import JSZip from 'jszip';
 import { combineLatest } from 'rxjs';
+import { CustomRulerFile } from '../../../model/megacampaign/CustomRulerFile';
 import { DiscordUser } from '../../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
-import { CustomRulerFile } from '../../../model/megacampaign/CustomRulerFile';
+import { MegaUtilService } from '../../../services/megacampaign/mega-util.service';
 import { TableColumn } from '../../../util/table/TableColumn';
+import { TableColumnBuilder } from '../../../util/table/TableColumnBuilder';
+import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
+import { LineViewerData } from '../../lineviewer/model/LineViewerData';
+import { Vic3SaveSeriesData } from '../../lineviewer/model/Vic3SaveSeriesData';
 import { PlotViewComponent } from '../../plot-view/plot-view.component';
 import { Plotable } from '../../plot-view/Plotable';
+import { PlottingService } from '../../plot-view/PlottingService';
+import { SaveSaverService } from '../../save-saver.service';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
 import { AssignmentService } from '../AssignmentService';
 import { MegaCampaign } from '../MegaCampaign';
 import { MegaPlotService } from '../MegaPlotService';
-import { MegaService } from '../MegaService';
+import { MegaService } from '../../../services/megacampaign/MegaService';
 import { StartAssignment } from '../StartAssignment';
-
-import { MatTooltipModule } from '@angular/material/tooltip';
-import JSZip from 'jszip';
-import { TableColumnBuilder } from '../../../util/table/TableColumnBuilder';
-import { SaveSaverService } from '../../save-saver.service';
-import { LineViewerData } from '../../lineviewer/model/LineViewerData';
-import { Vic3SaveSeriesData } from '../../lineviewer/model/Vic3SaveSeriesData';
-import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
-import { MegaUtilService } from '../../../services/megacampaign/mega-util.service';
-import { MatDividerModule } from '@angular/material/divider';
-import { MegaBrowserSessionService } from '../mega-browser-session.service';
-import { PlottingService } from '../../plot-view/PlottingService';
-import { ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { MegaBrowserSessionService } from '../../../services/megacampaign/mega-browser-session.service';
 
 @Component({
     selector: 'app-mega-campaign',
