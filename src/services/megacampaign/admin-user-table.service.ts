@@ -152,15 +152,12 @@ export class AdminUserTableService {
 
     canTriggerAssign(): boolean {
         const selectedIndices = this.selectedRowIndicesSubject.value;
-        console.log('Checking if can assign row to region with selected indices:', selectedIndices);
         if (selectedIndices.size !== 2) return false;
 
         const rows = this.rowsSubject.value;
         const selectedRows = Array.from(selectedIndices).map(i => rows[i]);
         const playersWithoutRegion = selectedRows.filter(r => r.user && !r.regionClient);
         const regionsWithoutPlayer = selectedRows.filter(r => !r.user && r.regionServer);
-        console.log('Players without region:', playersWithoutRegion);
-        console.log('Regions without player:', regionsWithoutPlayer);
         return playersWithoutRegion.length === 1 && regionsWithoutPlayer.length === 1;
     }
 
@@ -278,7 +275,6 @@ export class AdminUserTableService {
         const player2region: Map<DiscordUser, string> = new Map();
         this.rowsSubject.value.forEach((playerRegion: PlayerAndOrRegion) => {
             if (playerRegion.user && playerRegion.regionClient) {
-                console.log(`Assigning player ${playerRegion.getDisplayName()} to region ${playerRegion.regionClient}`);
                 player2region.set(playerRegion.user, playerRegion.regionClient);
             }
         });

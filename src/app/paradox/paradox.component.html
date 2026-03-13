@@ -14,7 +14,7 @@
         </div>
     </div>
     <div class="menus-container">
-        @for (menu of navMenus; track menu.label) {
+        @for (menu of navMenus$ | async; track menu.label) {
         <button mat-button [matMenuTriggerFor]="dropdownMenu" class="toolbar-menu-button" [attr.aria-label]="menu.label"
             #menuTrigger="matMenuTrigger">
             {{ menu.label }}

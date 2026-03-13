@@ -61,6 +61,7 @@ export class MCSignupComponent {
     private key2Value: Map<string, number> = new Map();
     private currentMapData: SignupAssetsData | null = null;
     private ck3: CK3 | null = null;
+    private latestServerPicks: string[] = [];
     displayedColumns: string[] = ['index', 'value'];
     dataSource: TableItem[] = [];
 
@@ -150,6 +151,7 @@ export class MCSignupComponent {
             takeUntilDestroyed()
         ).subscribe({
             next: (picks: string[]) => {
+                this.latestServerPicks = picks;
                 this.dataSource = picks.map((key: string) => ({
                     key,
                     name: key
@@ -265,6 +267,16 @@ export class MCSignupComponent {
         this._snackBar.open(message, action, {
             duration: 10000,
         });
+    }
+
+    isSignedUpExactly(): boolean {
+        const currentKeys = this.dataSource.map(item => item.key);
+        return currentKeys.length > 0 && JSON.stringify(currentKeys) === JSON.stringify(this.latestServerPicks);
+    }
+
+    isSignedUpDifferent(): boolean {
+        const currentKeys = this.dataSource.map(item => item.key);
+        return this.latestServerPicks.length > 0 && JSON.stringify(currentKeys) !== JSON.stringify(this.latestServerPicks);
     }
 
     getDeadline() {

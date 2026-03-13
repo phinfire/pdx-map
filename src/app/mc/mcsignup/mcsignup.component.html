@@ -15,6 +15,17 @@
     gegeben. <br> Bitte beachtet, dass nicht garantiert werden kann, dass ihr eine der von euch ausgewählten
     Wunschregionen erhaltet.
   </div>
+  @if (isSignedUpExactly()) {
+    <div class="signup-confirmation-alert alert-exact">
+      <mat-icon class="check-icon">check_circle</mat-icon>
+      <span>You are signed up!</span>
+    </div>
+  } @else if (isSignedUpDifferent()) {
+    <div class="signup-confirmation-alert alert-different">
+      <mat-icon class="check-icon">info</mat-icon>
+      <span>Your are signed up with a different selection</span>
+    </div>
+  }
   <div class="timer-container">
     <app-timer [label]="'Sign-up Deadline'" [endDate]="getDeadline()"></app-timer>
   </div>

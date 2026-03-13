@@ -57,9 +57,6 @@ export function readPlayers(data: any, characterCreator: (id: string) => Charact
                 }
             }
         }
-        if (playerName == "Finfire") {
-            console.log("Debugging Finfire's characters. Current character ID:", playerData.character, "Legacy characters:", playerData.legacy, previousCharacters);
-        }
         const player = new Ck3Player(playerName, characterObject, previousCharacters);
         players.push(player);
     }
@@ -134,7 +131,6 @@ export function readVassal2Liege(data: any) {
 export function readLandedTitles(data: any, titleCreator: (titleData: any) => AbstractLandedTitle) {
     const landedTitles: Map<string, AbstractLandedTitle> = new Map();
     if (data.landed_titles?.landed_titles) {
-        console.log(Object.keys(data.landed_titles.landed_titles));
         for (let i of Object.keys(data.landed_titles.landed_titles)) {
             if (data.landed_titles.landed_titles[i].key) {
                 const title = titleCreator(data.landed_titles.landed_titles[i]);

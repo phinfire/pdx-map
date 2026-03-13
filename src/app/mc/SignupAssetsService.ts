@@ -40,7 +40,6 @@ export class SignupAssetsService {
                 ck3Save: this.ck3Service.openCk3ZeroSaveFromFile(),
             }).pipe(
                 map(({ geoJson, ck3Save }) => {
-                    console.log("Loaded geoJson and CK3 save, processing data...");
                     const ck3 = ck3Save.getCK3();
                     const keysToExclude = collectAllChildren(ck3Save, parsedRegionConfig.topLevelKeysToInclude);
                     const key2ClusterKey = buildKey2Cluster(ck3, ck3Save, parsedRegionConfig.regions, keysToExclude);

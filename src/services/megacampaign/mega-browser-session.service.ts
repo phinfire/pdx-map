@@ -16,7 +16,6 @@ export class MegaBrowserSessionService {
     constructor() {
         this.megaService.getAvailableCampaigns$()
             .subscribe(campaigns => {
-                console.log('Fetched campaigns for browser session:', campaigns);
                 if (!this.selectedMegaCampaignSubject.value && campaigns.length > 0) {
                     this.selectedMegaCampaignSubject.next(campaigns[0]);
                 }
@@ -24,7 +23,6 @@ export class MegaBrowserSessionService {
     }
 
     selectCampaignById(campaignId: string | number | null): Observable<MegaCampaign | null> {
-        console.log('Selecting campaign by ID:', campaignId,typeof campaignId);
         if (!campaignId) {
             return this.selectedMegaCampaignSubject.asObservable();
         }

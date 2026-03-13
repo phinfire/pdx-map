@@ -9,7 +9,7 @@ import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { map } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { DiscordAuthenticationService } from '../../services/discord-auth.service';
 import { SideNavContentProvider } from '../../ui/SideNavContentProvider';
 import { DiscordLoginComponent } from '../discord-login/discord-login.component';
@@ -81,7 +81,7 @@ export class ParadoxComponent implements OnDestroy, AfterViewInit {
     
     currentRoute: string = '';
 
-    navMenus = [
+    private baseMenus = [
         {
             label: 'Save',
             items: [
@@ -107,6 +107,23 @@ export class ParadoxComponent implements OnDestroy, AfterViewInit {
             ]
         }
     ];
+
+    navMenus$: Observable<any[]> = this.authService.loggedInUser$.pipe(
+        map(user => {
+            if (!user) {
+                return this.baseMenus.map(menu => {
+                    if (menu.label === 'Campaigns') {
+                        return {
+                            ...menu,
+                            items: menu.items.filter(item => item.label !== 'Administration')
+                        };
+                    }
+                    return menu;
+                });
+            }
+            return this.baseMenus;
+        })
+    );
 
     constructor() {
         this.router.events.subscribe(() => {

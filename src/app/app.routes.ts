@@ -31,7 +31,7 @@ export const routes: Routes = [
             { path: 'jomini', component: JominiKioskComponent },
             { path: 'bloc', component: AlliancehelperComponent },
             { path: 'db', component: SavefileadminComponent },
-            { path: '', component: MegaCampaignComponent } // TODO: WelcomeComponent here once finished
+            { path: '', redirectTo: 'mc/signup/latest', pathMatch: 'full' }
         ]
     }
 ];
