@@ -1,24 +1,26 @@
-import { Component, inject, Input, OnDestroy } from '@angular/core';
+import { Component, ElementRef, inject, Input, OnDestroy, ViewChild } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { Character } from '../../../model/ck3/Character';
+import { Ck3Save } from '../../../model/ck3/Ck3Save';
 import { CK3TableColumnProvider } from '../../../services/configuration/CK3TableColumnProvider';
 import { LabeledAndIconed } from '../../../ui/LabeledAndIconed';
+import { SideNavContentProvider } from '../../../ui/SideNavContentProvider';
 import { TableColumn } from '../../../util/table/TableColumn';
 import { TableColumnBuilder } from '../../../util/table/TableColumnBuilder';
+import { Ck3HeuristicsService } from '../../ck3-heuristics.service';
 import { MapService } from '../../map.service';
+import { PlottingService } from '../../plot-view/PlottingService';
+import { SaveSaverService } from '../../save-saver.service';
 import { SlabMapViewComponent } from '../../slab-map-view/slab-map-view.component';
 import { ViewMode } from '../../slab-map-view/ViewMode';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
 import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
-import { Ck3Save } from '../../../model/ck3/Ck3Save';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
-import { SaveSaverService } from '../../save-saver.service';
-import { SideNavContentProvider } from '../../../ui/SideNavContentProvider';
 import { SaveFileNameDialogComponent } from '../save-filename-dialog.component';
-import { Subject, takeUntil } from 'rxjs';
 
 @Component({
     selector: 'app-ck3-save-view',
@@ -30,6 +32,8 @@ export class Ck3SaveViewComponent implements OnDestroy {
 
     @Input() activeSave: Ck3Save | null = null;
     @Input() isFromDatabase = false;
+
+    @ViewChild('timebarContainer') timebarContainer: ElementRef | null = null;
 
     protected rowElements: Character[] = [];
     protected behaviorConfig = new BehaviorConfigProvider(0.75);
@@ -43,13 +47,15 @@ export class Ck3SaveViewComponent implements OnDestroy {
     private router = inject(Router);
     private saveSaverService = inject(SaveSaverService);
     sideNavContentProvider = inject(SideNavContentProvider);
+    plottingService = inject(PlottingService);
+    heuristicsService = inject(Ck3HeuristicsService);
 
     private uploadActionHandle: string | null = null;
     private destroy$ = new Subject<void>();
 
     ngOnInit() {
         if (this.activeSave) {
-            this.rowElements = this.activeSave.getPlayers()
+            this.rowElements = this.activeSave.getPlayers().sort((a, b) => a.getName().localeCompare(b.getName()))
                 .map(player => player.getLastPlayedCharacter())
                 .filter((character): character is Character => character != null && character.isAlive());
             const playerColumn = new TableColumnBuilder<Character>("Player")
@@ -65,10 +71,21 @@ export class Ck3SaveViewComponent implements OnDestroy {
         }
     }
 
+    onTabChange(index: number): void {
+        setTimeout(() => this.renderTimeBar(), 500);
+    }
+
     ngOnDestroy(): void {
         this.removeToolbarActions();
         this.destroy$.next();
         this.destroy$.complete();
+    }
+
+    private renderTimeBar() {
+        const timeBarData = this.activeSave ? this.heuristicsService.buildTimeBarData(this.activeSave) : [];
+        if (this.timebarContainer && timeBarData.length > 0) {
+             this.plottingService.drawTimeBars(timeBarData, this.timebarContainer.nativeElement);
+        }
     }
 
     private setupToolbarActions(): void {

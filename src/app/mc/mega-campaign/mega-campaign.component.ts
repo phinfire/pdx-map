@@ -12,7 +12,9 @@ import { CustomRulerFile } from '../../../model/megacampaign/CustomRulerFile';
 import { DiscordUser } from '../../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
+import { MegaBrowserSessionService } from '../../../services/megacampaign/mega-browser-session.service';
 import { MegaUtilService } from '../../../services/megacampaign/mega-util.service';
+import { MegaService } from '../../../services/megacampaign/MegaService';
 import { TableColumn } from '../../../util/table/TableColumn';
 import { TableColumnBuilder } from '../../../util/table/TableColumnBuilder';
 import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
@@ -26,9 +28,7 @@ import { TableComponent } from '../../vic3-country-table/vic3-country-table.comp
 import { AssignmentService } from '../AssignmentService';
 import { MegaCampaign } from '../MegaCampaign';
 import { MegaPlotService } from '../MegaPlotService';
-import { MegaService } from '../../../services/megacampaign/MegaService';
 import { StartAssignment } from '../StartAssignment';
-import { MegaBrowserSessionService } from '../../../services/megacampaign/mega-browser-session.service';
 
 @Component({
     selector: 'app-mega-campaign',
@@ -52,9 +52,6 @@ export class MegaCampaignComponent implements AfterViewInit {
     megaUtils = inject(MegaUtilService);
     activatedRoute = inject(ActivatedRoute);
     plottingService = inject(PlottingService);
-
-    @ViewChild('timebarContainer') timebarContainer: ElementRef | null = null;
-
     campaign: MegaCampaign | null = null;
     userAssignment: StartAssignment | null = null;
     assignments: StartAssignment[] = [];
@@ -62,18 +59,6 @@ export class MegaCampaignComponent implements AfterViewInit {
 
     user2Ruler: Map<DiscordUser, CustomRulerFile> = new Map();
     seriesData: LineViewerData<Date> | null = null;
-    timeBarData: {label: string, startDate: Date, endDate: Date, rowName: string, color?: string}[] = [
-        {label: "Angela Merkel", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 0, 31), rowName: "Germany", color: "#1F1F1F"},
-        {label: "Olaf Scholz", startDate: new Date(2024, 0, 31), endDate: new Date(2024, 1, 29), rowName: "Germany", color: "#E3000F"},
-        {label: "Konrad Adenauer", startDate: new Date(2024, 1, 29), endDate: new Date(2024, 3, 15), rowName: "Germany", color: "#1F1F1F"},
-        {label: "Emmanuel Macron", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 0, 31), rowName: "France", color: "#FFFFFF"},
-        {label: "Pierre Bérégovoy", startDate: new Date(2024, 0, 31), endDate: new Date(2024, 3, 15), rowName: "France", color: "#EE3340"},
-        {label: "Boris Johnson", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 1, 15), rowName: "UK", color: "#0087DC"},
-        {label: "Rishi Sunak", startDate: new Date(2024, 1, 15), endDate: new Date(2024, 5, 30), rowName: "UK", color: "#0087DC"},
-        {label: "Giuseppe Conte", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 1, 28), rowName: "Italy", color: "#FFEB3B"},
-        {label: "Mario Draghi", startDate: new Date(2024, 1, 28), endDate: new Date(2024, 4, 31), rowName: "Italy", color: "#808080"},
-        {label: "Pedro Sánchez", startDate: new Date(2024, 0, 1), endDate: new Date(2024, 4, 30), rowName: "Spain", color: "#DA291C"}
-    ];
 
     private cachedColumns: Map<number, TableColumn<StartAssignment>[]> = new Map();
 
@@ -83,16 +68,15 @@ export class MegaCampaignComponent implements AfterViewInit {
     ngOnInit() {
         this.titleService.setTitle('Mega Campaign');
         const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
-        this.megaSessionService.selectedMegaCampaign$
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(campaign => {
-                if (!campaign) return;
+        console.log('MegaCampaignComponent initialized with campaignId:', campaignId);
+        this.megaSessionService.selectCampaignById(campaignId).subscribe(campaign => {
+            if (campaign) {
                 this.campaign = campaign;
                 this.saveSaver.getSaveFileByIdentifier$(this.campaign.getVic3SaveIdentifiersInChronologicalOrder()[2]).subscribe(save => {
                     this.seriesData = Vic3SaveSeriesData.fromSaves([save]);
                 });
-                this.initializeTimeBarData();
-            });
+            }
+        });
         combineLatest([this.assignmentService.allAssignments$, this.ck3Service.initializeCK3(), this.authService.loggedInUser$])
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(([assignments, ck3, loggedInUser]) => {
@@ -177,50 +161,8 @@ export class MegaCampaignComponent implements AfterViewInit {
         return columns;
     }
 
-    isInRegionSignupStage() {
-        return this.campaign ? this.campaign.isInRegionSignupStage() : false;
-    }
-
-    isInStartSelectionStage() {
-        return this.campaign ? this.campaign.isInStartSelectionStage() : false;
-    }
-
-    isInWaitingForFirstSessionStage() {
-        return this.campaign ? this.campaign.isInWaitingForFirstSessionStage() : false;
-    }
-
-    isPlayingCk3() {
-        return this.campaign ? this.campaign.isPlayingCk3() : false;
-    }
-
-    private initializeTimeBarData() {
-        // Generate example time bar data based on assignments
-        const baseDate = new Date(2024, 0, 1); // January 1, 2024
-        this.timeBarData = this.assignments.map((assignment, index) => {
-            const startDate = new Date(baseDate);
-            startDate.setDate(startDate.getDate() + index * 5);
-            const endDate = new Date(startDate);
-            endDate.setDate(endDate.getDate() + 10 + Math.random() * 20);
-            return {
-                label: assignment.user.getName(),
-                startDate,
-                endDate,
-                rowName: assignment.region_key || `Region ${index + 1}`
-            };
-        });
-    }
-
     ngAfterViewInit() {
-        this.renderTimeBar();
-    }
 
-    private renderTimeBar() {
-        console.log("Rendering time bar with data:", this.timeBarData);
-        console.log(this.timebarContainer, "Time bar container element:");
-        if (this.timebarContainer && this.timeBarData.length > 0) {
-            console.log("Time bar container:", this.timebarContainer.nativeElement);
-            this.plottingService.drawTimeBars(this.timeBarData, this.timebarContainer.nativeElement);
-        }
     }
 
     async downloadAllRulersAsZip() {

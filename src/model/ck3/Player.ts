@@ -4,7 +4,6 @@ import { Character } from "./Character";
 export class Ck3Player {
 
     constructor(private name: string, private currentCharacter: Character | null, private previousCharacters: Map<string,Character>) {
-        
     }
 
     getName(): string {

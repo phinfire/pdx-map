@@ -22,6 +22,7 @@ export const routes: Routes = [
             { path: 'map', component: ResourcemapComponent },
             { path: 'stonks', component: CampaignLinesComponent },
             { path: 'mc/admin', component: MCAdminComponent },
+            { path: 'mc/admin/:campaignId', component: MCAdminComponent },
             { path: 'mc/modder', component: MegaModderComponent },
             { path: 'mc/signup', component: MCSignupComponent },
             { path: 'mc/signup/:campaignId', component: MCSignupComponent },

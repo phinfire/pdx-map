@@ -28,7 +28,7 @@ export class Character {
         this.landed = data.landed_data != null;
         this.children = this.getChildren();
         if (this.data.family_data && this.data.family_data.child) {
-            this.children =  this.data.family_data.child
+            this.children = this.data.family_data.child
                 .map((child: any) => this.save.getCharacter(child))
                 .filter((child: any) => child != null).sort((a: any, b: any) => a.getBirthDate().getTime() - b.getBirthDate().getTime());
         } else {
@@ -43,8 +43,23 @@ export class Character {
             null;
     }
 
+    public DEBUG_printDomain() {
+        console.log(`Character ${this.getName()}`, this.data);
+        const domainTitleIndices = this.data.dead_data && this.data.dead_data.domain ? this.data.dead_data.domain : [];
+        let s = "";
+        for (const titleIndex of domainTitleIndices) {
+            const title = this.save.getTitleByIndex(titleIndex);
+            if (title) {
+                s += `\n- ${title.getLocalisedName()} (${title.getTier().getName()})`;
+            } else {
+                s += `\n- Unknown title with index ${titleIndex}`;
+            }
+        }
+        console.log(s);
+    }
+
     public getDynastyHouse() {
-        return this.save.getDynastyHouse(this.data.dynasty_house);
+        return this.save.getDynastyHouse(this.data.dynasty_house + "");
     }
 
     public isFemale() {
@@ -68,7 +83,7 @@ export class Character {
     }
 
     public getName() {
-        return this.data.first_name;
+        return this.data.first_name.replace("O_", "ø")
     }
 
     public getPerks() {
@@ -91,7 +106,7 @@ export class Character {
     }
 
     public getCash() {
-        return this.getAliveValue("gold", {value: 0}).value;
+        return this.getAliveValue("gold", { value: 0 }).value;
     }
 
     public getIncome() {
@@ -102,7 +117,7 @@ export class Character {
         return this.getLandedValue("balance", 0);
     }
 
-    public getTraits() : Trait[] {
+    public getTraits(): Trait[] {
         return this.traits;;
     }
 
@@ -170,7 +185,7 @@ export class Character {
         });
     }
 
-    public getCouncillors() : Character[] {
+    public getCouncillors(): Character[] {
         return this.getLandedValue("council", []).map((councilor: any) => {
             return this.save.getCharacter(councilor);
         });
@@ -180,8 +195,8 @@ export class Character {
         return this.save.getPlayerNameByCharacterId(this.getCharacterId());
     }
 
-    public getCharacterTier() : RulerTier {
-        return this.isLanded() ?  this.getHighestTitle()!.getTier() : RulerTier.NONE;
+    public getCharacterTier(): RulerTier {
+        return this.isLanded() ? this.getHighestTitle()!.getTier() : RulerTier.NONE;
     }
 
     public getHighestTitle() {
@@ -204,9 +219,16 @@ export class Character {
     }
 
     public getPrimaryTitle() {
-        if (this.data.landed_data && this.data.landed_data.domain) {
-            const firstDomainTitle = this.save.getTitleByIndex(this.data.landed_data.domain[0]);
-            return firstDomainTitle;
+        if (this.isAlive()) {
+            if (this.data.landed_data && this.data.landed_data.domain) {
+                const firstDomainTitle = this.save.getTitleByIndex(this.data.landed_data.domain[0]);
+                return firstDomainTitle;
+            }
+        } else {
+            if (this.data.dead_data && this.data.dead_data.domain) {
+                const firstDomainTitle = this.save.getTitleByIndex(this.data.dead_data.domain[0]);
+                return firstDomainTitle;
+            }
         }
         return null;
     }

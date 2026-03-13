@@ -6,7 +6,7 @@ export class DynastyHouse {
 
     private cachedHouseMembers: Character[] | null = null;
 
-    constructor(private id: number, private data: any, private save: ICk3Save) {
+    constructor(private id: string, private data: any, private save: ICk3Save) {
 
     }
 

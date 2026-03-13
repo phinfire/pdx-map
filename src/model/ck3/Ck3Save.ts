@@ -20,8 +20,9 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     private players: Ck3Player[] = [];
     private faiths: Faith[] = [];
     private cultures: Culture[] = [];
-    private landedTitles: AbstractLandedTitle[] = [];
-    private dynastyHouses: DynastyHouse[] = [];
+    private landedTitles: Map<string, AbstractLandedTitle> = new Map();
+    private key2LandedTitle: Map<string, AbstractLandedTitle> = new Map();
+    private id2DynastyHouses: Map<string, DynastyHouse> = new Map();
     private counties: County[] = [];
     private index2Holding: Map<string, Holding> = new Map<string, Holding>();
     private titleKey2Index = new Map<string, number>();
@@ -56,11 +57,11 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
         this.cultures = readAllCultures(data);
         this.counties = readCountries(data, this, this.ck3);
         this.landedTitles = readLandedTitles(data, (titleData) => createTitle(titleData, this, this.ck3));
+        for (const title of this.landedTitles.values()) {
+            this.key2LandedTitle.set(title.getKey(), title);
+        }
         this.index2Holding = readAllHoldings(data, this, this.ck3);
-        this.landedTitles.forEach((title, index) => {
-            this.titleKey2Index.set(title.getKey(), index);
-        });
-        this.dynastyHouses = readDynasties(data, this);
+        this.id2DynastyHouses = readDynasties(data, this);
         this.data = data;
     }
 
@@ -84,19 +85,12 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
         return null;
     }
 
-    getDynastyHouse(houseId: number): DynastyHouse | null {
-        if (this.dynastyHouses[houseId]) {
-            return this.dynastyHouses[houseId];
-        }
-        return null;
-    }
-
-    getDynastyHouseAndDynastyData(houseId: number) {
-        throw new Error("Method not implemented.");
+    getDynastyHouse(houseId: string) {
+        return this.id2DynastyHouses.get(houseId) || null;
     }
 
     getLandedTitles() {
-        return this.landedTitles;
+        return Array.from(this.landedTitles.values());
     }
 
     getIngameDate(): Date {
@@ -104,15 +98,11 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     }
 
     getTitleByIndex(index: number): AbstractLandedTitle | null {
-        if (index < 0 || index >= this.landedTitles.length) {
-            console.error("Invalid title index:", index, "length:", this.landedTitles.length);
-            return null;
-        }
-        return this.landedTitles[index];
+        return this.landedTitles.get("" + index) || null;
     }
 
     getHeldTitles(character: Character): AbstractLandedTitle[] {
-        return this.landedTitles.filter(title => title.getHolder() != null && title.getHolder()!.getCharacterId() === character.getCharacterId());
+        return this.getLandedTitles().filter(title => title.getHolder() != null && title.getHolder()!.getCharacterId() === character.getCharacterId());
     }
 
     getPlayerNameByCharacterId(characterId: string): string | null {
@@ -156,9 +146,8 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     }
 
     getTitle(key: string): AbstractLandedTitle {
-        const index = this.titleKey2Index.get(key);
-        if (index !== undefined) {
-            return this.landedTitles[index];
+        if (this.key2LandedTitle.has(key)) {
+            return this.key2LandedTitle.get(key)!;
         }
         throw new Error(`Title with key ${key} not found.`);
     }

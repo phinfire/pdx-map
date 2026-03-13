@@ -1,13 +1,11 @@
 import { Injectable } from '@angular/core';
 import { CountryShell } from './CountryShell';
 import { ImmutableCountryShell } from './ImmutableCountryShell';
-import { MegaModderE2VService } from '../../services/megacampaign/modding/MegaModderE2VService';
 
 @Injectable({
     providedIn: 'root'
 })
 export class CountryShellBuilderService {
-    constructor(private megaModderService: MegaModderE2VService) {}
 
     buildCountryShells(
         eu4ToVic3Mapping: Map<string, string>,

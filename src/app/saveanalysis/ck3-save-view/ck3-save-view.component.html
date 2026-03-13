@@ -1,4 +1,4 @@
-<mat-tab-group>
+<mat-tab-group (selectedIndexChange)="onTabChange($event)">
     <!--<mat-tab label="Map">
         <div class="map-container">
             <app-slab-map-view [save]="activeSave"></app-slab-map-view>
@@ -14,6 +14,15 @@
         </ng-template>
     </mat-tab>
     }
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <mat-icon>align_horizontal_left</mat-icon>
+        </ng-template>
+        <div class="timebar-container">
+            <div #timebarContainer class="timebar-plot"></div>
+        </div>
+    </mat-tab>
+
     <mat-tab>
         <ng-template mat-tab-label>
             <mat-icon>map</mat-icon>

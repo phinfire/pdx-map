@@ -48,6 +48,17 @@ export class RulerTier {
         return this.name;
     }
 
+    getRulerTitle(): string {
+        switch (this) {
+            case RulerTier.BARON: return "Baron";
+            case RulerTier.COUNT: return "Count";
+            case RulerTier.DUKE: return "Duke";
+            case RulerTier.KING: return "King";
+            case RulerTier.EMPEROR: return "Emperor";
+            default: return "-";
+        }
+    }
+
     getStateTitle(): string {
         switch (this) {
             case RulerTier.BARON: return "Barony";

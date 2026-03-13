@@ -1,26 +1,24 @@
 import { inject, Injectable } from "@angular/core";
-import { DiscordAuthenticationService } from "../discord-auth.service";
 import { HttpClient } from "@angular/common/http";
 import { Subject, of } from "rxjs";
 import { map, catchError, switchMap, startWith, tap, shareReplay} from "rxjs/operators";
 import { MegaCampaign } from "../../app/mc/MegaCampaign";
+import { BackendConfigService } from "./backend-config.service";
 
 @Injectable({
     providedIn: 'root'
 })
 export class MegaCampaignService {
 
-    private readonly API_URL = "https://codingafterdark.de/megacampaign"
-
-    private discordAuthService = inject(DiscordAuthenticationService);
     private http = inject(HttpClient);
+    private backendConfigService = inject(BackendConfigService);
 
     private campaignsRefresh$ = new Subject<void>();
 
     getCampaigns$() {
         return this.campaignsRefresh$.pipe(
             startWith(undefined),
-            switchMap(() => this.http.get<any[]>(this.API_URL + "/megacampaigns").pipe(
+            switchMap(() => this.http.get<any[]>(this.backendConfigService.getMegaCampaignApiUrl() + "/megacampaigns").pipe(
                 map(campaigns =>
                     campaigns
                         .filter(c =>
@@ -62,7 +60,7 @@ export class MegaCampaignService {
     }
 
     createNewCampaign(campaign: MegaCampaign) {
-        return this.http.post(this.API_URL + "/megacampaigns", {
+        return this.http.post(this.backendConfigService.getMegaCampaignApiUrl() + "/megacampaigns", {
             name: campaign.getName(),
             signupDeadlineDate: campaign.getRegionDeadlineDate(),
             pickDeadline: campaign.getStartDeadlineDate(),

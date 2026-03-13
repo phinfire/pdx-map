@@ -1,13 +1,13 @@
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, of, catchError, from, shareReplay, Subject, forkJoin } from 'rxjs';
+import { map, Observable, of, catchError, from, shareReplay, Subject } from 'rxjs';
 import { MegaCampaign } from '../../app/mc/MegaCampaign';
 import { HttpClient } from '@angular/common/http';
 import { DiscordAuthenticationService } from '../discord-auth.service';
 import { PdxFileService } from '../pdx-file.service';
 import { Eu4Save } from '../../model/games/eu4/Eu4Save';
-import { LegacyCampaignService } from '../../app/mc/legacy-campaign.service';
 import { RegionConfig } from '../../model/megacampaign/RegionConfig';
 import { parseRegionConfig } from '../../util/signup';
+import { BackendConfigService } from './backend-config.service';
 
 interface AssignmentEntry {
     userId: string;
@@ -29,12 +29,9 @@ interface AssignmentView {
 })
 export class MegaService {
 
-    public readonly campaignServiceRootUrl = `http://localhost:8085/megacampaign`;
-    //private readonly campaignsEndpoint = `https://codingafterdark.de/megacampaign`;
-
     private pdxFileService = inject(PdxFileService);
     private authService = inject(DiscordAuthenticationService);
-    private legacyCampaignService = inject(LegacyCampaignService);
+    private configService = inject(BackendConfigService);
 
     private lastEu4Save$: Observable<Eu4Save>;
 
@@ -47,10 +44,6 @@ export class MegaService {
     }
 
     private nations$?: Observable<any[]>;
-
-    getServiceURL() {
-        return this.campaignServiceRootUrl;
-    }
 
     getNations$(): Observable<any[]> {
         if (!this.nations$) {
@@ -79,28 +72,13 @@ export class MegaService {
 
     getAvailableCampaigns$(): Observable<MegaCampaign[]> {
         if (!this.combinedCampaigns$) {
-            this.combinedCampaigns$ = forkJoin({
-                legacy: this.legacyCampaignService.getLegacyCampaigns$(),
-                new: this.http.get<any[]>(`${this.campaignServiceRootUrl}/campaigns`).pipe(
-                    catchError(() => of([]))
-                )
-            }).pipe(
-                map(({ legacy, new: newCampaigns }) => {
-                    const newTransformed = newCampaigns
+            this.combinedCampaigns$ = this.http.get<any[]>(`${this.configService.getMegaCampaignApiUrl()}/campaigns`).pipe(
+                catchError(() => of([])),
+                map((newCampaigns) => {
+                    return newCampaigns
                         .map(c => this.transformNewApiCampaign(c))
-                        .filter((c): c is MegaCampaign => c !== null);
-
-                    const campaignMap = new Map<string, MegaCampaign>();
-
-                    legacy.forEach((c: MegaCampaign) => {
-                        campaignMap.set(c.getName(), c);
-                    });
-
-                    newTransformed.forEach(c => {
-                        campaignMap.set(c.getName(), c);
-                    });
-
-                    return Array.from(campaignMap.values());
+                        .filter((c): c is MegaCampaign => c !== null)
+                        .sort((a, b) => a.getRegionDeadlineDate().getTime() - b.getRegionDeadlineDate().getTime());
                 }),
                 shareReplay(1)
             );
@@ -157,13 +135,12 @@ export class MegaService {
 
     private invalidateCampaignsCache(): void {
         this.combinedCampaigns$ = undefined;
-        this.legacyCampaignService.invalidateCache();
         this.campaignsCacheInvalidated$.next();
     }
 
     createCampaign$(name: string): Observable<any> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.post<any>(`${this.campaignServiceRootUrl}/campaigns?name=${encodeURIComponent(name)}`, {}, { headers }).pipe(
+        return this.http.post<any>(`${this.configService.getMegaCampaignApiUrl()}/campaigns?name=${encodeURIComponent(name)}`, {}, { headers }).pipe(
             map(result => {
                 this.invalidateCampaignsCache();
                 return result;
@@ -173,7 +150,7 @@ export class MegaService {
 
     updateCampaign$(id: number, updates: any): Observable<any> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.patch<any>(`${this.campaignServiceRootUrl}/campaigns/${id}`, updates, { headers }).pipe(
+        return this.http.patch<any>(`${this.configService.getMegaCampaignApiUrl()}/campaigns/${id}`, updates, { headers }).pipe(
             map(result => {
                 this.invalidateCampaignsCache();
                 return result;
@@ -200,7 +177,7 @@ export class MegaService {
 
     deleteCampaign$(id: number): Observable<any> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.delete<any>(`${this.campaignServiceRootUrl}/campaigns/${id}`, { headers }).pipe(
+        return this.http.delete<any>(`${this.configService.getMegaCampaignApiUrl()}/campaigns/${id}`, { headers }).pipe(
             map(result => {
                 this.invalidateCampaignsCache();
                 return result;
@@ -218,14 +195,14 @@ export class MegaService {
 
     getAssignments$(campaignId: number): Observable<AssignmentView[]> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.get<AssignmentView[]>(`${this.campaignServiceRootUrl}/campaigns/${campaignId}/assignments`, { headers }).pipe(
+        return this.http.get<AssignmentView[]>(`${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/assignments`, { headers }).pipe(
             catchError(() => of([]))
         );
     }
 
     updateAssignments$(campaignId: number, assignmentRequest: AssignmentRequest): Observable<AssignmentView[]> {
         const headers = this.authService.getAuthenticationHeader();
-        return this.http.put<AssignmentView[]>(`${this.campaignServiceRootUrl}/campaigns/${campaignId}/assignments`, assignmentRequest, { headers }).pipe(
+        return this.http.put<AssignmentView[]>(`${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/assignments`, assignmentRequest, { headers }).pipe(
             catchError(() => of([]))
         );
     }

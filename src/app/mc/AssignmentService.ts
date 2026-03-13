@@ -7,6 +7,7 @@ import { MegaService } from '../../services/megacampaign/MegaService';
 import { MegaBrowserSessionService } from '../../services/megacampaign/mega-browser-session.service';
 import { DiscordService } from "../discord.service";
 import { StartAssignment } from "./StartAssignment";
+import { BackendConfigService } from '../../services/megacampaign/backend-config.service';
 
 @Injectable({
     providedIn: 'root'
@@ -18,6 +19,7 @@ export class AssignmentService implements OnDestroy {
     private discordAuthService = inject(DiscordAuthenticationService);
     private discordService = inject(DiscordService);
     private http = inject(HttpClient);
+    private configService = inject(BackendConfigService);
 
     private destroy$ = new Subject<void>();
     private refreshAssignments$ = new Subject<void>();
@@ -75,17 +77,16 @@ export class AssignmentService implements OnDestroy {
             return of([]);
         }
 
-        const assignmentUrl = `${this.megaService.getServiceURL()}/campaigns/${campaignId}/assignments`;
-        const startPositionUrl = `${this.megaService.getServiceURL()}/campaigns/${campaignId}/start-positions`;
-
         return combineLatest([
-            this.http.get<any[]>(assignmentUrl),
-            this.http.get<any[]>(startPositionUrl).pipe(catchError(() => of([])))
+            this.http.get<any[]>(`${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/assignments`),
+            this.http.get<any[]>(`${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/start-positions`).pipe(catchError(() => of([])))
         ]).pipe(
             switchMap(([assignments, startPositions]) => {
                 if (!assignments || assignments.length === 0) {
                     return of([]);
                 }
+                console.log('AssignmentService: Fetched assignments from server:', assignments);
+                console.log('AssignmentService: Fetched start positions from server:', startPositions);
 
                 const userIds = assignments.map(a => a.userId);
                 const positionsMap = new Map<string, any>();
@@ -137,7 +138,7 @@ export class AssignmentService implements OnDestroy {
                 }
 
                 const headers = this.getAuthenticatedHeaders();
-                const url = `${this.megaService.getServiceURL()}/campaigns/${campaignId}/start-positions/${userId}`;
+                const url = `${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/start-positions/${userId}`;
 
                 return this.http.post<any>(url, { startKey, startData }, { headers }).pipe(
                     map(() => {
@@ -160,7 +161,7 @@ export class AssignmentService implements OnDestroy {
                     return of(new Map());
                 }
 
-                const url = `${this.megaService.getServiceURL()}/campaigns/${campaignId}/start-positions`;
+                const url = `${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/start-positions`;
                 return this.http.get<any[]>(url).pipe(
                     map((positions: any[]) => {
                         const positionsMap = new Map<string, any>();
@@ -180,7 +181,7 @@ export class AssignmentService implements OnDestroy {
                     return of(null);
                 }
 
-                const url = `${this.megaService.getServiceURL()}/campaigns/${campaignId}/start-positions/${userId}`;
+                const url = `${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/start-positions/${userId}`;
                 return this.http.get<any>(url).pipe(
                     catchError(() => of(null))
                 );
@@ -196,7 +197,7 @@ export class AssignmentService implements OnDestroy {
                 }
 
                 const headers = this.getAuthenticatedHeaders();
-                const url = `${this.megaService.getServiceURL()}/campaigns/${campaignId}/assignments`;
+                const url = `${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/assignments`;
                 if (user2RegionKey.size === 0) {
                     console.warn('AssignmentService: Attempted to set empty assignments');
                     return of(false);
@@ -210,6 +211,7 @@ export class AssignmentService implements OnDestroy {
                         regionKey
                     };
                 });
+                console.log('AssignmentService: Sending assignments to server:', assignments);
 
                 return this.http.put<any[]>(url, { assignments }, { headers }).pipe(
                     map((response: any[]) => {

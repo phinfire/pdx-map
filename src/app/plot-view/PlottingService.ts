@@ -18,11 +18,11 @@ export class PlottingService {
     drawTimeBars(plotables: {label: string, startDate: Date, endDate: Date, rowName: string, color?: string}[], nativeElement: HTMLElement) {
         const width = nativeElement.clientWidth || 1000;
         const height = nativeElement.clientHeight || 500;
-        const margin = { top: 20, right: 30, bottom: 150, left: 150 };
+        const margin = { top: 20, right: 30, bottom: 50, left: 300 };
         const chartWidth = width - margin.left - margin.right;
         const chartHeight = height - margin.top - margin.bottom;
         const barGap = 8;
-        const uniqueRowNames = Array.from(new Set(plotables.map(p => p.rowName))).sort();
+        const uniqueRowNames = Array.from(new Set(plotables.map(p => p.rowName)));
         const xScale = d3.scaleTime()
             .domain([
                 d3.min(plotables, d => new Date(d.startDate.getFullYear(), 0, 1)) || new Date(),
@@ -33,7 +33,6 @@ export class PlottingService {
         const yScale = d3.scaleBand<string>()
             .domain(uniqueRowNames)
             .range([0, chartHeight])
-            .padding(0.2);
         const hostElement = d3.select(nativeElement);
         hostElement.selectAll("svg").remove();
 
@@ -45,19 +44,21 @@ export class PlottingService {
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
         const xAxis = d3.axisBottom(xScale)
-            .tickFormat(d3.timeFormat("%Y-%m-%d") as any);
+            .ticks(d3.timeYear.every(10))
+            .tickFormat(d3.timeFormat("%Y") as any);
         
         svg.append("g")
             .attr("transform", `translate(0,${chartHeight})`)
             .call(xAxis)
             .selectAll("text")
-            .attr("transform", "rotate(-45)")
-            .style("text-anchor", "end")
+            .style("font-size", "2em")
+            .style("font-family", "var(--font-family), 'Titillium Web', 'Montserrat', sans-serif")
 
         svg.append("g")
             .call(d3.axisLeft(yScale))
             .selectAll("text")
-            .style("font-size", "1.2em")
+            .style("font-size", "1.6em")
+            .style("font-family", "var(--font-family), 'Titillium Web', 'Montserrat', sans-serif")
 
         svg.selectAll(".time-bar")
             .data(plotables)
@@ -65,9 +66,9 @@ export class PlottingService {
             .append("rect")
             .attr("class", "time-bar")
             .attr("x", d => xScale(new Date(d.startDate)))
-            .attr("y", d => (yScale(d.rowName) || 0) + yScale.bandwidth() * 0.25)
+            .attr("y", d => (yScale(d.rowName) || 0) + yScale.bandwidth() * 0.075)
             .attr("width", d => Math.max(0, xScale(new Date(d.endDate)) - xScale(new Date(d.startDate)) - barGap))
-            .attr("height", yScale.bandwidth() * 0.5)
+            .attr("height", yScale.bandwidth() * 0.85)
             .attr("fill", (d: any) => d.color)
             .attr("filter", "url(#drop-shadow)")
             .style("cursor", "pointer");
@@ -78,9 +79,9 @@ export class PlottingService {
             .append("text")
             .attr("class", "time-bar-label")
             .attr("x", d => xScale(new Date(d.startDate)) + 4)
-            .attr("y", d => (yScale(d.rowName) || 0) + yScale.bandwidth() * 0.25 + yScale.bandwidth() * 0.5 / 2)
+            .attr("y", d => (yScale(d.rowName) || 0) + yScale.bandwidth() * 0.5)
             .attr("dominant-baseline", "middle")
-            .style("font-size", `${Math.max(10, yScale.bandwidth() * 0.4)}px`)
+            .style("font-size", `${Math.max(10, yScale.bandwidth() * 0.5)}px`)
             .style("font-weight", "bold")
             .style("fill", "#fff")
             .style("pointer-events", "none")
@@ -118,7 +119,7 @@ export class PlottingService {
         styleElement.text(`
             .time-bar-label {
                 font-family: var(--font-family), 'Titillium Web', 'Montserrat', sans-serif;
-                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;

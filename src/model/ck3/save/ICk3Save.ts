@@ -15,10 +15,8 @@ export interface ICk3Save {
     getIngameDate(): Date;
 
     getCharacter(characterId: number): Character | null;
-
-    getDynastyHouseAndDynastyData(houseId: number): any;
-
-    getDynastyHouse(houseId: number): DynastyHouse | null;
+    
+    getDynastyHouse(houseId: string): DynastyHouse | null;
 
     getHeldTitles(character: Character): AbstractLandedTitle[];
 

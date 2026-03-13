@@ -17,11 +17,14 @@ export class MegaBrowserSessionService {
         this.megaService.getAvailableCampaigns$()
             .subscribe(campaigns => {
                 console.log('Fetched campaigns for browser session:', campaigns);
-                this.selectedMegaCampaignSubject.next(campaigns.length > 0 ? campaigns[0] : null);
+                if (!this.selectedMegaCampaignSubject.value && campaigns.length > 0) {
+                    this.selectedMegaCampaignSubject.next(campaigns[0]);
+                }
             });
     }
 
     selectCampaignById(campaignId: string | number | null): Observable<MegaCampaign | null> {
+        console.log('Selecting campaign by ID:', campaignId,typeof campaignId);
         if (!campaignId) {
             return this.selectedMegaCampaignSubject.asObservable();
         }
@@ -31,7 +34,9 @@ export class MegaBrowserSessionService {
         const campaignIdNum = typeof campaignId === 'string' ? parseInt(campaignId, 10) : campaignId;
         return this.megaService.getAvailableCampaigns$().pipe(
             tap(campaigns => {
+                console.log('Looking for campaign ID in fetched campaigns:', campaignIdNum, campaigns);
                 const found = campaigns.find(c => c.getId() === campaignIdNum);
+                console.log('Found campaign:', found);
                 if (found && found.getId() !== this.selectedMegaCampaignSubject.value?.getId()) {
                     this.selectedMegaCampaignSubject.next(found);
                 }

@@ -32,13 +32,7 @@ export class MCAdminCampaigneditorComponent {
     private snackBar = inject(MatSnackBar);
     private megaBrowserSession = inject(MegaBrowserSessionService);
 
-    campaigns$ = this.megaService.getAvailableCampaigns$().pipe(
-        tap(campaigns => {
-            if (campaigns.length > 0 && !this.selectedCampaign) {
-                this.selectCampaign(campaigns[campaigns.length - 1]);
-            }
-        })
-    );
+    campaigns$ = this.megaService.getAvailableCampaigns$();
     selectedCampaign: MegaCampaign | null = null;
     editingCampaignData = {
         regionDeadline: new Date(),
@@ -104,16 +98,16 @@ export class MCAdminCampaigneditorComponent {
             vic3LobbyIdentifiers: campaign.getVic3LobbyIdentifiers().join(', '),
             possibleKeys: campaign.getPossibleKeys().join(', ')
         };
-        // Propagate selection to shared service, only if campaign.getId() is not undefined/null
         const campaignId = campaign.getId();
         if (campaignId !== undefined && campaignId !== null) {
             this.megaBrowserSession.selectCampaignById(campaignId).subscribe();
         }
     }
+    
     ngOnInit(): void {
-        // Listen for campaign selection changes from shared service
         this.megaBrowserSession.selectedMegaCampaign$.subscribe(campaign => {
             if (campaign && (!this.selectedCampaign || campaign.getId() !== this.selectedCampaign.getId())) {
+                console.log('Browser session selected campaign changed:', campaign);
                 this.selectCampaign(campaign);
             }
         });
@@ -200,7 +194,7 @@ export class MCAdminCampaigneditorComponent {
 
         const campaignId = this.selectedCampaign.getId()!;
         const updatePayload: any = {};
-        
+
         if (this.editingCampaignData.ck3MapGeoJsonUrl) {
             updatePayload.ck3MapGeoJsonUrl = this.editingCampaignData.ck3MapGeoJsonUrl;
         }

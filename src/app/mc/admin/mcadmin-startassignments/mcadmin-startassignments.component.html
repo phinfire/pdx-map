@@ -17,7 +17,7 @@
     <div class="add-user-section">
         <mat-form-field appearance="outline" class="add-user-form">
             <mat-label>Add User</mat-label>
-            <mat-select [(ngModel)]="newUserToAdd">
+            <mat-select [(ngModel)]="newUserToAdd" (selectionChange)="addNewUser()">
                 @for (user of availableUsers$ | async; track user.id) {
                     <mat-option [value]="user">
                         <img [src]="user.getAvatarImageUrl()" alt="avatar" class="option-avatar">
@@ -26,11 +26,6 @@
                 }
             </mat-select>
         </mat-form-field>
-        <button mat-flat-button color="primary" (click)="addNewUser()" [disabled]="!newUserToAdd"
-            matTooltip="Add selected user to players list">
-            <mat-icon class="action-icon-spacing">person_add</mat-icon>
-            Add
-        </button>
     </div>
 </div>
 
@@ -124,6 +119,12 @@
                     <td mat-cell *matCellDef="let element">
                         <div class="action-cell">
                             @if (element.user) {
+                                @if (element.regionClient) {
+                                    <button mat-icon-button (click)="clearAssignment(element)" 
+                                        matTooltip="Clear assignment">
+                                        <mat-icon color="accent">clear</mat-icon>
+                                    </button>
+                                }
                                 <button mat-icon-button (click)="removeUserRow(element)" 
                                     matTooltip="Remove user signup">
                                     <mat-icon color="primary">delete</mat-icon>

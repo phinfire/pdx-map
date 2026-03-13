@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { some } from 'd3';
 import { PlayerAndOrRegion } from '../../model/megacampaign/PlayerAndOrRegion';
 import { DiscordUser } from '../../model/social/DiscordUser';
 import { calculateAssignments } from '../../util/lobby';
@@ -12,6 +13,7 @@ export class AdminUserTableService {
 
     readonly rowsSubject = new BehaviorSubject<PlayerAndOrRegion[]>([]);
     readonly selectedRowIndicesSubject = new BehaviorSubject<Set<number>>(new Set());
+    private hasPulledAssignments = false;
 
     public readonly rows$: Observable<PlayerAndOrRegion[]> = this.rowsSubject.asObservable();
     public readonly selectedRowIndices$: Observable<Set<number>> = this.selectedRowIndicesSubject.asObservable();
@@ -76,20 +78,48 @@ export class AdminUserTableService {
         this.rowsSubject.next(rows);
     }
 
+    rebuildRowsFromServer(signupsMap: Map<string, string[]>, assignmentsMap: Map<string, string>, regions: string[], guildUsers: DiscordUser[]): void {
+        const userIdToDiscordUser = new Map(guildUsers.map(user => [user.id, user]));
+        const newPlayerRegions: PlayerAndOrRegion[] = [];
+        const handledRegions = new Set<string>();
+        for (const userId of new Set([...signupsMap.keys(), ...assignmentsMap.keys()])) {
+            const user = userIdToDiscordUser.get(userId);
+            if (user) {
+                const assignedRegion = assignmentsMap.get(userId) || null;
+                newPlayerRegions.push(new PlayerAndOrRegion(
+                    user,
+                    assignedRegion,
+                    null,
+                    signupsMap.get(userId) || []
+                ));
+                if (assignedRegion) {
+                    handledRegions.add(assignedRegion);
+                }
+            }
+        }
+        regions.forEach(region => {
+            if (!handledRegions.has(region)) {
+                newPlayerRegions.push(new PlayerAndOrRegion(null, region, null, []));
+            }
+        });
+
+        this.setRows(newPlayerRegions);
+        this.hasPulledAssignments = false;
+    }
+
     getRows(): PlayerAndOrRegion[] {
         return this.rowsSubject.value;
     }
 
     addRow(row: PlayerAndOrRegion): void {
         const current = this.rowsSubject.value;
-        this.rowsSubject.next([...current, row]);
+        this.rowsSubject.next([row, ...current]);
     }
 
     removeRow(playerRegion: PlayerAndOrRegion): void {
         const current = this.rowsSubject.value;
         const filtered = current.filter(pr => pr.getId() !== playerRegion.getId());
         this.rowsSubject.next(filtered);
-        // Clear selection after removal
         this.selectedRowIndicesSubject.next(new Set());
     }
 
@@ -117,18 +147,20 @@ export class AdminUserTableService {
     }
 
     canConfirmAssignments(): boolean {
-        return true
+        return this.hasPulledAssignments;
     }
 
-    canAssignRowToRegion(): boolean {
+    canTriggerAssign(): boolean {
         const selectedIndices = this.selectedRowIndicesSubject.value;
+        console.log('Checking if can assign row to region with selected indices:', selectedIndices);
         if (selectedIndices.size !== 2) return false;
 
         const rows = this.rowsSubject.value;
         const selectedRows = Array.from(selectedIndices).map(i => rows[i]);
         const playersWithoutRegion = selectedRows.filter(r => r.user && !r.regionClient);
         const regionsWithoutPlayer = selectedRows.filter(r => !r.user && r.regionServer);
-
+        console.log('Players without region:', playersWithoutRegion);
+        console.log('Regions without player:', regionsWithoutPlayer);
         return playersWithoutRegion.length === 1 && regionsWithoutPlayer.length === 1;
     }
 
@@ -146,9 +178,12 @@ export class AdminUserTableService {
     pullServerToLocal(): void {
         const rows = this.rowsSubject.value;
         rows.forEach(playerRegion => {
-            playerRegion.regionClient = playerRegion.regionServer || null;
+            if (playerRegion.user) {
+                playerRegion.regionClient = playerRegion.regionServer || playerRegion.regionClient;
+            }
         });
         this.rowsSubject.next([...rows]);
+        this.hasPulledAssignments = true;
     }
 
     assignSelectedRowToRegion(): boolean {
@@ -203,10 +238,10 @@ export class AdminUserTableService {
                 return { success: false, error: `Selected ${players.length} players but only ${regions.length} regions. Please select more regions.` };
             }
         } else {
-            players = rows.filter(pr => pr.user);
+            players = rows.filter((pr: PlayerAndOrRegion) => pr.user);
             regions = rows
-                .filter(pr => !pr.user && pr.regionServer)
-                .map(pr => pr.regionServer!);
+                .filter((pr: PlayerAndOrRegion) => !pr.user && pr.regionServer)
+                .map((pr: PlayerAndOrRegion) => pr.regionServer!);
         }
 
         if (players.length === 0) {
@@ -226,7 +261,7 @@ export class AdminUserTableService {
                 }))
             );
             for (const [region, user] of assignments.entries()) {
-                const playerRegion = rows.find(pr => pr.user?.id === user.id);
+                const playerRegion = rows.find((pr: PlayerAndOrRegion) => pr.user?.id === user.id);
                 if (playerRegion) {
                     playerRegion.regionClient = region;
                 }
@@ -239,13 +274,12 @@ export class AdminUserTableService {
         }
     }
 
-    getAssignmentsToPublish() {
+    getAssignmentsToPublish(): Map<DiscordUser, string> {
         const player2region: Map<DiscordUser, string> = new Map();
-        this.rowsSubject.value.forEach((playerRegion) => {
+        this.rowsSubject.value.forEach((playerRegion: PlayerAndOrRegion) => {
             if (playerRegion.user && playerRegion.regionClient) {
+                console.log(`Assigning player ${playerRegion.getDisplayName()} to region ${playerRegion.regionClient}`);
                 player2region.set(playerRegion.user, playerRegion.regionClient);
-            } else if (playerRegion.user && playerRegion.regionServer) {
-                player2region.set(playerRegion.user, playerRegion.regionServer);
             }
         });
         return player2region;

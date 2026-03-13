@@ -11,7 +11,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { some } from 'd3';
 import { combineLatest, map, Observable, Subscription } from 'rxjs';
 import { PlayerAndOrRegion } from '../../../../model/megacampaign/PlayerAndOrRegion';
 import { DiscordUser } from '../../../../model/social/DiscordUser';
@@ -100,7 +99,7 @@ export class McadminStartassignmentsComponent implements OnDestroy {
             icon: 'assignment',
             color: 'accent',
             tooltip: 'Assign selected player to selected region',
-            predicate: () => this.adminUserTableService.canAssignRowToRegion(),
+            predicate: () => this.adminUserTableService.canTriggerAssign(),
             action: () => this.assignSelectedRowToRegion()
         },
         {
@@ -201,48 +200,12 @@ export class McadminStartassignmentsComponent implements OnDestroy {
                         return { signupsMap, assignmentsMap: userId2AssignedRegion, regions, guildUsers };
                     })
                 ).subscribe(({ signupsMap, assignmentsMap, regions, guildUsers }) => {
-                    const rows = this.rebuildRowsFromServer(signupsMap, assignmentsMap, regions, guildUsers);
-                    this.adminUserTableService.setRows(rows);
+                    this.adminUserTableService.rebuildRowsFromServer(signupsMap, assignmentsMap, regions, guildUsers);
                 });
             } else {
                 this.adminUserTableService.clearAllRows();
             }
         });
-    }
-
-    private rebuildRowsFromServer(signupsMap: Map<string, string[]>, assignmentsMap: Map<string, string>, regions: string[], guildUsers: DiscordUser[]) {
-        const newPlayerRegions: PlayerAndOrRegion[] = [];
-        const handledRegions = new Set<string>();
-        const userIdToDiscordUser = new Map<string, DiscordUser>();
-        guildUsers.forEach(user => userIdToDiscordUser.set(user.id, user));
-        if (some(signupsMap.keys(), userId => !userIdToDiscordUser.has(userId))) {
-            console.error('Some user IDs from signups do not have corresponding DiscordUser objects:',
-                Array.from(signupsMap.keys()).filter(userId => !userIdToDiscordUser.has(userId)));
-        }
-        for (const [userId, picks] of signupsMap.entries()) {
-            const user = userIdToDiscordUser.get(userId)!;
-            const assignedRegionOnServer = assignmentsMap.get(userId) || null;
-            if (assignedRegionOnServer != null) {
-                handledRegions.add(assignedRegionOnServer);
-            }
-            newPlayerRegions.push(new PlayerAndOrRegion(
-                    user,
-                    assignedRegionOnServer,
-                    null,
-                    picks
-                ));
-        }
-        for (const region of regions) {
-            if (!handledRegions.has(region)) {
-                newPlayerRegions.push(new PlayerAndOrRegion(
-                    null,
-                    region,
-                    null,
-                    []
-                ));
-            }
-        }
-        return newPlayerRegions;
     }
 
     ngAfterViewInit() {
@@ -330,6 +293,12 @@ export class McadminStartassignmentsComponent implements OnDestroy {
                 console.error('Remove signup error:', err);
             }
         });
+    }
+
+    clearAssignment(playerRegion: PlayerAndOrRegion): void {
+        playerRegion.regionClient = null;
+        this.openSnackBar(`Assignment cleared for ${playerRegion.getDisplayName()}`, 'OK');
+        this.cdr.markForCheck();
     }
 
     assignSelectedRowToRegion(): void {

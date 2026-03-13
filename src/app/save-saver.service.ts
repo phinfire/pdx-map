@@ -67,7 +67,6 @@ export class SaveSaverService {
     }
 
     public getGameFromSaveMetadata(save: SaveInfo | { metadata: SaveMetadata }): GameType | null {
-        console.log('Save metadata:', save.metadata);
         const game = save.metadata?.game?.toLowerCase() as GameType;
         return (['ck3', 'vic3', 'eu4'] as const).includes(game) ? game : null;
     }

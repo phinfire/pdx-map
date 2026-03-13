@@ -5,6 +5,7 @@ import { DiscordAuthenticationService } from "../discord-auth.service";
 import { MegaService } from "./MegaService";
 import { MegaBrowserSessionService } from "./mega-browser-session.service";
 import { Signup } from "../../model/megacampaign/Signup";
+import { BackendConfigService } from "./backend-config.service";
 
 @Injectable({
     providedIn: 'root',
@@ -15,6 +16,7 @@ export class McSignupService implements OnDestroy {
     private megaService = inject(MegaService);
     private authService = inject(DiscordAuthenticationService);
     private http = inject(HttpClient);
+    private configService = inject(BackendConfigService);
 
     private destroy$ = new Subject<void>();
     private refetchUserPicks$ = new Subject<void>();
@@ -111,7 +113,7 @@ export class McSignupService implements OnDestroy {
                     return of(false);
                 }
                 const headers = this.authService.getAuthenticationHeader();
-                const url = `${this.megaService.getServiceURL()}/campaigns/${campaignId}/signups/${userId}`;
+                const url = `${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/signups/${userId}`;
                 return this.http.post<any>(url, { preferenceKeys }, { headers }).pipe(
                     tap(() => {
                         this.refetchUserPicks$.next();
@@ -141,7 +143,7 @@ export class McSignupService implements OnDestroy {
                     ...authHeader
                 });
 
-                const adminUrl = `${this.megaService.getServiceURL()}/campaigns/${campaignId}/signup/${discordId}`;
+                const adminUrl = `${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/signup/${discordId}`;
                 return this.http.delete<any>(adminUrl, { headers }).pipe(
                     tap(() => {
                         this.refetchAllSignups$.next();
@@ -170,7 +172,7 @@ export class McSignupService implements OnDestroy {
                 if (!meId) {
                     return of([]);
                 }
-                const url = `${this.megaService.getServiceURL()}/campaigns/${campaignId}/signups/${meId}`;
+                const url = `${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/signups/${meId}`;
                 return this.http.get<any>(url, { headers }).pipe(
                     map((response: any) => {
                         const picks: any[] = response?.preferenceKeys || response?.picks || [];
@@ -205,7 +207,7 @@ export class McSignupService implements OnDestroy {
             return of([]);
         }
 
-        return this.http.get<any>(`${this.megaService.getServiceURL()}/campaigns/${campaignId}/signups`, { headers }).pipe(
+        return this.http.get<any>(`${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/signups`, { headers }).pipe(
             map((result: any) => {
                 return Array.isArray(result) ? result : result?.signups || [];
             }),
@@ -263,7 +265,7 @@ export class McSignupService implements OnDestroy {
             return of(0);
         }
 
-        return this.http.get<any>(`${this.megaService.getServiceURL()}/campaigns/${campaignId}/signups/count`, { headers }).pipe(
+        return this.http.get<any>(`${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/signups/count`, { headers }).pipe(
             map((result: any) => {
                 return typeof result === 'number' ? result : result?.count || 0;
             }),

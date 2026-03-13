@@ -1,9 +1,5 @@
 <div class="main">
-        <div class="timebar-container">
-            <h2>Campaign Timeline</h2>
-            <div #timebarContainer class="timebar-plot"></div>
-        </div>
-@if (campaign && (isInStartSelectionStage() || isInWaitingForFirstSessionStage() || isPlayingCk3())) {
+@if (campaign && (campaign.isInStartSelectionStage() || campaign.isInWaitingForFirstSessionStage() || campaign.isPlayingCk3())) {
     @if (this.assignments.length >= 0) {
         <h1>{{ campaign.getName() }} Mega Campaign</h1>
         <h2>Start Regions</h2>
@@ -14,14 +10,14 @@
             }
         </div>
         <div class="button-container">
-            @if (!isInRegionSignupStage()) {
+            @if (!campaign.isInRegionSignupStage()) {
                 <button matButton="elevated" color="primary" (click)="goToSignup()" 
                         matTooltip="Signups are closed, but you can still view the signup screen">
                     <mat-icon>arrow_back</mat-icon>
                     Go back to Signup
                 </button>
             }
-            @if (!isInStartSelectionStage()) {
+            @if (!campaign.isInStartSelectionStage()) {
                 <button matButton="elevated" color="primary" (click)="goToStartSelection()" 
                         [disabled]="!userAssignment"
                         [matTooltip]="userAssignment ? 'County Selection is closed, but you can still view the starting county selection screen' : 'You must be assigned a region to select a starting county'">
@@ -29,13 +25,13 @@
                     Go back to Starting County Selection
                 </button>
             }
-            @if (!isPlayingCk3()) {
+            @if (!campaign.isPlayingCk3()) {
                 <button matButton="elevated" color="primary" (click)="goToStartSelection()">
                     <mat-icon>location_on</mat-icon>
                     Select your starting county
                 </button>
             }
-            @if (isInWaitingForFirstSessionStage() || isPlayingCk3()) {
+            @if (campaign.isInWaitingForFirstSessionStage() || campaign.isPlayingCk3()) {
                 <button matButton="elevated" color="primary" (click)="downloadAllRulersAsZip()">
                     <mat-icon>download</mat-icon>
                     Download All Rulers
