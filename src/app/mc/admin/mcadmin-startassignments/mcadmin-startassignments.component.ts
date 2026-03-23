@@ -44,6 +44,7 @@ export class McadminStartassignmentsComponent implements OnDestroy {
         'select', 'index', 'name', 'pick1', 'pick2', 'pick3', 'pick4', 'pick5', 'warning',
         'regionServer', 'region', 'actions'
     ];
+    private baseDisplayedColumns = this.displayedColumns;
 
     protected newUserToAdd: DiscordUser | null = null;
 
@@ -80,19 +81,20 @@ export class McadminStartassignmentsComponent implements OnDestroy {
 
     protected tableActions: TableAction[] = [
         {
-            label: 'Pull',
-            color: 'primary',
-            tooltip: 'Pull assignments from the server',
-            predicate: () => true,
-            action: () => this.pullServerToLocal()
-        },
-        {
-            label: 'Auto-Assign',
+            label: 'Opt-Assign',
             icon: 'auto_awesome',
             color: 'accent',
             tooltip: 'Automatically assign players to regions using Hungarian algorithm based on preferences',
             predicate: () => true,
             action: () => this.autoAssignPlayerRegions()
+        },
+        {
+            label: 'Random Assign',
+            icon: 'shuffle',
+            color: 'accent',
+            tooltip: 'Automatically assign players to regions using randomized serial dictatorship based on preferences',
+            predicate: () => true,
+            action: () => this.autoAssignPlayerRegionsRandomized()
         },
         {
             label: 'Assign',
@@ -121,31 +123,24 @@ export class McadminStartassignmentsComponent implements OnDestroy {
 
     protected availableUsers$: Observable<DiscordUser[]> = this.discordService.getGuildUsersAsDiscordUsers('749686922959388752');
 
-    getPick(playerRegion: PlayerAndOrRegion, pickNumber: number): string {
-        return playerRegion.getPick(pickNumber);
-    }
-
-    getPickNumber(playerRegion: PlayerAndOrRegion): string {
-        return playerRegion.getPickNumber();
-    }
-
-    isPlayerHappy(playerRegion: PlayerAndOrRegion): boolean {
-        return playerRegion.isHappy();
-    }
-
-    getServerAssignedRegion(playerRegion: PlayerAndOrRegion): string {
-        return playerRegion.regionServer || '';
-    }
-
-    getLocalAssignedRegion(playerRegion: PlayerAndOrRegion): string {
-        return playerRegion.regionClient || '';
-    }
-
-    getPlayerDisplayName(playerRegion: PlayerAndOrRegion): string {
-        return playerRegion.user ? playerRegion.getDisplayName() : '-';
-    }
-
     ngOnInit() {
+        // Subscribe to hasAnyAssignments to dynamically show/hide match-pick column
+        this.hasAnyAssignments$.subscribe(hasAssignments => {
+            const hasMatchPickColumn = this.displayedColumns.includes('match-pick');
+            if (hasAssignments && !hasMatchPickColumn) {
+                const warningIndex = this.displayedColumns.indexOf('warning');
+                this.displayedColumns = [
+                    ...this.displayedColumns.slice(0, warningIndex + 1),
+                    'match-pick',
+                    ...this.displayedColumns.slice(warningIndex + 1)
+                ];
+                this.cdr.markForCheck();
+            } else if (!hasAssignments && hasMatchPickColumn) {
+                this.displayedColumns = this.displayedColumns.filter(col => col !== 'match-pick');
+                this.cdr.markForCheck();
+            }
+        });
+
         this.tableData.sortingDataAccessor = (item: PlayerAndOrRegion, property: string): string | number => {
             switch (property) {
                 case 'name':
@@ -179,6 +174,7 @@ export class McadminStartassignmentsComponent implements OnDestroy {
 
         this.megaBrowserSession.selectedMegaCampaign$.subscribe((campaign: MegaCampaign | null) => {
             this.usersSub?.unsubscribe();
+            this.adminUserTableService.clearAllRows();
             if (campaign) {
                 this.usersSub = combineLatest([
                     this.mcSignupService.allSignups$,
@@ -194,16 +190,14 @@ export class McadminStartassignmentsComponent implements OnDestroy {
                         const userId2AssignedRegion = new Map<string, string>();
                         assignments.forEach(assignment => {
                             if (assignment.user?.id) {
-                                userId2AssignedRegion.set(assignment.user.id, assignment.region_key);
+                                userId2AssignedRegion.set(assignment.user.id, assignment.regionKey);
                             }
                         });
                         return { signupsMap, assignmentsMap: userId2AssignedRegion, regions, guildUsers };
                     })
                 ).subscribe(({ signupsMap, assignmentsMap, regions, guildUsers }) => {
-                    this.adminUserTableService.rebuildRowsFromServer(signupsMap, assignmentsMap, regions, guildUsers);
+                    this.adminUserTableService.rebuildRowsFromServer(signupsMap, assignmentsMap, regions, guildUsers); this.adminUserTableService.pullServerToLocal();
                 });
-            } else {
-                this.adminUserTableService.clearAllRows();
             }
         });
     }
@@ -248,32 +242,6 @@ export class McadminStartassignmentsComponent implements OnDestroy {
         });
     }
 
-    pullServerToLocal() {
-        this.adminUserTableService.pullServerToLocal();
-        this.openSnackBar('Server assignments loaded into local assignments.', 'OK');
-    }
-
-    toggleUserSelection(index: number): void {
-        this.adminUserTableService.toggleUserSelection(index);
-    }
-
-    isUserSelected(index: number): boolean {
-        return this.adminUserTableService.isUserSelected(index);
-    }
-
-    toggleAllPlayers(): void {
-        this.adminUserTableService.toggleAllPlayers();
-    }
-
-    isAllPlayersSelected(): boolean {
-        return this.adminUserTableService.isAllPlayersSelected();
-    }
-
-    isPlayersIndeterminate(): boolean {
-        return this.adminUserTableService.isPlayersIndeterminate();
-    }
-
-
     removeUserRow(playerRegion: PlayerAndOrRegion): void {
         const userName = playerRegion.getDisplayName();
         const userId = playerRegion.getId();
@@ -296,9 +264,20 @@ export class McadminStartassignmentsComponent implements OnDestroy {
     }
 
     clearAssignment(playerRegion: PlayerAndOrRegion): void {
-        playerRegion.regionClient = null;
-        this.openSnackBar(`Assignment cleared for ${playerRegion.getDisplayName()}`, 'OK');
-        this.cdr.markForCheck();
+        this.assignmentService.deletePlayerAssignment$(playerRegion.getId()).subscribe({
+            next: (success) => {
+                if (success) {
+                    this.openSnackBar(`Assignment cleared for ${playerRegion.getDisplayName()}`, 'OK');
+                }
+                else {
+                    this.openSnackBar(`Failed to clear assignment for ${playerRegion.getDisplayName()}`, 'OK');
+                }
+            },
+            error: (err) => {
+                this.openSnackBar(`Error clearing assignment: ${err?.message || 'Unknown error'}`, 'OK');
+                console.error('Clear assignment error:', err);
+            }
+        });
     }
 
     assignSelectedRowToRegion(): void {
@@ -306,8 +285,8 @@ export class McadminStartassignmentsComponent implements OnDestroy {
         const selectedIndices = this.adminUserTableService.selectedRowIndicesSubject?.value || new Set();
         const selectedIndicesArray = Array.from(selectedIndices);
         const regionRow = rows[selectedIndicesArray.find(i => !rows[i].user)!];
-        
-        if (this.adminUserTableService.assignSelectedRowToRegion()) {
+
+        if (this.adminUserTableService.performAssignActionOnSelectedRows()) {
             this.openSnackBar(`Player assigned to ${regionRow.regionServer}!`, 'OK');
         } else {
             this.openSnackBar('Invalid selection for assignment.', 'OK');
@@ -351,6 +330,16 @@ export class McadminStartassignmentsComponent implements OnDestroy {
         } else {
             this.openSnackBar(`Error during auto-assignment: ${result.error}`, 'OK');
             if (result.error) console.error('Auto-assignment error:', result.error);
+        }
+    }
+
+    autoAssignPlayerRegionsRandomized(): void {
+        const result = this.adminUserTableService.autoAssignPlayerRegionsRandomized();
+        if (result.success) {
+            this.openSnackBar('Assignments automatically assigned using randomized serial dictatorship!', 'OK');
+        } else {
+            this.openSnackBar(`Error during random assignment: ${result.error}`, 'OK');
+            if (result.error) console.error('Random assignment error:', result.error);
         }
     }
 }

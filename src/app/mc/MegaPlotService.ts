@@ -1,5 +1,4 @@
 import { Injectable, inject } from "@angular/core";
-import { StartAssignment } from "./StartAssignment";
 import { CK3Service } from "../../services/gamedata/CK3Service";
 import { PdxFileService } from "../../services/pdx-file.service";
 import { Trait } from "../../model/ck3/Trait";
@@ -7,6 +6,7 @@ import { Plotable } from "../plot-view/Plotable";
 import { RGB } from "../../util/RGB";
 import { TraitType } from "../../model/ck3/enum/TraitType";
 import { CK3 } from "../../model/ck3/game/CK3";
+import { CustomRulerFile } from "../../model/megacampaign/CustomRulerFile";
 
 @Injectable({
     providedIn: 'root'
@@ -16,7 +16,7 @@ export class MegaPlotService {
     ck3Service = inject(CK3Service);
     fileService = inject(PdxFileService);
 
-    generatePlotData(ck3: CK3, assignments: StartAssignment[]) {
+    generatePlotData(ck3: CK3, rulers: CustomRulerFile[]) {
         const traitType2Color = new Map<string, RGB>();
         traitType2Color.set(TraitType.PERSONALITY, new RGB(102, 153, 204));
         traitType2Color.set(TraitType.INHERITABLE, new RGB(102, 0, 0));
@@ -27,7 +27,7 @@ export class MegaPlotService {
         traitType2Color.set(TraitType.HEALTH, new RGB(235, 83, 83));
         traitType2Color.set(TraitType.PHYSICAL, new RGB(0, 128, 128));
         traitType2Color.set(TraitType.FALLBACK, new RGB(128, 128, 128));
-        return countTraits(assignments, this.ck3Service, ck3, this.fileService).then(trait2Count => {
+        return countTraits(rulers).then(trait2Count => {
             return Array.from(trait2Count.entries()).map(([trait, count]) => {
                 if (traitType2Color.has(trait.getTraitType()) === false) {
                     console.warn(`No color defined for trait type ${trait.getTraitType()}`);
@@ -45,29 +45,18 @@ export class MegaPlotService {
 }
 
 async function countTraits(
-    assignments: StartAssignment[],
-    ck3Service: CK3Service,
-    ck3: CK3,
-    fileService: PdxFileService
+    rulers: CustomRulerFile[]
 ): Promise<Map<Trait, number>> {
     const trait2Count: Map<Trait, number> = new Map();
     return new Promise((resolve) => {
-        const promises = assignments.map(async (assignment) => {
-            if (assignment.start_key && assignment.start_data) {
-                const json = await fileService.parseContentToJsonPromise((assignment.start_data as { ruler: string }).ruler);
-                const character = ck3Service.parseCustomCharacter(json, ck3);
-                if (character) {
-                    for (const trait of character.traits) {
-                        trait2Count.set(trait, (trait2Count.get(trait) || 0) + 1);
-                    }
-                    if (character.educationTrait) {
-                        trait2Count.set(character.educationTrait, (trait2Count.get(character.educationTrait) || 0) + 1);
-                    }
-                }
+        rulers.forEach((ruler) => {
+            for (const trait of ruler.traits) {
+                trait2Count.set(trait, (trait2Count.get(trait) || 0) + 1);
+            }
+            if (ruler.educationTrait) {
+                trait2Count.set(ruler.educationTrait, (trait2Count.get(ruler.educationTrait) || 0) + 1);
             }
         });
-        Promise.all(promises).then(() => {
-            resolve(trait2Count);
-        });
+        resolve(trait2Count);
     });
 }

@@ -13,6 +13,9 @@ export class PdxFileService {
      * @param content The string content to parse.
      */
     public parseContentToJsonPromise(content: string): Promise<any> {
+        if (!content || typeof content !== 'string') {
+            return Promise.reject(new Error(`Invalid content: expected non-empty string, got ${typeof content}`));
+        }
         return Jomini.initialize().then(parser => {
             const parsedData = parser.parseText(content, {}, (q) => q.json());
             return JSON.parse(parsedData);

@@ -36,14 +36,14 @@
             <table mat-table [dataSource]="tableData" matSort #tableSort="matSort" class="mat-table-striped">
                 <ng-container matColumnDef="select">
                     <th mat-header-cell *matHeaderCellDef>
-                        <mat-checkbox (change)="$event ? toggleAllPlayers() : null"
-                                      [checked]="isAllPlayersSelected()"
-                                      [indeterminate]="isPlayersIndeterminate()"
+                        <mat-checkbox (change)="$event ? adminUserTableService.toggleAllPlayers() : null"
+                                      [checked]="adminUserTableService.isAllPlayersSelected()"
+                                      [indeterminate]="adminUserTableService.isPlayersIndeterminate()"
                                       matTooltip="Select all players">
                         </mat-checkbox>
                     </th>
                     <td mat-cell *matCellDef="let element; let i = index">
-                        <mat-checkbox [checked]="isUserSelected(i)" (change)="toggleUserSelection(i)"></mat-checkbox>
+                        <mat-checkbox [checked]="adminUserTableService.isUserSelected(i)" (change)="adminUserTableService.toggleUserSelection(i)"></mat-checkbox>
                     </td>
                 </ng-container>
 
@@ -92,8 +92,19 @@
                 <ng-container matColumnDef="warning">
                     <th mat-header-cell *matHeaderCellDef></th>
                     <td mat-cell *matCellDef="let element">
-                        @if ((hasAnyAssignments$ | async) && !element.isHappy()) {
+                        @if ((hasAnyAssignments$ | async) && element.user && !element.isHappy()) {
                             <mat-icon class="warning-icon" matTooltip="User not assigned to a pick">warning</mat-icon>
+                        }
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="match-pick">
+                    <th mat-header-cell *matHeaderCellDef>Match</th>
+                    <td mat-cell *matCellDef="let element">
+                        @if (element.user !== null && element.regionClient !== null && element.isHappy()) {
+                            <mat-icon class="match-icon" color="accent" matTooltip="Assigned to a preferred pick">check_circle</mat-icon>
+                        } @else if (element.user && element.regionClient) {
+                            <mat-icon class="no-match-icon" matTooltip="Not assigned to a preferred pick">cancel</mat-icon>
                         }
                     </td>
                 </ng-container>

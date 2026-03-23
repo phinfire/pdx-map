@@ -10,7 +10,7 @@ export function findCountiesOwnedByAtMostDoubleCounts(save: Ck3Save, k: number):
     const holder2CountyTitles = new Map<string, string[]>();
     const holder2PrimaryTitle = new Map<string, string>();
     for (const title of save.getLandedTitles()) {
-        if (!title.getKey().startsWith("c_")) {
+        if (!title.getKey().startsWith("c_") || title.getKey().startsWith("c_nf_")) {
             continue;
         }
         const holder = title.getHolder();
@@ -68,7 +68,7 @@ export function buildKey2Cluster(ck3: CK3, ck3Save: Ck3Save, regions: Region[], 
         }
         if (matchedRegionNames.length == 0) {
             if (title.getKey().indexOf("_nf_") == -1) {
-                console.error(`Title\n${getPathToTheTop(title.getKey(), ck3).join(" -> ")} \ndoes not belong to any region`);
+                console.warn(`Title\n${getPathToTheTop(title.getKey(), ck3).join(" -> ")} \ndoes not belong to any region`);
             }
         } else if (matchedRegionNames.length > 1 && new Set(matchedRegionNames).size > 1) {
             if (title.getKey().indexOf("_nf_") == -1) {

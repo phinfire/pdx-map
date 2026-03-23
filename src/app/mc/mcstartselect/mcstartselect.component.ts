@@ -1,5 +1,5 @@
-import { Component, inject, Input, ViewChild, AfterViewInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, inject, ViewChild, AfterViewInit, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MegaCampaign } from '../MegaCampaign';
 import { PolygonSelectComponent } from '../../viewers/polygon-select/polygon-select.component';
 import { TimerComponent } from '../../timer/timer.component';
@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SignupAssetsService, SignupAssetsData } from '../SignupAssetsService';
 import { StartAssignment } from '../StartAssignment';
-import { combineLatest } from 'rxjs';
+import { combineLatest, filter } from 'rxjs';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
 import { PdxFileService } from '../../../services/pdx-file.service';
 import { CustomRulerFile } from '../../../model/megacampaign/CustomRulerFile';
@@ -21,8 +21,7 @@ import { DiscordAuthenticationService } from '../../../services/discord-auth.ser
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
 import { MegaService } from '../../../services/megacampaign/MegaService';
-import { MegaBrowserSessionService } from '../mega-browser-session.service';
-import { LegacyMCSignupService } from '../../../services/megacampaign/legacy-mc-signup-service.service';
+import { MegaBrowserSessionService } from '../../../services/megacampaign/mega-browser-session.service';
 
 @Component({
     selector: 'app-mcstartselect',
@@ -30,12 +29,11 @@ import { LegacyMCSignupService } from '../../../services/megacampaign/legacy-mc-
     templateUrl: './mcstartselect.component.html',
     styleUrl: './mcstartselect.component.scss'
 })
-export class McstartselectComponent implements AfterViewInit {
+export class McstartselectComponent implements OnInit, AfterViewInit {
 
     @ViewChild('polygonSelect') polygonSelectComponent!: PolygonSelectComponent;
 
     discordAuthService = inject(DiscordAuthenticationService);
-    signupService = inject(LegacyMCSignupService);
     signupAssetsService = inject(SignupAssetsService);
     ck3Service = inject(CK3Service);
     fileService = inject(PdxFileService);
@@ -44,10 +42,10 @@ export class McstartselectComponent implements AfterViewInit {
     megaService = inject(MegaService);
     megaSessionService = inject(MegaBrowserSessionService);
     activatedRoute = inject(ActivatedRoute);
+    router = inject(Router);
 
-    @Input() campaign: MegaCampaign | null = null;
-    @Input() assignment!: StartAssignment;
-    @Input() goBackFunction: (() => void) | null = null;
+    campaign: MegaCampaign | null = null;
+    assignment: StartAssignment | null = null;
 
     prepackagedLocalAssignment: StartAssignment | null = null;
     rendererReady = false;
@@ -57,7 +55,6 @@ export class McstartselectComponent implements AfterViewInit {
     ck3: CK3 | null = null;
 
     private key2Value: Map<string, number> = new Map();
-    private pendingMapData: SignupAssetsData | null = null;
     protected rulerFileContent: string | null = null;
 
     colorConfigProvider = new ColorConfigProvider(new Map<string, number>());
@@ -75,57 +72,108 @@ export class McstartselectComponent implements AfterViewInit {
     }
 
     ngOnInit() {
-        if (!this.campaign) {
-            const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
-            this.megaSessionService.selectCampaignById(campaignId).subscribe(campaign => {
-                this.campaign = campaign;
-            });
-        }
-        if (!this.assignment || !this.assignment.region_key) {
-            console.error('McstartselectComponent: No assignment or region key provided');
+        const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
+        if (!campaignId) {
+            console.error('McstartselectComponent: No campaign ID in route params');
             return;
         }
         combineLatest([
-            this.signupAssetsService.loadRegionMapData$(this.assignment.region_key)
+            this.megaSessionService.selectCampaignById(campaignId),
+            combineLatest([
+                this.assignmentService.allAssignments$,
+                this.discordAuthService.loggedInUser$
+            ]).pipe(
+                filter(([assignments]) => assignments.length > 0),
+                filter(([assignments, user]) => {
+                    if (!user) return false;
+                    const userAssignment = assignments.find(a => a.user.id === user.id);
+                    return !!userAssignment;
+                })
+            )
         ]).subscribe({
-            next: ([currentData]) => {
-                this.pendingMapData = currentData;
-                this.tryLaunchPolygonSelect();
+            next: ([campaign, [assignments, user]]) => {
+                if (!campaign) {
+                    console.error('McstartselectComponent: Campaign not found');
+                    return;
+                }
+                if (!user) {
+                    console.error('McstartselectComponent: User not logged in');
+                    return;
+                }
+                const userAssignment = assignments.find(a => a.user.id === user.id);
+                if (!userAssignment) {
+                    console.error('McstartselectComponent: No assignment found for user');
+                    return;
+                }
+                this.campaign = campaign;
+                this.assignment = userAssignment;
+                this.loadAndLaunchMapData();
+            },
+            error: (error) => {
+                console.error('McstartselectComponent: Error loading data:', error);
+            }
+        });
+        this.ck3Service.initializeCK3().subscribe(ck3 => {
+            this.ck3 = ck3;
+        });
+        this.assignmentService.getMyStartPosition$().subscribe({
+            next: (position) => {
+                console.log('Fetched my start position:', position);
+                if (position?.startData) {
+                    try {
+                        if (position.startData) {
+                            this.rulerFileContent = position.startData;
+                            this.loadRulerFromContent(position.startData);
+                        }
+                    } catch (error) {
+                        console.error('McstartselectComponent: Error parsing start data:', error);
+                    }
+                }
+            },
+            error: (error) => {
+                console.log('McstartselectComponent: No previously saved start position (this is normal on first load)');
+            }
+        });
+    }
+
+    private loadAndLaunchMapData() {
+        console.log('Loading map data for assignment:', this.assignment);
+        if (!this.assignment || !this.assignment.regionKey) {
+            console.error('McstartselectComponent: No assignment or region key');
+            return;
+        }
+        
+        this.signupAssetsService.loadRegionMapData$(this.assignment.regionKey).subscribe({
+            next: (data) => {
+                console.log('Map data loaded:', data);
+                this.launchPolygonSelect(data);
             },
             error: (error) => {
                 console.error('McstartselectComponent: Error loading map data:', error);
             }
         });
-        if (this.assignment && this.assignment.start_data) {
-            const rulerData = (this.assignment.start_data as { ruler: string }).ruler;
-            if (this.assignment && this.assignment.start_data && rulerData) {
-                this.rulerFileContent = rulerData;
-                this.ck3Service.initializeCK3().subscribe(ck3 => {
-                    this.fileService.importFilePromise(new File([rulerData], 'ruler.ck3ruler')).then(result => {
-                        try {
-                            const character = this.ck3Service.parseCustomCharacter(result.json, ck3);
-                            this.ruler = character;
-                        } catch (e) {
-                            console.error('Failed to parse ruler from start_data:', e);
-                            this.ruler = null;
-                        }
-                    })
-                });
-            }
-        }
+    }
+
+    private loadRulerFromContent(rulerData: string) {
+        this.ck3Service.initializeCK3().subscribe(ck3 => {
+            this.fileService.parseContentToJsonPromise(rulerData).then(json => {
+                try {
+                    const character = this.ck3Service.parseCustomCharacter(json, ck3);
+                    this.ruler = character;
+                    console.log('Ruler loaded from start position:', character);
+                } catch (e) {
+                    console.error('Failed to parse ruler from content:', e);
+                    this.ruler = null;
+                }
+            }).catch(error => {
+                console.error('Failed to parse ruler content:', error);
+                this.ruler = null;
+            });
+        });
     }
 
     ngAfterViewInit() {
-        this.tryLaunchPolygonSelect();
-    }
-
-    private tryLaunchPolygonSelect() {
-        if (this.pendingMapData && this.polygonSelectComponent) {
-            this.launchPolygonSelect(this.pendingMapData);
-            this.pendingMapData = null;
-            console.log('Setting locked states for start key:', this.assignment.start_key);
-            this.polygonSelectComponent.setLockedStates(this.assignment.start_key ? [this.assignment.start_key] : [], true);
-        }
+        // polygon select is now launched during ngOnInit when all data is ready
     }
 
     private launchPolygonSelect(data: SignupAssetsData) {
@@ -137,16 +185,25 @@ export class McstartselectComponent implements AfterViewInit {
             console.warn('McstartselectComponent: No meshes found for the assigned region');
             return;
         }
+        
         for (const mesh of data.meshes) {
             this.key2Value.set(mesh.key, 1);
         }
+        
         const colorConfigProviders = [
             ...data.configProviders,
             new ValueGradientColorConfig(this.key2Value)
         ];
+        
         this.clusterManager = data.clusterManager;
-        this.ck3 = data.ck3;
+        this.ck3 = data.ck3SaveData?.getCK3() || null;
+        
         this.polygonSelectComponent.launch(data.meshes, colorConfigProviders);
+        if (this.assignment?.startKey) {
+            console.log('Setting locked state for start key:', this.assignment.startKey);
+            this.polygonSelectComponent.setLockedStates([this.assignment.startKey], true);
+        }
+        
         this.rendererReady = true;
     }
 
@@ -208,27 +265,25 @@ export class McstartselectComponent implements AfterViewInit {
             alert('No position selected or assignment missing.');
             return;
         }
-        if (!this.discordAuthService.isLoggedIn()) {
+        const authHeader = this.discordAuthService.getAuthenticationHeader();
+        if (!authHeader || !authHeader['Authorization']) {
             alert('You must be logged in to upload your selection.');
             return;
         }
-        const packagedAssignment: StartAssignment = {
-            user: this.discordAuthService.getLoggedInUser()!,
-            region_key: this.assignment.region_key,
-            start_key: this.selectedPosition,
-            start_data: { ruler: this.rulerFileContent }
-        };
-        console.log('Uploading selection:', packagedAssignment);
-        this.assignmentService.updateMyAssignment$(packagedAssignment).subscribe({
-            next: () => {
-                this.snackBar.open('Selection uploaded successfully!', 'Close', { duration: 3000 });
+        this.assignmentService.setMyStartPosition$(this.selectedPosition, this.rulerFileContent || "").subscribe({
+            next: (success) => {
+                if (success) {
+                    this.snackBar.open('Selection uploaded successfully!', 'Close', { duration: 3000 });
+                } else {
+                    this.snackBar.open('Error uploading selection. Please try again.', 'Close', { duration: 3000 });
+                }
             },
             error: (err) => {
                 console.error('Error uploading selection:', err);
                 this.snackBar.open('Error uploading selection. Please try again.', 'Close', { duration: 3000 });
             }
         });
-    };
+    }
 
     clearRuler() {
         this.ruler = null;

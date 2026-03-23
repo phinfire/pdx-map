@@ -10,6 +10,7 @@ import { ParadoxComponent } from './paradox/paradox.component';
 import { ResourcemapComponent } from './resourcemap/resourcemap.component';
 import { SaveViewSplashComponent } from './saveanalysis/save-view-splash/save-view-splash.component';
 import { SavefileadminComponent } from './savefileadmin/savefileadmin.component';
+import { McstartselectComponent } from './mc/mcstartselect/mcstartselect.component';
 
 export const routes: Routes = [
     {
@@ -26,6 +27,7 @@ export const routes: Routes = [
             { path: 'mc/modder', component: MegaModderComponent },
             { path: 'mc/signup', component: MCSignupComponent },
             { path: 'mc/signup/:campaignId', component: MCSignupComponent },
+            { path: 'mc/start-selection/:campaignId', component: McstartselectComponent },
             { path: 'mc/:campaignId', component: MegaCampaignComponent },
             { path: 'mc', component: MegaCampaignComponent },
             { path: 'jomini', component: JominiKioskComponent },

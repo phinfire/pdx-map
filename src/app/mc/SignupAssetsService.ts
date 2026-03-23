@@ -62,72 +62,73 @@ export class SignupAssetsService {
     );
 
     loadRegionMapData$(regionKey: string): Observable<SignupAssetsData> {
-        return forkJoin({
-            geoJson: this.mapService.fetchCK3GeoJson(true, false),
-            ck3Save: this.ck3Service.openCk3ZeroSaveFromFile(),
-            parsedRegionConfig: this.selectedCampaignRegionConfig$
-        }).pipe(
-            map(({ geoJson, ck3Save, parsedRegionConfig }) => {
-                const ck3 = ck3Save.getCK3();
-                const keysToExclude = collectAllChildren(ck3Save, parsedRegionConfig.topLevelKeysToInclude);
-                const key2ClusterKey = buildKey2Cluster(ck3, ck3Save, parsedRegionConfig.regions, keysToExclude);
-                const baseClusterManager = new ClusterManager(key2ClusterKey);
-                const countiesInRegion = baseClusterManager.getCluster2Keys(regionKey);
-                const countyRealms = findCountiesOwnedByAtMostDoubleCounts(ck3Save, 2);
-                const countyToRealmMap = new Map<string, string>();
-                countyRealms.forEach((realm, realmIndex) => {
-                    const realmKey = `realm_${realmIndex}_${realm[0]}`;
-                    realm.forEach(countyKey => {
-                        if (countiesInRegion.includes(countyKey)) {
-                            countyToRealmMap.set(countyKey, realmKey);
-                        }
-                    });
-                });
-                countiesInRegion.forEach(countyKey => {
-                    if (!countyToRealmMap.has(countyKey)) {
-                        countyToRealmMap.set(countyKey, `single_${countyKey}`);
-                    }
-                });
+        return this.selectedCampaignRegionConfig$.pipe(
+            switchMap(parsedRegionConfig =>
+                forkJoin({
+                    geoJson: this.mapService.fetchCK3GeoJson(true, false),
+                    ck3Save: this.ck3Service.openCk3ZeroSaveFromFile(),
+                }).pipe(
+                    map(({ geoJson, ck3Save }) => {
+                        const ck3 = ck3Save.getCK3();
+                        const keysToExclude = collectAllChildren(ck3Save, parsedRegionConfig.topLevelKeysToInclude);
+                        const key2ClusterKey = buildKey2Cluster(ck3, ck3Save, parsedRegionConfig.regions, keysToExclude);
+                        const baseClusterManager = new ClusterManager(key2ClusterKey);
+                        const countiesInRegion = baseClusterManager.getCluster2Keys(regionKey);
+                        const countyRealms = findCountiesOwnedByAtMostDoubleCounts(ck3Save, 2);
+                        const countyToRealmMap = new Map<string, string>();
+                        countyRealms.forEach((realm, realmIndex) => {
+                            const realmKey = `realm_${realmIndex}_${realm[0]}`;
+                            realm.forEach(countyKey => {
+                                if (countiesInRegion.includes(countyKey)) {
+                                    countyToRealmMap.set(countyKey, realmKey);
+                                }
+                            });
+                        });
+                        countiesInRegion.forEach(countyKey => {
+                            if (!countyToRealmMap.has(countyKey)) {
+                                countyToRealmMap.set(countyKey, `single_${countyKey}`);
+                            }
+                        });
 
-                const key2color = new Map<string, number>();
-                ck3Save.getLandedTitles()
-                    .filter((title: AbstractLandedTitle) => title.getKey().startsWith("c_") && countiesInRegion.includes(title.getKey()))
-                    .forEach((title: AbstractLandedTitle) => {
-                        const deFactoTopLiege = title.getUltimateLiegeTitle();
-                        key2color.set(title.getKey(), deFactoTopLiege.getColor().toNumber());
-                    });
+                        const key2color = new Map<string, number>();
+                        ck3Save.getLandedTitles()
+                            .filter((title: AbstractLandedTitle) => title.getKey().startsWith("c_") && countiesInRegion.includes(title.getKey()))
+                            .forEach((title: AbstractLandedTitle) => {
+                                const deFactoTopLiege = title.getUltimateLiegeTitle();
+                                key2color.set(title.getKey(), deFactoTopLiege.getColor().toNumber());
+                            });
 
-                const colorProvider = new ColorConfigProvider(key2color);
-                const forceNonInteractive = (key: string) => {
-                    return keysToExclude.has(key) ? true : false;
-                };
+                        const colorProvider = new ColorConfigProvider(key2color);
+                        const forceNonInteractive = (key: string) => {
+                            return keysToExclude.has(key) ? true : false;
+                        };
 
-                const countiesOwnedByDoubleOrSingleCounts = new Set<string>();
-                countyRealms.forEach(realm => {
-                    realm.forEach(county => {
-                        if (countiesInRegion.includes(county)) {
-                            countiesOwnedByDoubleOrSingleCounts.add(county);
-                        }
+                        const countiesOwnedByDoubleOrSingleCounts = new Set<string>();
+                        countyRealms.forEach(realm => {
+                            realm.forEach(county => {
+                                if (countiesInRegion.includes(county)) {
+                                    countiesOwnedByDoubleOrSingleCounts.add(county);
+                                }
+                            })
+                        });
+                        const allMeshes = makeGeoJsonPolygons(geoJson, colorProvider, (countyKey) => null, forceNonInteractive, 1.5);
+                        const meshes = allMeshes.filter(mesh => countiesInRegion.includes(mesh.key));
+                        meshes.forEach(mesh => {
+                            if (!countiesOwnedByDoubleOrSingleCounts.has(mesh.key)) {
+                                mesh.interactive = false;
+                            }
+                        });
+                        const data: SignupAssetsData = {
+                            ck3SaveData: ck3Save,
+                            meshes: meshes,
+                            configProviders: [colorProvider],
+                            clusterManager: new ClusterManager(countyToRealmMap),
+                        };
+
+                        return data;
                     })
-                });
-                const allMeshes = makeGeoJsonPolygons(geoJson, colorProvider, (countyKey) => null, forceNonInteractive, 1.5);
-                const meshes = allMeshes.filter(mesh => countiesInRegion.includes(mesh.key));
-                meshes.forEach(mesh => {
-                    if (!countiesOwnedByDoubleOrSingleCounts.has(mesh.key)) {
-                        mesh.interactive = false;
-                    }
-                    //mesh.interactive = true;
-                    //mesh.locked = false;
-                });
-                const data: SignupAssetsData = {
-                    ck3SaveData: ck3Save,
-                    meshes: meshes,
-                    configProviders: [colorProvider],
-                    clusterManager: new ClusterManager(countyToRealmMap),
-                };
-
-                return data;
-            }),
+                )
+            ),
             shareReplay(1)
         );
     }

@@ -32,9 +32,7 @@ export class MegaBrowserSessionService {
         const campaignIdNum = typeof campaignId === 'string' ? parseInt(campaignId, 10) : campaignId;
         return this.megaService.getAvailableCampaigns$().pipe(
             tap(campaigns => {
-                console.log('Looking for campaign ID in fetched campaigns:', campaignIdNum, campaigns);
                 const found = campaigns.find(c => c.getId() === campaignIdNum);
-                console.log('Found campaign:', found);
                 if (found && found.getId() !== this.selectedMegaCampaignSubject.value?.getId()) {
                     this.selectedMegaCampaignSubject.next(found);
                 }

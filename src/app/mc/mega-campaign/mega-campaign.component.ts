@@ -63,7 +63,7 @@ export class MegaCampaignComponent implements AfterViewInit {
     private cachedColumns: Map<number, TableColumn<StartAssignment>[]> = new Map();
 
     goToSignup = () => this.router.navigate(['/mc/signup']);
-    goToStartSelection = () => this.router.navigate(['/mc/start-selection']);
+    goToStartSelection = () => this.router.navigate(['/mc/start-selection', this.campaign?.getId()]);
 
     ngOnInit() {
         this.titleService.setTitle('Mega Campaign');
@@ -81,31 +81,37 @@ export class MegaCampaignComponent implements AfterViewInit {
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(([assignments, ck3, loggedInUser]) => {
                 if (assignments != null) {
-                    this.assignments = assignments.sort((a, b) => a.region_key < b.region_key ? -1 : (a.region_key > b.region_key ? 1 : 0));
+                    this.assignments = assignments.sort((a, b) => a.regionKey < b.regionKey ? -1 : (a.regionKey > b.regionKey ? 1 : 0));
                     this.cachedColumns.clear();
                     this.userAssignment = loggedInUser ? assignments.find(a => a.user.id === loggedInUser.id) || null : null;
-                }
-                if (assignments != null && ck3 != null) {
-                    this.megaPlotService.generatePlotData(ck3, assignments).then((traitPlotables) => {
-                        this.traitPlotables = traitPlotables;
-                    });
-                    this.user2Ruler.clear();
-                    assignments.forEach(async a => {
-                        if (a.start_data && a.start_key) {
-                            const rulerData = (a.start_data as { ruler: string }).ruler;
-                            const fileService = this.megaPlotService.fileService;
-                            const ck3Service = this.megaPlotService.ck3Service;
-                            const json = await fileService.parseContentToJsonPromise(rulerData);
-                            const ruler = ck3Service.parseCustomCharacter(json, ck3);
-                            if (ruler) {
-                                this.user2Ruler.set(a.user, ruler);
-                                const message = this.megaUtils.getIllegalityReport(ruler);
-                                if (message.length > 0) {
-                                    console.log(`Illegality report for ${a.user.getName()}: ${message}`);
+                    if (ck3 != null) {
+                        this.user2Ruler.clear();
+                        const rulerPromises = assignments.map(async a => {
+                            console.log("a: ", a);
+                            if (a.startData && a.startKey) {
+                                console.log(`Processing start data for user ${a.user.getName()} with region ${a.regionKey}`);
+                                const rulerData = a.startData as string;
+                                const fileService = this.megaPlotService.fileService;
+                                const ck3Service = this.megaPlotService.ck3Service;
+                                console.log(`Parsing ruler data for user ${a.user.getName()}`);
+                                const json = await fileService.parseContentToJsonPromise(rulerData);
+                                const ruler = ck3Service.parseCustomCharacter(json, ck3);
+                                if (ruler) {
+                                    this.user2Ruler.set(a.user, ruler);
+                                    const message = this.megaUtils.getIllegalityReport(ruler);
+                                    if (message.length > 0) {
+                                        console.log(`Illegality report for ${a.user.getName()}: ${message}`);
+                                    }
                                 }
                             }
-                        }
-                    });
+                            console.log(`Finished processing start data for user ${a.user.getName()}`);
+                        });
+                        Promise.all(rulerPromises).then(() => {
+                            this.megaPlotService.generatePlotData(ck3, Array.from(this.user2Ruler.values())).then((traitPlotables) => {
+                                this.traitPlotables = traitPlotables;
+                            });
+                        });
+                    }
                 }
             });
     }
@@ -137,12 +143,12 @@ export class MegaCampaignComponent implements AfterViewInit {
                 .build(),
             new TableColumnBuilder<StartAssignment>('Region')
                 .isSortable(false)
-                .withCellValue(a => a.region_key)
+                .withCellValue(a => a.regionKey)
                 .build(),
             new TableColumnBuilder<StartAssignment>('OK')
                 .isSortable(false)
                 .withCellValue((a: StartAssignment) => {
-                    if (!a.start_key || !a.start_data) {
+                    if (!a.startKey || !a.startData) {
                         return '';
                     }
                     const ruler = this.user2Ruler.get(a.user);
@@ -168,10 +174,10 @@ export class MegaCampaignComponent implements AfterViewInit {
     async downloadAllRulersAsZip() {
         const zip = new JSZip();
         for (const assignment of this.assignments) {
-            if (assignment.start_data && (assignment.start_data as any).ruler) {
-                const rulerData = (assignment.start_data as { ruler: string }).ruler;
+            if (assignment.startData && assignment.startKey) {
+                const rulerData = assignment.startData as string;
                 const userName = assignment.user.getName().replace(/[^a-zA-Z0-9_-]/g, '_');
-                const fileName = assignment.start_key + "_" + `${userName || assignment.user.id}.ck3ruler`;
+                const fileName = assignment.startKey + "_" + `${userName || assignment.user.id}.ck3ruler`;
                 zip.file(fileName, rulerData);
             }
         }

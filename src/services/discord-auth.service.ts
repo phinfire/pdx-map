@@ -30,7 +30,6 @@ interface HealthResponse {
 })
 export class DiscordAuthenticationService {
     private static readonly CONFIG = {
-        API_URL: "https://codingafterdark.de/mc-signup",
         AUTH_SERVICE_URL: "https://codingafterdark.de/authentication",
         CLIENT_ID: "1403891748371038462",
         JWT_STORAGE_KEY: "discordToken",
@@ -120,10 +119,6 @@ export class DiscordAuthenticationService {
             map(user => user !== null),
             distinctUntilChanged()
         );
-    }
-
-    static getApiUrl(): string {
-        return DiscordAuthenticationService.CONFIG.API_URL;
     }
 
     private getRedirectUrl(): string {

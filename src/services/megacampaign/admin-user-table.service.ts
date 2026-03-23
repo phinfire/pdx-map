@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 import { some } from 'd3';
 import { PlayerAndOrRegion } from '../../model/megacampaign/PlayerAndOrRegion';
 import { DiscordUser } from '../../model/social/DiscordUser';
-import { calculateAssignments } from '../../util/lobby';
+import { calculateAssignments, calculateAssignmentsRandomizedSerialDictatorship } from '../../util/lobby';
 
 @Injectable({
     providedIn: 'root',
@@ -150,17 +150,6 @@ export class AdminUserTableService {
         return this.hasPulledAssignments;
     }
 
-    canTriggerAssign(): boolean {
-        const selectedIndices = this.selectedRowIndicesSubject.value;
-        if (selectedIndices.size !== 2) return false;
-
-        const rows = this.rowsSubject.value;
-        const selectedRows = Array.from(selectedIndices).map(i => rows[i]);
-        const playersWithoutRegion = selectedRows.filter(r => r.user && !r.regionClient);
-        const regionsWithoutPlayer = selectedRows.filter(r => !r.user && r.regionServer);
-        return playersWithoutRegion.length === 1 && regionsWithoutPlayer.length === 1;
-    }
-
     canSwapRows(): boolean {
         const selectedIndices = this.selectedRowIndicesSubject.value;
         if (selectedIndices.size !== 2) return false;
@@ -183,7 +172,18 @@ export class AdminUserTableService {
         this.hasPulledAssignments = true;
     }
 
-    assignSelectedRowToRegion(): boolean {
+    canTriggerAssign(): boolean {
+        const selectedIndices = this.selectedRowIndicesSubject.value;
+        if (selectedIndices.size !== 2) return false;
+
+        const rows = this.rowsSubject.value;
+        const selectedRows = Array.from(selectedIndices).map(i => rows[i]);
+        const playersWithoutRegion = selectedRows.filter(r => r.user && !r.regionClient);
+        const regionsWithoutPlayer = selectedRows.filter(r => !r.user && r.regionServer);
+        return playersWithoutRegion.length === 1 && regionsWithoutPlayer.length === 1;
+    }
+
+    performAssignActionOnSelectedRows(): boolean {
         const selectedIndices = this.selectedRowIndicesSubject.value;
         const rows = this.rowsSubject.value;
         const selectedRows = Array.from(selectedIndices).map(i => rows[i]);
@@ -251,6 +251,57 @@ export class AdminUserTableService {
 
         try {
             const assignments = calculateAssignments<DiscordUser, string>(
+                regions,
+                players.map(p => ({
+                    user: p.user!,
+                    picks: p.preferences || []
+                }))
+            );
+            for (const [region, user] of assignments.entries()) {
+                const playerRegion = rows.find((pr: PlayerAndOrRegion) => pr.user?.id === user.id);
+                if (playerRegion) {
+                    playerRegion.regionClient = region;
+                }
+            }
+            this.rowsSubject.next([...rows]);
+            this.clearSelection();
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+        }
+    }
+
+    autoAssignPlayerRegionsRandomized(): { success: boolean; error?: string } {
+        let players: PlayerAndOrRegion[];
+        let regions: string[];
+        const rows = this.rowsSubject.value;
+        const selectedIndices = this.selectedRowIndicesSubject.value;
+
+        if (selectedIndices.size > 0) {
+            const selectedRows = rows.filter((_, index) => selectedIndices.has(index));
+            players = selectedRows.filter(pr => pr.user);
+            const regionRows = selectedRows.filter(pr => !pr.user && pr.regionServer);
+            regions = regionRows.map(pr => pr.regionServer!);
+            if (players.length > regions.length) {
+                return { success: false, error: `Selected ${players.length} players but only ${regions.length} regions. Please select more regions.` };
+            }
+        } else {
+            players = rows.filter((pr: PlayerAndOrRegion) => pr.user);
+            regions = rows
+                .filter((pr: PlayerAndOrRegion) => !pr.user && pr.regionServer)
+                .map((pr: PlayerAndOrRegion) => pr.regionServer!);
+        }
+
+        if (players.length === 0) {
+            return { success: false, error: 'No players to assign.' };
+        }
+
+        if (regions.length === 0) {
+            return { success: false, error: 'No available regions to assign.' };
+        }
+
+        try {
+            const assignments = calculateAssignmentsRandomizedSerialDictatorship<DiscordUser, string>(
                 regions,
                 players.map(p => ({
                     user: p.user!,

@@ -1,7 +1,7 @@
 <div class="main">
 @if (campaign && (campaign.isInStartSelectionStage() || campaign.isInWaitingForFirstSessionStage() || campaign.isPlayingCk3())) {
     @if (this.assignments.length >= 0) {
-        <h1>{{ campaign.getName() }} Mega Campaign</h1>
+        <h1>{{ campaign.getName() }}</h1>
         <h2>Start Regions</h2>
         <div class="table-container">
             <app-table [rowElements]="getAssignments(0)" [columns]="getColumns(0)"></app-table>

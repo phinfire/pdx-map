@@ -223,7 +223,6 @@ export class McSignupService implements OnDestroy {
             map((signups: any[]) => {
                 return signups.map(s => {
                     const picks: string[] = s.preferenceKeys || s.picks || [];
-                    console.log(s);
                     return { userId: s.userId + "", picks } as Signup;
                 });
             })

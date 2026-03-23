@@ -35,6 +35,43 @@ export function calculateAssignments<U, T>(
     return result;
 }
 
+export function calculateAssignmentsRandomizedSerialDictatorship<U, T>(
+    choices: T[],
+    signups: { user: U; picks: T[] }[]
+): Map<T, U> {
+    const n = choices.length;
+    const m = signups.length;
+    if (n < m) {
+        throw new Error("Number of choices must be >= number of signups");
+    }
+    const shuffledSignups = [...signups];
+    for (let i = shuffledSignups.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledSignups[i], shuffledSignups[j]] = [shuffledSignups[j], shuffledSignups[i]];
+    }
+
+    const availableChoices = new Set(choices);
+    const result = new Map<T, U>();
+    for (const signup of shuffledSignups) {
+        let assignedChoice: T | null = null;
+        for (const pick of signup.picks) {
+            if (availableChoices.has(pick)) {
+                assignedChoice = pick;
+                break;
+            }
+        }
+        if (!assignedChoice && availableChoices.size > 0) {
+            assignedChoice = Array.from(availableChoices)[0];
+        }
+        if (assignedChoice) {
+            result.set(assignedChoice, signup.user);
+            availableChoices.delete(assignedChoice);
+        }
+    }
+
+    return result;
+}
+
 function hungarian(costMatrix: number[][]): number[] {
     const n = costMatrix.length;
     const u = Array(n + 1).fill(0);

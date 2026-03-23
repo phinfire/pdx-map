@@ -2,17 +2,15 @@
 <div class="top">
     <div class="header-container">
         <h1>
-            @if (goBackFunction) {
-                <button mat-button 
-                        class="back-button"
-                        (click)="goBackFunction!()"
-                        matTooltip="Go back"
-                        matTooltipPosition="below"
-                        aria-label="Go back">
-                    <mat-icon class="back-icon">chevron_left</mat-icon>
-                </button>
-            }
-            Select Your Starting Position in: <span class="region-name">{{ assignment.region_key }}</span>
+            <button mat-button 
+                    class="back-button"
+                    (click)="router.navigate(['/mc', campaign.getId()])"
+                    matTooltip="Go back"
+                    matTooltipPosition="below"
+                    aria-label="Go back">
+                <mat-icon class="back-icon">chevron_left</mat-icon>
+            </button>
+            Select Your Starting Position in: <span class="region-name">{{ assignment?.regionKey }}</span>
         </h1>
     </div>
     <div class="timer-container">

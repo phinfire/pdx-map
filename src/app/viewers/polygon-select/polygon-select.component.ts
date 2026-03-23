@@ -151,6 +151,7 @@ export class PolygonSelectComponent {
     }
 
     public launch(meshes: (THREE.Mesh & { targetZ?: number, locked?: boolean, interactive?: boolean, key: string })[], colorConfigProviders: ColorConfigProvider[], liftConfig: BehaviorConfigProvider = this.liftConfig) {
+        console.log('Launching PolygonSelectComponent with meshes:', meshes, 'colorConfigProviders:', colorConfigProviders, 'liftConfig:', liftConfig);
         if (this.isLaunched) {
             return;
         }
