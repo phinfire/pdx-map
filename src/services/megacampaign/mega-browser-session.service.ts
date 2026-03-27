@@ -22,6 +22,41 @@ export class MegaBrowserSessionService {
             });
     }
 
+    hasNextCampaign(campaign: MegaCampaign): Observable<boolean> {
+        return this.megaService.getAvailableCampaigns$().pipe(
+            map(campaigns => {
+                const index = campaigns.findIndex(c => c.getId() === campaign.getId());
+                return index >= 0 && index < campaigns.length - 1;
+            })
+        );
+    }
+
+    canNavigate(campaign: MegaCampaign, navigation: number) {
+        return this.megaService.getAvailableCampaigns$().pipe(
+            map(campaigns => {
+                const index = campaigns.findIndex(c => c.getId() === campaign.getId());
+                const targetIndex = index + navigation;
+                return targetIndex >= 0 && targetIndex < campaigns.length;
+            })
+        );
+    }
+
+    navigateFromTo(campaign: MegaCampaign, navigation: number): Observable<MegaCampaign | null> {
+        return this.megaService.getAvailableCampaigns$().pipe(
+            map(campaigns => {
+                const index = campaigns.findIndex(c => c.getId() === campaign.getId());
+                const targetIndex = index + navigation;
+                if (targetIndex < 0 || targetIndex >= campaigns.length) {
+                    console.error(`Cannot navigate from campaign ${campaign.getId()} with navigation ${navigation}. Target index ${targetIndex} is out of bounds.`);
+                    return null;
+                }
+                const result = campaigns[targetIndex];
+                this.selectedMegaCampaignSubject.next(result);
+                return result;
+            })
+        );
+    }
+
     selectCampaignById(campaignId: string | number | null): Observable<MegaCampaign | null> {
         if (!campaignId) {
             return this.selectedMegaCampaignSubject.asObservable();
@@ -42,25 +77,19 @@ export class MegaBrowserSessionService {
     }
 
     selectPreviousCampaign(): Observable<MegaCampaign | null> {
-        return this.megaService.getAvailableCampaigns$().pipe(
-            map(campaigns => {
-                const currentId = this.selectedMegaCampaignSubject.value?.getId();
-                const index = campaigns.findIndex(c => c.getId() === currentId);
-                return index > 0 ? campaigns[index - 1] : null;
-            }),
-            tap(prev => prev && this.selectedMegaCampaignSubject.next(prev))
-        );
+        const current = this.selectedMegaCampaignSubject.value;
+        if (!current) {
+            return this.selectedMegaCampaignSubject.asObservable();
+        }
+        return this.navigateFromTo(current, -1);
     }
 
     selectNextCampaign(): Observable<MegaCampaign | null> {
-        return this.megaService.getAvailableCampaigns$().pipe(
-            map(campaigns => {
-                const currentId = this.selectedMegaCampaignSubject.value?.getId();
-                const index = campaigns.findIndex(c => c.getId() === currentId);
-                return index >= 0 && index < campaigns.length - 1 ? campaigns[index + 1] : null;
-            }),
-            tap(next => next && this.selectedMegaCampaignSubject.next(next))
-        );
+        const current = this.selectedMegaCampaignSubject.value;
+        if (!current) {
+            return this.selectedMegaCampaignSubject.asObservable();
+        }
+        return this.navigateFromTo(current, 1);
     }
 
     selectLatestCampaign(): Observable<MegaCampaign | null> {

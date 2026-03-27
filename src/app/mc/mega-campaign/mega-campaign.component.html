@@ -1,7 +1,15 @@
 <div class="main">
-@if (campaign && (campaign.isInStartSelectionStage() || campaign.isInWaitingForFirstSessionStage() || campaign.isPlayingCk3())) {
+@if (campaign) {
     @if (this.assignments.length >= 0) {
-        <h1>{{ campaign.getName() }}</h1>
+        <div class="campaign-header">
+            <button matButton (click)="navigatePrevious()" [disabled]="!(canNavigatePrevious$ | async)" [class.disabled-opacity]="!(canNavigatePrevious$ | async)" matTooltip="Previous campaign">
+                <mat-icon class="lg-icon">chevron_left</mat-icon>
+            </button>
+            <h1>{{ campaign.getName() }}</h1>
+            <button matButton (click)="navigateNext()" [disabled]="!(canNavigateNext$ | async)" [class.disabled-opacity]="!(canNavigateNext$ | async)" matTooltip="Next campaign">
+                <mat-icon class="lg-icon">chevron_right</mat-icon>
+            </button>
+        </div>
         <h2>Start Regions</h2>
         <div class="table-container">
             <app-table [rowElements]="getAssignments(0)" [columns]="getColumns(0)"></app-table>
@@ -25,27 +33,29 @@
                     Go back to Starting County Selection
                 </button>
             }
-            @if (!campaign.isPlayingCk3()) {
+            @if (campaign.isInStartSelectionStage()) {
                 <button matButton="elevated" color="primary" (click)="goToStartSelection()">
                     <mat-icon>location_on</mat-icon>
                     Select your starting county
                 </button>
             }
-            @if (campaign.isInWaitingForFirstSessionStage() || campaign.isPlayingCk3()) {
+            @if (!campaign.isInRegionSignupStage() && !campaign.isInStartSelectionStage()) {
                 <button matButton="elevated" color="primary" (click)="downloadAllRulersAsZip()">
                     <mat-icon>download</mat-icon>
                     Download All Rulers
                 </button>
             }
         </div>
+        @if (!campaign.isInRegionSignupStage()) {
         <div class="plot-container">
             <app-plot-view [plotablesInput]="traitPlotables" [titleInput]="'Player Ruler Traits'"></app-plot-view>
         </div>
+        }
+        @if (seriesData) {
         <div class="lines-plot-container">
-            @if (seriesData) {
                 <app-lineviewer [data]="seriesData"></app-lineviewer>
-            }
         </div>
+        }
     }
 }
 </div>

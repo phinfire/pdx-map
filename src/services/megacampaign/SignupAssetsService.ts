@@ -5,11 +5,11 @@ import { AbstractLandedTitle } from "../../model/ck3/title/AbstractLandedTitle";
 import { CK3Service } from "../../services/gamedata/CK3Service";
 import { makeGeoJsonPolygons } from "../../util/geometry/threeGeometry";
 import { buildColorConfigProvider, buildKey2Cluster, collectAllChildren, findCountiesOwnedByAtMostDoubleCounts } from '../../util/signup';
-import { MapService } from "../map.service";
-import { ColorConfigProvider } from "../viewers/polygon-select/ColorConfigProvider";
-import { ClusterManager } from "./mcsignup/ClusterManager";
-import { MegaCampaign } from './MegaCampaign';
 import { MegaBrowserSessionService } from "../../services/megacampaign/mega-browser-session.service";
+import { MapService } from "../map.service";
+import { ClusterManager } from "../../util/ClusterManager";
+import { MegaCampaign } from "../../app/mc/MegaCampaign";
+import { ColorConfigProvider } from "../../app/viewers/polygon-select/ColorConfigProvider";
 
 export interface SignupAssetsData {
     ck3SaveData: any;

@@ -4,8 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { Eu4Save } from '../../../model/games/eu4/Eu4Save';
 import { PdxFileService } from '../../../services/pdx-file.service';
-import { MapService } from '../../map.service';
-import { IHasKey, MapEU4DataProvider } from '../config/MapDataProvider';
+import { MapService } from '../../../services/map.service';
+import { IHasKey, MapEU4DataProvider } from '../../../services/configuration/MapDataProvider';
 
 @Component({
     selector: 'app-map',
@@ -17,15 +17,11 @@ export class MapComponent {
 
     protected static readonly wasteLandColorHex = "#808080";
     private imgSize: [number, number] = [0.8 * 8192, 4096];
-
     private includedCounties = new Map<string, IHasKey>();
-
     private map: L.Map | null = null;
     private geoJsonLayer: L.GeoJSON | null = null;
     private showHoverTooltip = true;
-
     private geoJson: any = {};
-
     private dataProvider: MapEU4DataProvider = new MapEU4DataProvider(null);
 
     @ViewChild('mapcontainer') mapContainer!: ElementRef<HTMLDivElement>;

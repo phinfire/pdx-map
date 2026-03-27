@@ -8,20 +8,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { SignupAssetsService, SignupAssetsData } from '../SignupAssetsService';
 import { StartAssignment } from '../StartAssignment';
 import { combineLatest, filter } from 'rxjs';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
 import { PdxFileService } from '../../../services/pdx-file.service';
 import { CustomRulerFile } from '../../../model/megacampaign/CustomRulerFile';
-import { ClusterManager } from '../mcsignup/ClusterManager';
+import { ClusterManager } from '../../../util/ClusterManager';
 import { CK3 } from '../../../model/ck3/game/CK3';
-import { AssignmentService } from '../AssignmentService';
+import { AssignmentService } from '../../../services/megacampaign/AssignmentService';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
 import { MegaService } from '../../../services/megacampaign/MegaService';
 import { MegaBrowserSessionService } from '../../../services/megacampaign/mega-browser-session.service';
+import { SignupAssetsService, SignupAssetsData } from '../../../services/megacampaign/SignupAssetsService';
 
 @Component({
     selector: 'app-mcstartselect',

@@ -24,14 +24,14 @@ import { LabeledAndIconed } from '../../../ui/LabeledAndIconed';
 import { SideNavContentProvider } from '../../../ui/SideNavContentProvider';
 import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
 import { LineViewerData } from '../../lineviewer/model/LineViewerData';
-import { MapService } from '../../map.service';
-import { SaveSaverService } from '../../save-saver.service';
+import { MapService } from '../../../services/map.service';
 import { SlabMapViewComponent } from '../../slab-map-view/slab-map-view.component';
 import { ViewMode } from '../../slab-map-view/ViewMode';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
 import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
 import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
 import { SaveFileNameDialogComponent } from '../save-filename-dialog.component';
+import { SaveSaverService } from '../../../services/save-saver.service';
 
 @Component({
     selector: 'app-save-view',

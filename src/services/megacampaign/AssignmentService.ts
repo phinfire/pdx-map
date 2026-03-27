@@ -2,12 +2,11 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, OnDestroy, inject } from "@angular/core";
 import { Observable, Subject, catchError, combineLatest, distinctUntilChanged, filter, map, merge, of, shareReplay, startWith, switchMap, take } from "rxjs";
 import { DiscordUser } from "../../model/social/DiscordUser";
-import { DiscordAuthenticationService } from "../../services/discord-auth.service";
-import { MegaService } from '../../services/megacampaign/MegaService';
-import { MegaBrowserSessionService } from '../../services/megacampaign/mega-browser-session.service';
-import { DiscordService } from "../discord.service";
-import { Assignment, MegaStartPosition, StartAssignment } from "./StartAssignment";
-import { BackendConfigService } from '../../services/megacampaign/backend-config.service';
+import { DiscordAuthenticationService } from "../discord-auth.service";
+import { Assignment, MegaStartPosition, StartAssignment } from "../../app/mc/StartAssignment";
+import { BackendConfigService } from './backend-config.service';
+import { MegaBrowserSessionService } from './mega-browser-session.service';
+import { DiscordService } from '../discord.service';
 
 @Injectable({
     providedIn: 'root'
@@ -77,8 +76,6 @@ export class AssignmentService implements OnDestroy {
             this.http.get<MegaStartPosition[]>(`${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/start-positions`).pipe(catchError(() => of([])))
         ]).pipe(
             switchMap(([assignments, startPositions]) => {
-                console.log('Fetched assignments:', assignments);
-                console.log('Fetched start positions:', startPositions);
                 if (!assignments || assignments.length === 0) {
                     return of([]);
                 }
@@ -114,7 +111,6 @@ export class AssignmentService implements OnDestroy {
                                 };
                             })
                             .filter(Boolean) as StartAssignment[];
-                        console.log('Processed assignments:', result);
                         return result;
                     })
                 );
@@ -166,7 +162,6 @@ export class AssignmentService implements OnDestroy {
                 const url = `${this.configService.getMegaCampaignApiUrl()}/campaigns/${campaignId}/start-positions`;
                 return this.http.get<MegaStartPosition[]>(url).pipe(
                     map((positions: MegaStartPosition[]) => {
-                        console.log('Fetched all start positions:', positions);
                         const positionsMap = new Map<string, MegaStartPosition>();
                         positions.forEach(p => positionsMap.set(p.userId, p));
                         return positionsMap;
@@ -221,10 +216,6 @@ export class AssignmentService implements OnDestroy {
                         regionKey
                     };
                 });
-                console.log(
-                    "for campaignId:", campaignId,
-                    'AssignmentService: Sending assignments to server:', assignments);
-
                 return this.http.put<Assignment[]>(url, { assignments }, { headers }).pipe(
                     map((response: Assignment[]) => {
                         if (Array.isArray(response)) {

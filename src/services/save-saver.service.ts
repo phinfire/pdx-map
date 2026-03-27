@@ -2,10 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, from, of, throwError } from 'rxjs';
 import { catchError, concatMap, map, tap } from 'rxjs/operators';
 import { Vic3Save } from '../model/vic/Vic3Save';
-import { DataStorageService, FileUploadResponse } from '../services/datastorage.service';
+import { DataStorageService, FileUploadResponse } from './datastorage.service';
 import { Eu4Save } from '../model/games/eu4/Eu4Save';
 import { Ck3Save } from '../model/ck3/Ck3Save';
-import { CK3Service } from '../services/gamedata/CK3Service';
+import { CK3Service } from './gamedata/CK3Service';
 
 export type GameType = 'ck3' | 'vic3' | 'eu4';
 

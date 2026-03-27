@@ -1,19 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable, map, forkJoin, of } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { forkJoin, map, Observable, of } from 'rxjs';
+import { BackendConfigService } from '../services/megacampaign/backend-config.service';
 import { DiscordUser } from '../model/social/DiscordUser';
 
-export interface HealthCheckResponse {
-    status: string;
-    discord_client_ready: boolean;
-    discord_bot_name: string;
-}
-
-export interface ErrorResponse {
-    detail: string;
-}
-
-export interface UsersResponse {
+interface UsersResponse {
     users: { [userId: string]: any };
 }
 
@@ -25,7 +16,8 @@ export interface UsersResponse {
     providedIn: 'root',
 })
 export class DiscordService {
-    private readonly apiBaseUrl = "https://codingafterdark.de/discord-api";
+
+    configService = inject(BackendConfigService);
 
     constructor(private http: HttpClient) {
     }
@@ -36,7 +28,7 @@ export class DiscordService {
      * @returns Observable of array of DiscordUser objects sorted by display name/username
      */
     getGuildUsersAsDiscordUsers(guildId: string): Observable<DiscordUser[]> {
-        return this.http.get<any>(`${this.apiBaseUrl}/guild/${guildId}/users`).pipe(
+        return this.http.get<any>(`${this.configService.getDiscordApiUrl()}/guild/${guildId}/users`).pipe(
             map(response => {
                 const users = Object.values(response.users).map((user: any) => {
                     return DiscordUser.fromApiJson(user)
@@ -77,7 +69,7 @@ export class DiscordService {
     }
 
     private fetchUserBatch(userIds: string[]): Observable<UsersResponse> {
-        let url = `${this.apiBaseUrl}/users`;
+        let url = `${this.configService.getDiscordApiUrl()}/users`;
         if (userIds.length > 0) {
             const params = new URLSearchParams();
             userIds.forEach(id => params.append('user_ids', id));

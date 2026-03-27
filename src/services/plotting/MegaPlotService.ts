@@ -1,22 +1,17 @@
-import { Injectable, inject } from "@angular/core";
-import { CK3Service } from "../../services/gamedata/CK3Service";
-import { PdxFileService } from "../../services/pdx-file.service";
-import { Trait } from "../../model/ck3/Trait";
-import { Plotable } from "../plot-view/Plotable";
-import { RGB } from "../../util/RGB";
+import { Injectable } from "@angular/core";
 import { TraitType } from "../../model/ck3/enum/TraitType";
 import { CK3 } from "../../model/ck3/game/CK3";
+import { Trait } from "../../model/ck3/Trait";
 import { CustomRulerFile } from "../../model/megacampaign/CustomRulerFile";
+import { RGB } from "../../util/RGB";
+import { Plotable } from "../../model/Plotable";
 
 @Injectable({
     providedIn: 'root'
 })
 export class MegaPlotService {
 
-    ck3Service = inject(CK3Service);
-    fileService = inject(PdxFileService);
-
-    generatePlotData(ck3: CK3, rulers: CustomRulerFile[]) {
+    generatePlotData(rulers: CustomRulerFile[]) {
         const traitType2Color = new Map<string, RGB>();
         traitType2Color.set(TraitType.PERSONALITY, new RGB(102, 153, 204));
         traitType2Color.set(TraitType.INHERITABLE, new RGB(102, 0, 0));

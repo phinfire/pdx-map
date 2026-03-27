@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { combineLatest } from 'rxjs';
 import { Vic3GameFilesService } from '../../model/vic/Vic3GameFilesService';
 import { LabeledAndIconed } from '../../ui/LabeledAndIconed';
-import { MapService } from '../map.service';
+import { MapService } from '../../services/map.service';
 import { SlabMapViewComponent } from '../slab-map-view/slab-map-view.component';
 import { ViewMode } from '../slab-map-view/ViewMode';
 import { BehaviorConfigProvider } from '../viewers/polygon-select/BehaviorConfigProvider';

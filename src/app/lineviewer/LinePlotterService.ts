@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import * as d3 from 'd3';
-import { D3JsService } from '../../services/D3JsService';
+import { D3JsService } from '../../services/plotting/D3JsService';
 import { DataSeries } from './model/DataSeries';
 import { Scaling } from './Scaling';
 

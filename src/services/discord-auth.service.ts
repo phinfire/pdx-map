@@ -4,7 +4,7 @@ import { BehaviorSubject, interval, Observable, of, Subject } from 'rxjs';
 import { catchError, map, startWith, switchMap, tap, shareReplay, distinctUntilChanged } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DiscordUser } from '../model/social/DiscordUser';
-import { DiscordService } from '../app/discord.service';
+import { DiscordService } from './discord.service';
 
 export interface ApiHealth {
     timestamp: string;

@@ -1,4 +1,5 @@
-import { AfterViewInit, Component, DestroyRef, ElementRef, inject, ViewChild } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
+import { AfterViewInit, Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
@@ -7,7 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import JSZip from 'jszip';
-import { combineLatest } from 'rxjs';
+import { BehaviorSubject, combineLatest } from 'rxjs';
 import { CustomRulerFile } from '../../../model/megacampaign/CustomRulerFile';
 import { DiscordUser } from '../../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
@@ -21,18 +22,19 @@ import { LineviewerComponent } from '../../lineviewer/lineviewer.component';
 import { LineViewerData } from '../../lineviewer/model/LineViewerData';
 import { Vic3SaveSeriesData } from '../../lineviewer/model/Vic3SaveSeriesData';
 import { PlotViewComponent } from '../../plot-view/plot-view.component';
-import { Plotable } from '../../plot-view/Plotable';
-import { PlottingService } from '../../plot-view/PlottingService';
-import { SaveSaverService } from '../../save-saver.service';
+import { Plotable } from '../../../model/Plotable';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
-import { AssignmentService } from '../AssignmentService';
+import { AssignmentService } from '../../../services/megacampaign/AssignmentService';
 import { MegaCampaign } from '../MegaCampaign';
-import { MegaPlotService } from '../MegaPlotService';
+import { MegaPlotService } from '../../../services/plotting/MegaPlotService';
 import { StartAssignment } from '../StartAssignment';
+import { PdxFileService } from '../../../services/pdx-file.service';
+import { PlottingService } from '../../../services/plotting/PlottingService';
+import { SaveSaverService } from '../../../services/save-saver.service';
 
 @Component({
     selector: 'app-mega-campaign',
-    imports: [MatButtonModule, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent, MatDividerModule, LineviewerComponent],
+    imports: [MatButtonModule, AsyncPipe, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent, MatDividerModule, LineviewerComponent],
     templateUrl: './mega-campaign.component.html',
     styleUrl: './mega-campaign.component.scss'
 })
@@ -46,6 +48,7 @@ export class MegaCampaignComponent implements AfterViewInit {
     assignmentService = inject(AssignmentService);
     authService = inject(DiscordAuthenticationService);
     megaPlotService = inject(MegaPlotService);
+    fileService = inject(PdxFileService);
     ck3Service = inject(CK3Service);
     destroyRef = inject(DestroyRef);
     saveSaver = inject(SaveSaverService);
@@ -56,6 +59,8 @@ export class MegaCampaignComponent implements AfterViewInit {
     userAssignment: StartAssignment | null = null;
     assignments: StartAssignment[] = [];
     traitPlotables: Plotable[] = [];
+    canNavigatePrevious$ = new BehaviorSubject<boolean>(false);
+    canNavigateNext$ = new BehaviorSubject<boolean>(false);
 
     user2Ruler: Map<DiscordUser, CustomRulerFile> = new Map();
     seriesData: LineViewerData<Date> | null = null;
@@ -65,18 +70,65 @@ export class MegaCampaignComponent implements AfterViewInit {
     goToSignup = () => this.router.navigate(['/mc/signup']);
     goToStartSelection = () => this.router.navigate(['/mc/start-selection', this.campaign?.getId()]);
 
-    ngOnInit() {
-        this.titleService.setTitle('Mega Campaign');
-        const campaignId = this.activatedRoute.snapshot.paramMap.get('campaignId');
-        console.log('MegaCampaignComponent initialized with campaignId:', campaignId);
+    private updateNavigationStates(campaign: MegaCampaign) {
+        this.megaSessionService.canNavigate(campaign, -1)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(canGoPrevious => this.canNavigatePrevious$.next(canGoPrevious));
+
+        this.megaSessionService.canNavigate(campaign, 1)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(canGoNext => this.canNavigateNext$.next(canGoNext));
+    }
+
+    navigatePrevious() {
+        if (this.campaign) {
+            this.megaSessionService.selectPreviousCampaign()
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe(prev => {
+                    if (prev) {
+                        this.router.navigate(['/mc', prev.getId()]);
+                    }
+                });
+        }
+    }
+
+    navigateNext() {
+        if (this.campaign) {
+            this.megaSessionService.selectNextCampaign()
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe(next => {
+                    if (next) {
+                        this.router.navigate(['/mc', next.getId()]);
+                    }
+                });
+        }
+    }
+
+    private loadCampaign(campaignId: string | null) {
+        this.seriesData = null;
         this.megaSessionService.selectCampaignById(campaignId).subscribe(campaign => {
             if (campaign) {
                 this.campaign = campaign;
-                this.saveSaver.getSaveFileByIdentifier$(this.campaign.getVic3SaveIdentifiersInChronologicalOrder()[2]).subscribe(save => {
-                    this.seriesData = Vic3SaveSeriesData.fromSaves([save]);
-                });
+                this.updateNavigationStates(campaign);
+                if (campaign.getVic3LobbyIdentifiers().length > 0) {
+                    const numberOfSessions = campaign.getVic3LobbyIdentifiers().length;
+                    this.saveSaver.getSaveFileByIdentifier$(this.campaign.getVic3LobbyIdentifiers()[numberOfSessions - 1]).subscribe(save => {
+                        this.seriesData = Vic3SaveSeriesData.fromSaves([save]);
+                    });
+                }
             }
         });
+    }
+
+    ngOnInit() {
+        this.titleService.setTitle('Mega Campaign');
+        this.activatedRoute.paramMap
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(params => {
+                const campaignId = params.get('campaignId');
+                this.loadCampaign(campaignId);
+            });
+
         combineLatest([this.assignmentService.allAssignments$, this.ck3Service.initializeCK3(), this.authService.loggedInUser$])
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(([assignments, ck3, loggedInUser]) => {
@@ -87,15 +139,10 @@ export class MegaCampaignComponent implements AfterViewInit {
                     if (ck3 != null) {
                         this.user2Ruler.clear();
                         const rulerPromises = assignments.map(async a => {
-                            console.log("a: ", a);
                             if (a.startData && a.startKey) {
-                                console.log(`Processing start data for user ${a.user.getName()} with region ${a.regionKey}`);
                                 const rulerData = a.startData as string;
-                                const fileService = this.megaPlotService.fileService;
-                                const ck3Service = this.megaPlotService.ck3Service;
-                                console.log(`Parsing ruler data for user ${a.user.getName()}`);
-                                const json = await fileService.parseContentToJsonPromise(rulerData);
-                                const ruler = ck3Service.parseCustomCharacter(json, ck3);
+                                const json = await this.fileService.parseContentToJsonPromise(rulerData);
+                                const ruler = this.ck3Service.parseCustomCharacter(json, ck3);
                                 if (ruler) {
                                     this.user2Ruler.set(a.user, ruler);
                                     const message = this.megaUtils.getIllegalityReport(ruler);
@@ -104,10 +151,9 @@ export class MegaCampaignComponent implements AfterViewInit {
                                     }
                                 }
                             }
-                            console.log(`Finished processing start data for user ${a.user.getName()}`);
                         });
                         Promise.all(rulerPromises).then(() => {
-                            this.megaPlotService.generatePlotData(ck3, Array.from(this.user2Ruler.values())).then((traitPlotables) => {
+                            this.megaPlotService.generatePlotData(Array.from(this.user2Ruler.values())).then((traitPlotables) => {
                                 this.traitPlotables = traitPlotables;
                             });
                         });
@@ -160,9 +206,16 @@ export class MegaCampaignComponent implements AfterViewInit {
                 })
                 .isSortable(false)
                 .withTooltip("Whether this user has uploaded a permitted ruler")
+                .withCellTooltip((a: StartAssignment) => {
+                    const ruler = this.user2Ruler.get(a.user);
+                    if (!ruler) {
+                        return '';
+                    }
+                    const illegalityReport = this.megaUtils.getIllegalityReport(ruler);
+                    return illegalityReport.length === 0 ? null : illegalityReport;
+                })
                 .build()
         ];
-
         this.cachedColumns.set(col, columns);
         return columns;
     }

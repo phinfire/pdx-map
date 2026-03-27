@@ -1,13 +1,12 @@
-import * as d3 from 'd3';
 import { Component, OnInit, ElementRef, Inject, inject, Input, Optional, OnChanges, SimpleChanges, AfterViewInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Plotable } from './Plotable';
-import { PlottingService } from './PlottingService';
-import { PlotExportService } from './PlotExportService';
+import { Plotable } from '../../model/Plotable';
+import { PlotExportService } from '../../services/plotting/PlotExportService';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { PlottingService } from '../../services/plotting/PlottingService';
 
 @Component({
     selector: 'app-plot-view',

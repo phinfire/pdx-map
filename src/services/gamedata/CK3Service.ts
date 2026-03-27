@@ -2,20 +2,19 @@ import { Injectable } from '@angular/core';
 import { Jomini } from 'jomini';
 import JSZip from 'jszip';
 import { forkJoin, from, Observable } from 'rxjs';
-import { catchError, map, switchMap, shareReplay } from 'rxjs/operators';
-import { RGB } from '../../util/RGB';
-import { PdxFileService } from '../pdx-file.service';
+import { fromFetch } from 'rxjs/fetch';
+import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
+import { Ck3Save } from '../../model/ck3/Ck3Save';
 import { CK3 } from '../../model/ck3/game/CK3';
 import { Trait } from '../../model/ck3/Trait';
 import { CustomRulerFile } from '../../model/megacampaign/CustomRulerFile';
-import { Ck3Save } from '../../model/ck3/Ck3Save';
+import { PdxFileService } from '../pdx-file.service';
+import { parseTraits, parsePreparsedLandedTitles, parseLocalisations } from '../../util/parse/parse';
 
 @Injectable({
     providedIn: 'root'
 })
 export class CK3Service {
-
-    private readonly baseUrl = 'assets/gamedata/ck3';
 
     private readonly jomini$ = from(Jomini.initialize()).pipe(shareReplay(1));
 
@@ -25,87 +24,15 @@ export class CK3Service {
 
     }
 
-    private fetchText(url: string): Observable<string> {
-        return from(fetch(url).then(res => res.text()));
-    }
-
     private fetchAndParse<T>(url: string, parser: any, parseFn: (data: string) => T): Observable<T> {
-        return this.fetchText(url).pipe(
+        return fromFetch(url).pipe(
+            switchMap((res: Response) => res.text()),
             map(data => parseFn(data)),
             catchError(error => {
                 console.error(`Failed to fetch or parse ${url}`, error);
                 throw error;
             })
         );
-    }
-
-    private parseLocalisations(localisationMaps: [Map<string, string>, Map<string, string>]): Map<string, string> {
-        const locs = new Map<string, string>();
-        localisationMaps.forEach(map => {
-            map.forEach((value, key) => locs.set(key, value));
-        });
-        return locs;
-    }
-
-    private parseTraits(data: string, parser: any): Trait[] {
-        const traits: Trait[] = [];
-        const parsed = parser.parseText(data);
-        let i = 0;
-        for (const key of Object.keys(parsed)) {
-            if (!key.startsWith("@")) {
-                traits.push(new Trait(key, parsed[key], i++));
-            }
-        }
-        return traits;
-    }
-
-    private parsePreparsedLandedTitles(jsonString: string) {
-        const titleData = JSON.parse(jsonString);
-        const titleKey2Color = new Map<string, RGB>();
-        const county2Baronies = new Map<string, string[]>();
-        const barony2provinceIndices = new Map<string, number>();
-        const vassalTitle2OverlordTitle = new Map<string, string>();
-        for (const filename of Object.keys(titleData)) {
-            const parsedContent = titleData[filename];
-            for (const key of Object.keys(parsedContent)) {
-                CK3.recursivelyInsertBaronyIndices(
-                    parsedContent[key],
-                    key,
-                    titleKey2Color,
-                    county2Baronies,
-                    barony2provinceIndices,
-                    vassalTitle2OverlordTitle
-                );
-            }
-        }
-
-        return { titleKey2Color, county2Baronies, barony2provinceIndices, vassalTitle2OverlordTitle };
-    }
-
-    private parseLandedTitles(data: string, parser: any): {
-        titleKey2Color: Map<string, RGB>,
-        county2Baronies: Map<string, string[]>,
-        barony2provinceIndices: Map<string, number>,
-        vassalTitle2OverlordTitle: Map<string, string>
-    } {
-        const parsed = parser.parseText(data);
-        const titleKey2Color = new Map<string, RGB>();
-        const county2Baronies = new Map<string, string[]>();
-        const barony2provinceIndices = new Map<string, number>();
-        const vassalTitle2OverlordTitle = new Map<string, string>();
-
-        for (const key of Object.keys(parsed)) {
-            CK3.recursivelyInsertBaronyIndices(
-                parsed[key],
-                key,
-                titleKey2Color,
-                county2Baronies,
-                barony2provinceIndices,
-                vassalTitle2OverlordTitle
-            );
-        }
-
-        return { titleKey2Color, county2Baronies, barony2provinceIndices, vassalTitle2OverlordTitle };
     }
 
     private parseBuildings(zipBlob: Blob, parser: any): Observable<Map<string, any>> {
@@ -147,23 +74,25 @@ export class CK3Service {
                         traits: this.fetchAndParse(
                             CK3.CK3_DATA_URL + "/common/traits/00_traits.txt",
                             parser,
-                            d => this.parseTraits(d, parser)
+                            d => parseTraits(d, parser)
                         ),
                         landedTitles: this.fetchAndParse(
                             "https://codingafterdark.de/pdx/data/landed_titles.json",
                             parser,
-                            d => this.parsePreparsedLandedTitles(d)
+                            d => parsePreparsedLandedTitles(d)
                         ),
-                        scriptedValues: this.fetchText(
-                            CK3.CK3_DATA_URL + "/common/scripted_values/00_building_values.txt"
-                        ).pipe(map(data => parser.parseText(data))),
+                        scriptedValues: this.fetchAndParse(
+                            CK3.CK3_DATA_URL + "/common/scripted_values/00_building_values.txt",
+                            parser,
+                            d => parser.parseText(d)
+                        ),
                         buildings: from(fetch(CK3.CK3_DATA_URL + "/common/buildings.zip").then(r => r.blob())).pipe(
                             switchMap(blob => this.parseBuildings(blob, parser))
                         )
                     })
                 ),
                 map(({ localisationMaps, traits, landedTitles }) => {
-                    const locs = this.parseLocalisations(localisationMaps);
+                    const locs = parseLocalisations(localisationMaps);
                     return new CK3(
                         locs,
                         traits,

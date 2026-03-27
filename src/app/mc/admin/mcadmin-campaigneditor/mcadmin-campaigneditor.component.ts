@@ -107,7 +107,6 @@ export class MCAdminCampaigneditorComponent {
     ngOnInit(): void {
         this.megaBrowserSession.selectedMegaCampaign$.subscribe(campaign => {
             if (campaign && (!this.selectedCampaign || campaign.getId() !== this.selectedCampaign.getId())) {
-                console.log('Browser session selected campaign changed:', campaign);
                 this.selectCampaign(campaign);
             }
         });

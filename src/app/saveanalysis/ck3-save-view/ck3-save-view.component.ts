@@ -12,15 +12,15 @@ import { LabeledAndIconed } from '../../../ui/LabeledAndIconed';
 import { SideNavContentProvider } from '../../../ui/SideNavContentProvider';
 import { TableColumn } from '../../../util/table/TableColumn';
 import { TableColumnBuilder } from '../../../util/table/TableColumnBuilder';
-import { Ck3HeuristicsService } from '../../ck3-heuristics.service';
-import { MapService } from '../../map.service';
-import { PlottingService } from '../../plot-view/PlottingService';
-import { SaveSaverService } from '../../save-saver.service';
+import { Ck3HeuristicsService } from '../../../services/ck3-heuristics.service';
+import { MapService } from '../../../services/map.service';
 import { SlabMapViewComponent } from '../../slab-map-view/slab-map-view.component';
 import { ViewMode } from '../../slab-map-view/ViewMode';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
 import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
 import { SaveFileNameDialogComponent } from '../save-filename-dialog.component';
+import { PlottingService } from '../../../services/plotting/PlottingService';
+import { SaveSaverService } from '../../../services/save-saver.service';
 
 @Component({
     selector: 'app-ck3-save-view',

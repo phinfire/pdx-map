@@ -9,7 +9,7 @@ import { CdkContextMenuTrigger, CdkMenu, CdkMenuItem, CdkMenuModule } from '@ang
 import { MatDialog } from '@angular/material/dialog';
 import { PlotViewComponent } from '../plot-view/plot-view.component';
 import { TableColumn } from '../../util/table/TableColumn';
-import { Plotable } from '../plot-view/Plotable';
+import { Plotable } from '../../model/Plotable';
 import { MatIconModule } from '@angular/material/icon';
 import { simpleHash } from '../../util/utils';
 

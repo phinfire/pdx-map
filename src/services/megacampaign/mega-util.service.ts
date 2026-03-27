@@ -14,13 +14,13 @@ export class MegaUtilService {
         const illegalTraits = this.getIllegalTraits(ruler.traits);
         let message = "";
         if (negativeTraits.length > 1) {
-            message += `You have ${negativeTraits.length} negative traits: ${negativeTraits.map(t => t.getName()).join(", ")}, but only 1 is allowed.`;
+            message += `You have ${negativeTraits.length} negative traits:\n ${negativeTraits.map(t => t.getName()).join(", ")},\n but only 1 is allowed.`;
         }
         if (illegalTraits.length > 0) {
-            message += `The following traits are not allowed: ${illegalTraits.map(t => t.getName()).join(", ")}. `;
+            message += `The following traits are not allowed:\n ${illegalTraits.map(t => t.getName()).join(", ")}. `;
         }
         if (incompatibleTraits.length > 1) {
-            message += `You have ${incompatibleTraits.length} inheritable traits: ${incompatibleTraits.map(t => t.getName()).join(", ")}, but only 1 is allowed.`;
+            message += `You have ${incompatibleTraits.length} inheritable traits:\n ${incompatibleTraits.map(t => t.getName()).join(", ")},\n but only 1 is allowed.`;
         }
         return message;
     }

@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import * as d3 from 'd3';
-import { Plotable } from "./Plotable";
+import { Plotable } from "../../model/Plotable";
 
 class DefaultPlotStyle {
     getTextColor() { return { toString: () => '#fff' }; }
@@ -133,7 +133,6 @@ export class PlottingService {
         const bars = plotables;
         const width = nativeElement.clientWidth || 800;
         const height = nativeElement.clientHeight || 500;
-        console.log(`Drawing bar plot with width ${width} and height ${height} based on ${nativeElement.clientWidth}x${nativeElement.clientHeight} of host element.`);
         const IMAGE_SIZE_PERCENT = 0.9;
         const tempX = d3.scaleBand()
             .domain(bars.map(d => d.label))
@@ -432,7 +431,7 @@ export class PlottingService {
         arcs.append("path")
             .attr("d", arc)
             .attr("fill", (d, i) => color(String(i)))
-            .attr("class", "slice"); // Use CSS box-shadow instead
+            .attr("class", "slice");
         arcs.append("text")
             .attr("transform", d => {
                 const [x, y] = arc.centroid(d);

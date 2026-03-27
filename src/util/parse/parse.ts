@@ -1,17 +1,18 @@
-import { Character } from "../model/ck3/Character";
-import { County } from "../model/ck3/County";
-import { Culture } from "../model/ck3/Culture";
-import { DynastyHouse } from "../model/ck3/DynastyHouse";
-import { Faith } from "../model/ck3/Faith";
-import { CK3 } from "../model/ck3/game/CK3";
-import { Holding } from "../model/ck3/Holding";
-import { Ck3Player } from "../model/ck3/Player";
-import { RulerTier } from "../model/ck3/RulerTier";
-import { ICk3Save } from "../model/ck3/save/ICk3Save";
-import { AbstractLandedTitle } from "../model/ck3/title/AbstractLandedTitle";
-import { CustomLandedTitle } from "../model/ck3/title/CustomLandedTitle";
-import { LandedTitle } from "../model/ck3/title/LandedTitle";
-import { RGB } from "./RGB";
+import { Character } from "../../model/ck3/Character";
+import { County } from "../../model/ck3/County";
+import { Culture } from "../../model/ck3/Culture";
+import { DynastyHouse } from "../../model/ck3/DynastyHouse";
+import { Faith } from "../../model/ck3/Faith";
+import { CK3 } from "../../model/ck3/game/CK3";
+import { Holding } from "../../model/ck3/Holding";
+import { Ck3Player } from "../../model/ck3/Player";
+import { RulerTier } from "../../model/ck3/RulerTier";
+import { ICk3Save } from "../../model/ck3/save/ICk3Save";
+import { AbstractLandedTitle } from "../../model/ck3/title/AbstractLandedTitle";
+import { CustomLandedTitle } from "../../model/ck3/title/CustomLandedTitle";
+import { LandedTitle } from "../../model/ck3/title/LandedTitle";
+import { Trait } from "../../model/ck3/Trait";
+import { RGB } from "../RGB";
 
 export function readPlayers(data: any, characterCreator: (id: string) => Character | null) {
     const players = [];
@@ -215,3 +216,46 @@ export function createAllCharacters(data: any, save: ICk3Save, ck3: CK3) {
         deadPrunable: deadPrunableCharacters
     };
 }
+
+export function parseLocalisations(localisationMaps: [Map<string, string>, Map<string, string>]): Map<string, string> {
+    const locs = new Map<string, string>();
+    localisationMaps.forEach(map => {
+        map.forEach((value, key) => locs.set(key, value));
+    });
+    return locs;
+}
+
+export function parseTraits(data: string, parser: any): Trait[] {
+    const traits: Trait[] = [];
+    const parsed = parser.parseText(data);
+    let i = 0;
+    for (const key of Object.keys(parsed)) {
+        if (!key.startsWith("@")) {
+            traits.push(new Trait(key, parsed[key], i++));
+        }
+    }
+    return traits;
+}
+
+export function parsePreparsedLandedTitles(jsonString: string) {
+        const titleData = JSON.parse(jsonString);
+        const titleKey2Color = new Map<string, RGB>();
+        const county2Baronies = new Map<string, string[]>();
+        const barony2provinceIndices = new Map<string, number>();
+        const vassalTitle2OverlordTitle = new Map<string, string>();
+        for (const filename of Object.keys(titleData)) {
+            const parsedContent = titleData[filename];
+            for (const key of Object.keys(parsedContent)) {
+                CK3.recursivelyInsertBaronyIndices(
+                    parsedContent[key],
+                    key,
+                    titleKey2Color,
+                    county2Baronies,
+                    barony2provinceIndices,
+                    vassalTitle2OverlordTitle
+                );
+            }
+        }
+
+        return { titleKey2Color, county2Baronies, barony2provinceIndices, vassalTitle2OverlordTitle };
+    }

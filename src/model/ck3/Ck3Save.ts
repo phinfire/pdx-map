@@ -9,7 +9,7 @@ import { Holding } from "./Holding";
 import { Ck3Player } from "./Player";
 import { ICk3Save } from "./save/ICk3Save";
 import { AbstractLandedTitle } from "./title/AbstractLandedTitle";
-import { readPlayers, readAllFaiths, readAllCultures, readCountries, readLandedTitles, createTitle, readAllHoldings, readDynasties, createAllCharacters } from "../../util/parse";
+import { readPlayers, readAllFaiths, readAllCultures, readCountries, readLandedTitles, createTitle, readAllHoldings, readDynasties, createAllCharacters } from "../../util/parse/parse";
 
 export class Ck3Save implements ICk3Save, ParadoxSave {
 

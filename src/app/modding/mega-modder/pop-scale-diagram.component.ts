@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import * as d3 from 'd3';
 import { map } from 'rxjs/operators';
-import { D3JsService } from '../../../services/D3JsService';
+import { D3JsService } from '../../../services/plotting/D3JsService';
 import { SkanderbegProxyService } from '../../../services/api/SkanderbegProxyService';
 import { MegaModderE2VService } from '../../../services/megacampaign/modding/MegaModderE2VService';
 

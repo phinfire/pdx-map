@@ -22,8 +22,8 @@ import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigPro
 import { PolygonSelectComponent } from '../../viewers/polygon-select/polygon-select.component';
 import { ValueGradientColorConfig } from '../../viewers/polygon-select/ValueGradientColorConfig';
 import { MegaCampaign } from '../MegaCampaign';
-import { SignupAssetsData, SignupAssetsService } from './../SignupAssetsService';
 import { MegaBrowserSessionService } from '../../../services/megacampaign/mega-browser-session.service';
+import { SignupAssetsService, SignupAssetsData } from '../../../services/megacampaign/SignupAssetsService';
 
 export interface TableItem {
     key: string;
@@ -38,8 +38,6 @@ export interface TableItem {
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MCSignupComponent {
-
-
 
     @ViewChild(PolygonSelectComponent) polygonSelectComponent!: PolygonSelectComponent;
 

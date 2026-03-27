@@ -1,11 +1,9 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
+import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { Observable } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
 import { map } from 'rxjs/operators';
 import { DiscordAuthenticationService } from '../../services/discord-auth.service';
-import { DiscordUser } from '../../model/social/DiscordUser';
 
 @Component({
     selector: 'app-discord-field',

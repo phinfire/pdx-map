@@ -13,11 +13,11 @@ import { Vic3Save } from '../../../model/vic/Vic3Save';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
 import { PdxFileService } from '../../../services/pdx-file.service';
 import { SideNavContentProvider } from '../../../ui/SideNavContentProvider';
-import { SaveSaverService } from '../../save-saver.service';
 import { SaveViewComponent } from '../save-view/save-view.component';
 import { Ck3SaveViewComponent } from '../ck3-save-view/ck3-save-view.component';
 import { Ck3Save } from '../../../model/ck3/Ck3Save';
 import { Eu4SaveViewComponent } from '../eu4-save-view/eu4-save-view.component';
+import { SaveSaverService } from '../../../services/save-saver.service';
 
 @Component({
     selector: 'app-save-view-splash',

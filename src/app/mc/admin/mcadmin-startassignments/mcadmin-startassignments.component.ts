@@ -14,13 +14,12 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { combineLatest, map, Observable, Subscription } from 'rxjs';
 import { PlayerAndOrRegion } from '../../../../model/megacampaign/PlayerAndOrRegion';
 import { DiscordUser } from '../../../../model/social/DiscordUser';
-import { DiscordAuthenticationService } from '../../../../services/discord-auth.service';
 import { AdminUserTableService } from '../../../../services/megacampaign/admin-user-table.service';
 import { McSignupService } from '../../../../services/megacampaign/mc-signup.service';
 import { MegaBrowserSessionService } from '../../../../services/megacampaign/mega-browser-session.service';
-import { DiscordService } from '../../../discord.service';
-import { AssignmentService } from '../../AssignmentService';
+import { AssignmentService } from '../../../../services/megacampaign/AssignmentService';
 import { MegaCampaign } from '../../MegaCampaign';
+import { DiscordService } from '../../../../services/discord.service';
 
 interface TableAction {
     label: string;
@@ -44,13 +43,10 @@ export class McadminStartassignmentsComponent implements OnDestroy {
         'select', 'index', 'name', 'pick1', 'pick2', 'pick3', 'pick4', 'pick5', 'warning',
         'regionServer', 'region', 'actions'
     ];
-    private baseDisplayedColumns = this.displayedColumns;
-
     protected newUserToAdd: DiscordUser | null = null;
 
     @ViewChild('tableSort') tableSort!: MatSort;
 
-    discordAuthService = inject(DiscordAuthenticationService);
     discordService = inject(DiscordService);
     mcSignupService = inject(McSignupService);
     assignmentService = inject(AssignmentService);
@@ -68,15 +64,12 @@ export class McadminStartassignmentsComponent implements OnDestroy {
     }
 
     protected tableData = new MatTableDataSource<PlayerAndOrRegion>([]);
-
     protected rows$: Observable<PlayerAndOrRegion[]>;
     protected selectedRowIndices$: Observable<Set<number>>;
 
     private usersSub?: Subscription;
     private rowsSub?: Subscription;
     private sortChangeSub?: Subscription;
-
-    // Derived observables
     protected hasAnyAssignments$: Observable<boolean>;
 
     protected tableActions: TableAction[] = [

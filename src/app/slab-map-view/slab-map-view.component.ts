@@ -1,7 +1,7 @@
 import { Component, inject, Input, ViewChild } from '@angular/core';
 import { PolygonSelectComponent } from '../viewers/polygon-select/polygon-select.component';
 import { makeGeoJsonPolygons } from '../../util/geometry/threeGeometry';
-import { MapService } from '../map.service';
+import { MapService } from '../../services/map.service';
 import { ColorConfigProvider } from '../viewers/polygon-select/ColorConfigProvider';
 import { BehaviorConfigProvider } from '../viewers/polygon-select/BehaviorConfigProvider';
 import { ViewMode } from './ViewMode';
