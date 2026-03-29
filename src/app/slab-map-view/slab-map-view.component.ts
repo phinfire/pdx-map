@@ -34,7 +34,7 @@ export class SlabMapViewComponent {
     defaultTooltip = (key: string) => key;
 
     getCustomButtons() : CustomButton[] {
-       return this.viewModes.map((vm, index) => ({
+       return this.viewModes.length <= 1 ? [] : this.viewModes.map((vm, index) => ({
             categoryLabel: vm.categoryLabel,
             icon: vm.icon,
             isImage: vm.icon.indexOf('.') >= 0,

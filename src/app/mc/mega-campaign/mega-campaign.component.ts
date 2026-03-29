@@ -8,7 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import JSZip from 'jszip';
-import { BehaviorSubject, combineLatest } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { CustomRulerFile } from '../../../model/megacampaign/CustomRulerFile';
 import { DiscordUser } from '../../../model/social/DiscordUser';
 import { DiscordAuthenticationService } from '../../../services/discord-auth.service';
@@ -31,10 +31,16 @@ import { StartAssignment } from '../StartAssignment';
 import { PdxFileService } from '../../../services/pdx-file.service';
 import { PlottingService } from '../../../services/plotting/PlottingService';
 import { SaveSaverService } from '../../../services/save-saver.service';
+import { MapService } from '../../../services/map.service';
+import { SlabMapViewComponent } from '../../slab-map-view/slab-map-view.component';
+import { ViewMode } from '../../slab-map-view/ViewMode';
+import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
+import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
+import { LabeledAndIconed } from '../../../ui/LabeledAndIconed';
 
 @Component({
     selector: 'app-mega-campaign',
-    imports: [MatButtonModule, AsyncPipe, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent, MatDividerModule, LineviewerComponent],
+    imports: [MatButtonModule, AsyncPipe, TableComponent, MatIconModule, MatTooltipModule, PlotViewComponent, MatDividerModule, LineviewerComponent, SlabMapViewComponent],
     templateUrl: './mega-campaign.component.html',
     styleUrl: './mega-campaign.component.scss'
 })
@@ -55,6 +61,7 @@ export class MegaCampaignComponent implements AfterViewInit {
     megaUtils = inject(MegaUtilService);
     activatedRoute = inject(ActivatedRoute);
     plottingService = inject(PlottingService);
+    mapService = inject(MapService);
     campaign: MegaCampaign | null = null;
     userAssignment: StartAssignment | null = null;
     assignments: StartAssignment[] = [];
@@ -64,11 +71,14 @@ export class MegaCampaignComponent implements AfterViewInit {
 
     user2Ruler: Map<DiscordUser, CustomRulerFile> = new Map();
     seriesData: LineViewerData<Date> | null = null;
+    ck3MapViewModes: LabeledAndIconed<ViewMode>[] = [];
+    ck3MapBehaviorConfig = new BehaviorConfigProvider(0.75);
 
     private cachedColumns: Map<number, TableColumn<StartAssignment>[]> = new Map();
 
     goToSignup = () => this.router.navigate(['/mc/signup']);
     goToStartSelection = () => this.router.navigate(['/mc/start-selection', this.campaign?.getId()]);
+    ck3GeoJsonFetcher = (): Observable<any> => this.mapService.fetchCK3GeoJson(true, true);
 
     private updateNavigationStates(campaign: MegaCampaign) {
         this.megaSessionService.canNavigate(campaign, -1)
@@ -78,6 +88,31 @@ export class MegaCampaignComponent implements AfterViewInit {
         this.megaSessionService.canNavigate(campaign, 1)
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(canGoNext => this.canNavigateNext$.next(canGoNext));
+    }
+
+    private generateCK3MapViewMode() {
+        this.ck3Service.initializeCK3().subscribe(ck3 => {
+            const startKey2Color = new Map<string, number>();
+            for (const assignment of this.assignments) {
+                if (assignment.startKey) {
+                    startKey2Color.set(assignment.startKey, 0xFFFF00);
+                }
+            }
+
+            const colorConfig = new ColorConfigProvider(startKey2Color, true);
+            const viewMode: ViewMode = {
+                getColorConfig: () => colorConfig,
+                getTooltip: () => (key: string) => {
+                    const assignment = this.assignments.find(a => a.startKey === key);
+                    if (!assignment) {
+                        return key;
+                    }
+                    const localizedCountyName = ck3.localise(assignment.startKey!)
+                    return `<b>${assignment.user.getName()}</b><br>County: ${localizedCountyName}<br>Region: ${assignment.regionKey}`;
+                }
+            };
+            this.ck3MapViewModes = [new LabeledAndIconed<ViewMode>(null, 'Starting Locations', 'place', viewMode)];
+        });
     }
 
     navigatePrevious() {
@@ -135,6 +170,7 @@ export class MegaCampaignComponent implements AfterViewInit {
                 if (assignments != null) {
                     this.assignments = assignments.sort((a, b) => a.regionKey < b.regionKey ? -1 : (a.regionKey > b.regionKey ? 1 : 0));
                     this.cachedColumns.clear();
+                    this.generateCK3MapViewMode();
                     this.userAssignment = loggedInUser ? assignments.find(a => a.user.id === loggedInUser.id) || null : null;
                     if (ck3 != null) {
                         this.user2Ruler.clear();

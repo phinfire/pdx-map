@@ -56,6 +56,13 @@
                 <app-lineviewer [data]="seriesData"></app-lineviewer>
         </div>
         }
+        @if (ck3MapViewModes.length > 0) {
+        <div class="map-container">
+            <h2>Starting Locations</h2>
+            <app-slab-map-view [geoJsonFetcher]="ck3GeoJsonFetcher" [viewModes]="ck3MapViewModes" [behaviorConfig]="ck3MapBehaviorConfig">
+            </app-slab-map-view>
+        </div>
+        }
     }
 }
 </div>

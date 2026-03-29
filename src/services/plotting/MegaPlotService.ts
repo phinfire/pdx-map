@@ -1,6 +1,5 @@
 import { Injectable } from "@angular/core";
 import { TraitType } from "../../model/ck3/enum/TraitType";
-import { CK3 } from "../../model/ck3/game/CK3";
 import { Trait } from "../../model/ck3/Trait";
 import { CustomRulerFile } from "../../model/megacampaign/CustomRulerFile";
 import { RGB } from "../../util/RGB";
@@ -11,7 +10,7 @@ import { Plotable } from "../../model/Plotable";
 })
 export class MegaPlotService {
 
-    generatePlotData(rulers: CustomRulerFile[]) {
+    getTraitType2Color(): Map<string, RGB> {
         const traitType2Color = new Map<string, RGB>();
         traitType2Color.set(TraitType.PERSONALITY, new RGB(102, 153, 204));
         traitType2Color.set(TraitType.INHERITABLE, new RGB(102, 0, 0));
@@ -22,6 +21,11 @@ export class MegaPlotService {
         traitType2Color.set(TraitType.HEALTH, new RGB(235, 83, 83));
         traitType2Color.set(TraitType.PHYSICAL, new RGB(0, 128, 128));
         traitType2Color.set(TraitType.FALLBACK, new RGB(128, 128, 128));
+        return traitType2Color;
+    }
+
+    generatePlotData(rulers: CustomRulerFile[]) {
+        const traitType2Color = this.getTraitType2Color();
         return countTraits(rulers).then(trait2Count => {
             return Array.from(trait2Count.entries()).map(([trait, count]) => {
                 if (traitType2Color.has(trait.getTraitType()) === false) {

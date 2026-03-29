@@ -12,17 +12,23 @@ export class MegaUtilService {
         const negativeTraits = ruler.traits.filter(t => t.getRulerDesignerCost() < 0);
         const incompatibleTraits = this.getIncomptaibleTraits(ruler.traits);
         const illegalTraits = this.getIllegalTraits(ruler.traits);
-        let message = "";
+        const personalityTraits = ruler.traits.filter(t => t.getTraitType() === TraitType.PERSONALITY);
+        const messageLines = [];
         if (negativeTraits.length > 1) {
-            message += `You have ${negativeTraits.length} negative traits:\n ${negativeTraits.map(t => t.getName()).join(", ")},\n but only 1 is allowed.`;
+            messageLines.push(`You have ${negativeTraits.length} negative traits:\n ${negativeTraits.map(t => t.getName()).join(", ")},\n but only 1 is allowed.`);
         }
         if (illegalTraits.length > 0) {
-            message += `The following traits are not allowed:\n ${illegalTraits.map(t => t.getName()).join(", ")}. `;
+            messageLines.push(`The following traits are not allowed:\n ${illegalTraits.map(t => t.getName()).join(", ")}. `);
         }
         if (incompatibleTraits.length > 1) {
-            message += `You have ${incompatibleTraits.length} inheritable traits:\n ${incompatibleTraits.map(t => t.getName()).join(", ")},\n but only 1 is allowed.`;
+            messageLines.push(`You have ${incompatibleTraits.length} inheritable traits:\n ${incompatibleTraits.map(t => t.getName()).join(", ")},\n but only 1 is allowed.`);
         }
-        return message;
+        if (personalityTraits.length > 3) {
+            messageLines.push(`You have ${personalityTraits.length} personality traits:\n ${personalityTraits.map(t => t.getName()).join(", ")},\n but only 3 are allowed.`);
+        } else if (personalityTraits.length < 2) {
+            messageLines.push(`You have only ${personalityTraits.length} personality traits:\n ${personalityTraits.map(t => t.getName()).join(", ")},\n but 3 are required.`);
+        }
+        return messageLines.join("\n");
     }
 
     private getIllegalTraits(traits: Trait[]) {
