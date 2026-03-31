@@ -91,7 +91,6 @@ export class PdxFileService {
                     } catch (error) {
                         const message = `Error parsing file: ${file.name}`;
                         console.error(message, error);
-                        // Try to extract offset from error message
                         const errorString = JSON.stringify(error);
                         console.log("Full error object:", errorString);
                         const offsetMatch = errorString.match(/offset:\s*(\d+)/);

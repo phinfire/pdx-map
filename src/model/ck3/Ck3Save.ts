@@ -61,8 +61,22 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
             this.key2LandedTitle.set(title.getKey(), title);
         }
         this.index2Holding = readAllHoldings(data, this, this.ck3);
-        this.id2DynastyHouses = readDynasties(data, this);
+        const dynasty2LivingCharacters = this.groupCharactersByDynasty(this.livingCharacters.values());
+        const dynasty2DeadCharacters = this.groupCharactersByDynasty([...this.deadUnprunableCharacters.values(), ...this.deadPrunableCharacters.values()]);
+        this.id2DynastyHouses = readDynasties(data, dynasty2LivingCharacters, dynasty2DeadCharacters);
         this.data = data;
+    }
+
+    private groupCharactersByDynasty(characters: Iterable<Character>): Map<string, Character[]> {
+        const result = new Map<string, Character[]>();
+        for (const char of characters) {
+            const dynastyId = char.getDynastyHouseID();
+            if (!result.has(dynastyId)) {
+                result.set(dynastyId, []);
+            }
+            result.get(dynastyId)!.push(char);
+        }
+        return result;
     }
 
     public getCK3(): CK3 {
@@ -102,7 +116,8 @@ export class Ck3Save implements ICk3Save, ParadoxSave {
     }
 
     getHeldTitles(character: Character): AbstractLandedTitle[] {
-        return this.getLandedTitles().filter(title => title.getHolder() != null && title.getHolder()!.getCharacterId() === character.getCharacterId());
+        const ts = this.getLandedTitles().filter(title => title.getHolder() != null && title.getHolder()!.getCharacterId() === character.getCharacterId());
+        return ts;
     }
 
     getPlayerNameByCharacterId(characterId: string): string | null {

@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import * as d3 from 'd3';
 import { Plotable } from "../../model/Plotable";
+import { TimeBar } from "../../model/plotting/TimeBar";
 
 class DefaultPlotStyle {
     getTextColor() { return { toString: () => '#fff' }; }
@@ -15,7 +16,7 @@ export class PlottingService {
 
     private static readonly OTHER_LABEL = 'Other';
 
-    drawTimeBars(plotables: {label: string, startDate: Date, endDate: Date, rowName: string, color?: string}[], nativeElement: HTMLElement) {
+    drawTimeBars(plotables: TimeBar[], nativeElement: HTMLElement) {
         const width = nativeElement.clientWidth || 1000;
         const height = nativeElement.clientHeight || 500;
         const margin = { top: 20, right: 30, bottom: 50, left: 300 };
@@ -46,7 +47,7 @@ export class PlottingService {
         const xAxis = d3.axisBottom(xScale)
             .ticks(d3.timeYear.every(10))
             .tickFormat(d3.timeFormat("%Y") as any);
-        
+
         svg.append("g")
             .attr("transform", `translate(0,${chartHeight})`)
             .call(xAxis)
@@ -71,7 +72,49 @@ export class PlottingService {
             .attr("height", yScale.bandwidth() * 0.85)
             .attr("fill", (d: any) => d.color)
             .attr("filter", "url(#drop-shadow)")
-            .style("cursor", "pointer");
+            .style("cursor", "pointer")
+            .on("mouseover", function (event, d: TimeBar) {
+                d3.selectAll(".time-bar-label")
+                    .filter((label: any) => label === d)
+                    .transition()
+                    .duration(200)
+                    .style("opacity", 0);
+
+                const barY = yScale(d.rowName) || 0;
+                const barCenterY = barY + yScale.bandwidth() * 0.5;
+                const MILESTONE_ICON_SIZE = Math.max(12, yScale.bandwidth() * 0.6);
+
+                d3.select(this.parentNode as SVGElement)
+                    .selectAll(".milestone-icon-" + plotables.indexOf(d))
+                    .data(d.milestones)
+                    .enter()
+                    .append("image")
+                    .attr("class", "milestone-icon-" + plotables.indexOf(d))
+                    .attr("x", (m: any) => xScale(new Date(m.target)) - MILESTONE_ICON_SIZE / 2)
+                    .attr("y", barCenterY - MILESTONE_ICON_SIZE / 2)
+                    .attr("width", MILESTONE_ICON_SIZE)
+                    .attr("height", MILESTONE_ICON_SIZE)
+                    .attr("href", (m: any) => m.icon)
+                    .attr("title", (m: any) => m.label)
+                    .style("opacity", 0)
+                    .transition()
+                    .duration(200)
+                    .style("opacity", 1);
+            })
+            .on("mouseout", function (event, d: TimeBar) {
+                d3.selectAll(".time-bar-label")
+                    .filter((label: any) => label === d)
+                    .transition()
+                    .duration(200)
+                    .style("opacity", 1);
+
+                d3.select(this.parentNode as SVGElement)
+                    .selectAll(".milestone-icon-" + plotables.indexOf(d))
+                    .transition()
+                    .duration(200)
+                    .style("opacity", 0)
+                    .remove();
+            });
 
         svg.selectAll(".time-bar-label")
             .data(plotables)
@@ -102,6 +145,7 @@ export class PlottingService {
                     }
                 }
             });
+
         const defs = svgRoot.append("defs");
         defs.append("filter")
             .attr("id", "drop-shadow")
@@ -123,6 +167,17 @@ export class PlottingService {
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                transition: opacity 0.2s ease;
+            }
+            .time-bar {
+                transition: opacity 0.1s ease-in-out;
+            }
+            .time-bar:hover {
+                opacity: 0.8;
+            }
+            image.milestone-icon {
+                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+                cursor: pointer;
             }
         `);
 
@@ -342,10 +397,10 @@ export class PlottingService {
 
     private injectBarPlotStyles(hostElement: d3.Selection<HTMLElement, unknown, null, undefined>) {
         hostElement.selectAll("style").remove();
-        
+
         // Get the computed background color from the host element
         const computedBgColor = window.getComputedStyle(hostElement.node() || document.body).backgroundColor;
-        
+
         const styleElement = hostElement.append("style");
         styleElement.text(`
                 svg {

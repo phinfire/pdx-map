@@ -80,14 +80,12 @@ export class CK3TableColumnProvider {
         ]);
         map.set("Fun Facts", [
             new TableColumnBuilder<Character>("Traits")
-                .isSortable(false)
                 .withCellValue((char: Character) => char.getTraits().length)
-                .withCellTooltip((char: Character) => char.getTraits().map(trait => trait.getName()).join("<br>"))
+                .withCellTooltip((char: Character) => char.getTraits().map(trait => trait ? trait.getName() : "???").join("\n")) //TODO: likely missing AllUnderHeaven traits
                 .build(),
             new TableColumnBuilder<Character>("Perks")
-                .isSortable(false)
                 .withCellValue((char: Character) => char.getPerks().length)
-                .withCellTooltip((char: Character) => char.getPerks().map((perk: string) => perk).join("<br>"))
+                .withCellTooltip((char: Character) => char.getPerks().map((perk: string) => perk).join("\n"))
                 .build(),
             new TableColumnBuilder<Character>("Kills")
                 .withCellValue(char => char.getAliveValue("kills", []).length)

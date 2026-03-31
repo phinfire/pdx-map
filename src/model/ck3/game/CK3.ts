@@ -81,7 +81,12 @@ export class CK3 {
                 data.split("\n").map(line => line.trim()).filter(line => line.indexOf(":") != -1 && !line.startsWith("#")).forEach(line => {
                     const parts = line.split(":");
                     const key = parts[0].trim();
-                    const value = line.indexOf("0") != -1 ? parts[1].substring(3, parts[1].length - 1) : parts[1].trim().replace("\"", "").replace("\"", "");
+                    let value = "";
+                    if (line.indexOf("0") != -1 || line.indexOf("1") != -1 || line.indexOf("2") != -1) {
+                        value = parts[1].substring(3, parts[1].length - 1);
+                    } else {
+                        value = parts[1].trim().replace("\"", "").replace("\"", "");
+                    }
                     locMap.set(key, value);
                 });
                 return locMap;
@@ -103,8 +108,8 @@ export class CK3 {
         return this.localisation.has(trait);
     }
 
-    public localise(trait: string) {
-        return this.localisation.get(trait)!
+    public localise(input: string) {
+        return this.localisation.get(input) || input;
     }
 
     public getCountyBaronies(countyName: string) {

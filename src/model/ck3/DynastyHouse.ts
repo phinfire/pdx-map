@@ -6,7 +6,7 @@ export class DynastyHouse {
 
     private cachedHouseMembers: Character[] | null = null;
 
-    constructor(private id: string, private data: any, private save: ICk3Save) {
+    constructor(private id: string, private data: any, private livingMembers: Character[], private deadMembers: Character[]) {
 
     }
 
@@ -15,12 +15,7 @@ export class DynastyHouse {
     }
 
     public getHouseMembers() {
-        if (this.cachedHouseMembers === null) {
-            this.cachedHouseMembers = this.save.getLivingCharactersFiltered((character: any) => {
-                return character.dynasty_house == this.id;   
-            });
-        }
-        return this.cachedHouseMembers;
+        return this.livingMembers.concat(this.deadMembers);
     }
 
     public getName() {

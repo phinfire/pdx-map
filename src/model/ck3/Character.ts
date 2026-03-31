@@ -5,10 +5,11 @@ import { Skill } from "./enum/Skill";
 import { Trait } from "./Trait";
 import { AbstractLandedTitle } from "./title/AbstractLandedTitle";
 import { ICk3Save } from "./save/ICk3Save";
+import { makeUnicodeSuffixReadable } from "../../util/textencoding";
 
 export class Character {
 
-    static fromRawData(id: string, data: any, save: ICk3Save, ck3: CK3): Character {
+    static fromRawData(id: string, data: any, save: ICk3Save, ck3: CK3, memoryData: any): Character {
         return new Character(id, data, save, ck3);
     }
 
@@ -17,6 +18,7 @@ export class Character {
     private landed: boolean
     private birthDate: Date;
     private deathDate: Date | null;
+    private name: string;
 
     children: Character[] = [];
 
@@ -41,25 +43,15 @@ export class Character {
         this.deathDate = this.data.dead_data ?
             (this.data.dead_data.date instanceof Date ? this.data.dead_data.date : new Date(this.data.dead_data.date)) :
             null;
-    }
-
-    public DEBUG_printDomain() {
-        console.log(`Character ${this.getName()}`, this.data);
-        const domainTitleIndices = this.data.dead_data && this.data.dead_data.domain ? this.data.dead_data.domain : [];
-        let s = "";
-        for (const titleIndex of domainTitleIndices) {
-            const title = this.save.getTitleByIndex(titleIndex);
-            if (title) {
-                s += `\n- ${title.getLocalisedName()} (${title.getTier().getName()})`;
-            } else {
-                s += `\n- Unknown title with index ${titleIndex}`;
-            }
-        }
-        console.log(s);
+            this.name = makeUnicodeSuffixReadable(this.data.first_name);
     }
 
     public getDynastyHouse() {
-        return this.save.getDynastyHouse(this.data.dynasty_house + "");
+        return this.save.getDynastyHouse(this.getDynastyHouseID());
+    }
+
+    public getDynastyHouseID() {
+        return this.data.dynasty_house + "";
     }
 
     public isFemale() {
@@ -83,7 +75,7 @@ export class Character {
     }
 
     public getName() {
-        return this.data.first_name.replace("O_", "ø")
+        return this.name;
     }
 
     public getPerks() {

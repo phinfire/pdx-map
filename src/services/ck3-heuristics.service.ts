@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ICk3Save } from '../model/ck3/save/ICk3Save';
 import { Character } from '../model/ck3/Character';
 import { RGB } from '../util/RGB';
+import { TimeBar } from '../model/plotting/TimeBar';
 
 @Injectable({
     providedIn: 'root',
@@ -9,14 +10,7 @@ import { RGB } from '../util/RGB';
 export class Ck3HeuristicsService {
 
     buildTimeBarData(save: ICk3Save) {
-        const timeBarData: {
-            label: string;
-            startDate: Date;
-            endDate: Date;
-            rowName: string;
-            color: string;
-            guessing: boolean;
-        }[] = [];
+        const timeBarData: TimeBar[] = [];
         for (const player of save.getPlayers()) {
             const charactersByDate = new Map<string, Character>();
             for (const [date, character] of player.getPreviousCharacters()) {
@@ -52,7 +46,8 @@ export class Ck3HeuristicsService {
                     endDate,
                     rowName: player.getName(),
                     color: color.toHexString(),
-                    guessing: false
+                    lowConfidence: false,
+                    milestones: []
                 });
             }
         }

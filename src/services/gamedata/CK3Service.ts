@@ -117,7 +117,6 @@ export class CK3Service {
                     map(blob => new File([blob], "save.ck3")),
                     switchMap(file => from(this.importFilePromise(file, true))),
                     map(result => {
-                        //this.paradoxFileService.downloadJson(result.json, "ck3_opt" + ".json");
                         return Ck3Save.fromRawData(result.json, ck3);
                     })
                 )
@@ -130,7 +129,6 @@ export class CK3Service {
     }
 
     openCk3ZeroSaveFromFile(): Observable<Ck3Save> {
-        //https://codingafterdark.de/pdx/mega/ZERO_WILLIAM.ck3
         return this.openCk3SaveFromFile("https://codingafterdark.de/pdx/mega/Kaiser_Heinrich_IV_of_the_Holy_Roman_Empire_1066_09_15.ck3").pipe(
             shareReplay(1)
         );
@@ -249,7 +247,11 @@ export class CK3Service {
                                 played_character: q.at('/played_character') ?? null,
                                 religion: { faiths: q.at('/religion/faiths') ?? null },
                                 culture_manager: { cultures: q.at('/culture_manager/cultures') ?? null },
-                                landed_titles: { landed_titles: q.at('/landed_titles/landed_titles') ?? null }
+                                landed_titles: { landed_titles: q.at('/landed_titles/landed_titles') ?? null },
+                                wars : q.at('/wars') ?? null,
+                                legends: q.at('/legends') ?? null,
+
+                                character_memory_manager: q.at('/character_memory_manager') ?? null
                             }));
                             resolve({ name: file.name, json: result });
                         } else {

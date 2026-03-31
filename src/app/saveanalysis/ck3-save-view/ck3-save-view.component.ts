@@ -15,12 +15,13 @@ import { TableColumnBuilder } from '../../../util/table/TableColumnBuilder';
 import { Ck3HeuristicsService } from '../../../services/ck3-heuristics.service';
 import { MapService } from '../../../services/map.service';
 import { SlabMapViewComponent } from '../../slab-map-view/slab-map-view.component';
-import { ViewMode } from '../../slab-map-view/ViewMode';
+import { CategoryViewMode, ViewMode } from '../../slab-map-view/ViewMode';
 import { TableComponent } from '../../vic3-country-table/vic3-country-table.component';
 import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
 import { SaveFileNameDialogComponent } from '../save-filename-dialog.component';
 import { PlottingService } from '../../../services/plotting/PlottingService';
 import { SaveSaverService } from '../../../services/save-saver.service';
+import { ViewModeProvider } from '../../slab-map-view/ViewModeProvider';
 
 @Component({
     selector: 'app-ck3-save-view',
@@ -68,6 +69,7 @@ export class Ck3SaveViewComponent implements OnDestroy {
             this.columnMap = new Map(Array.from(this.ck3ColumnProvider.getCharacterColumns(),
                 ([key, value]) => [key, [TableColumnBuilder.getIndexColumn(), playerColumn, ...value]]));
             this.setupToolbarActions();
+            this.availableMapViewModes = new ViewModeProvider().buildViewModesForCk3(this.activeSave);
         }
     }
 

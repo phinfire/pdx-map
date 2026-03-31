@@ -64,12 +64,11 @@ export function readPlayers(data: any, characterCreator: (id: string) => Charact
     return players;
 }
 
-export function readDynasties(data: any, save: ICk3Save) {
+export function readDynasties(data: any, dynasty2LivingCharacters: Map<string, Character[]>, dynasty2DeadCharacters: Map<string, Character[]>) {
     const dynasties = new Map<string, DynastyHouse>();
-    for (const key in data.dynasties?.dynasty_house) {
-        if (Object.prototype.hasOwnProperty.call(data.dynasties.dynasty_house, key)) {
-            dynasties.set(key, new DynastyHouse(key, data.dynasties.dynasty_house[key], save));
-        }
+    const dynastyHouseData = data.dynasties?.dynasty_house || {};
+    for (const id of Object.keys(dynastyHouseData)) {
+        dynasties.set(id, new DynastyHouse(id, dynastyHouseData[id], dynasty2LivingCharacters.get(id) || [], dynasty2DeadCharacters.get(id) || []));
     }
     return dynasties;
 }
@@ -83,10 +82,8 @@ export function readAllFaiths(data: any): Faith[] {
     const faiths: Faith[] = [];
     const faithsData = data.religion?.faiths;
     if (faithsData && typeof faithsData === "object") {
-        for (const faithId in faithsData) {
-            if (Object.prototype.hasOwnProperty.call(faithsData, faithId)) {
-                faiths.push(new Faith(Number(faithId), faithsData[faithId]));
-            }
+        for (const faithId of Object.keys(faithsData)) {
+            faiths.push(new Faith(Number(faithId), faithsData[faithId]));
         }
     }
     return faiths;
@@ -101,10 +98,8 @@ export function readAllCultures(data: any): Culture[] {
     const cultures: Culture[] = [];
     const culturesData = data.culture_manager?.cultures;
     if (culturesData && typeof culturesData === "object") {
-        for (const cultureId in culturesData) {
-            if (Object.prototype.hasOwnProperty.call(culturesData, cultureId)) {
-                cultures.push(new Culture(Number(cultureId), culturesData[cultureId]));
-            }
+        for (const cultureId of Object.keys(culturesData)) {
+            cultures.push(new Culture(Number(cultureId), culturesData[cultureId]));
         }
     }
     return cultures;
@@ -154,7 +149,7 @@ export function createTitle(data: any, save: ICk3Save, ck3: CK3): AbstractLanded
         }
         const rgb = data.color != null ? new RGB(data.color.rgb[0], data.color.rgb[1], data.color.rgb[2]) : new RGB(255, 0, 0);
         const tierString = data.tier ? RulerTier.fromRealmTier(data.tier) : RulerTier.NONE;
-        const name = data.name;
+        const name = data.title_name_data.name;
         return new CustomLandedTitle(key, holder, de_facto_liege, rgb, tierString, deJureVassalIndices, name, capitalHoldingIndex, save, ck3);
     } else {
         return new LandedTitle(key, holder, de_facto_liege, deJureVassalIndices, capitalHoldingIndex, save, ck3);
@@ -186,35 +181,21 @@ export function readAllHoldings(data: any, parentSave: ICk3Save, ck3: CK3) {
 }
 
 export function createAllCharacters(data: any, save: ICk3Save, ck3: CK3) {
-    const livingCharacters = new Map<string, Character>();
-    const deadUnprunableCharacters = new Map<string, Character>();
-    const deadPrunableCharacters = new Map<string, Character>();
-    const livingData = data.living || {};
-    for (const characterId in livingData) {
-        if (Object.prototype.hasOwnProperty.call(livingData, characterId)) {
-            const char = Character.fromRawData(characterId, livingData[characterId], save, ck3);
-            livingCharacters.set(characterId, char);
-        }
-    }
-    const deadUnprunableData = data.dead_unprunable || {};
-    for (const characterId in deadUnprunableData) {
-        if (Object.prototype.hasOwnProperty.call(deadUnprunableData, characterId)) {
-            const char = Character.fromRawData(characterId, deadUnprunableData[characterId], save, ck3);
-            deadUnprunableCharacters.set(characterId, char);
-        }
-    }
-    const deadPrunableData = data.dead_prunable || {};
-    for (const characterId in deadPrunableData) {
-        if (Object.prototype.hasOwnProperty.call(deadPrunableData, characterId)) {
-            const char = Character.fromRawData(characterId, deadPrunableData[characterId], save, ck3);
-            deadPrunableCharacters.set(characterId, char);
-        }
-    }
+    const memoryData = data.character_memory_manager.database;
     return {
-        living: livingCharacters,
-        deadUnprunable: deadUnprunableCharacters,
-        deadPrunable: deadPrunableCharacters
+        living: createCharacterMapFromData(data.living || {}, save, ck3, memoryData),
+        deadUnprunable: createCharacterMapFromData(data.dead_unprunable || {}, save, ck3, memoryData),
+        deadPrunable: createCharacterMapFromData(data.dead_prunable || {}, save, ck3, memoryData)
     };
+}
+
+function createCharacterMapFromData(data: any, save: ICk3Save, ck3: CK3, memoryData: any): Map<string, Character> {
+    const characters = new Map<string, Character>();
+    for (const characterId of Object.keys(data)) {
+        const char = Character.fromRawData(characterId, data[characterId], save, ck3, memoryData);
+        characters.set(characterId, char);
+    }
+    return characters;
 }
 
 export function parseLocalisations(localisationMaps: [Map<string, string>, Map<string, string>]): Map<string, string> {
@@ -234,6 +215,7 @@ export function parseTraits(data: string, parser: any): Trait[] {
             traits.push(new Trait(key, parsed[key], i++));
         }
     }
+    console.log("Parsed traits:", traits);
     return traits;
 }
 
