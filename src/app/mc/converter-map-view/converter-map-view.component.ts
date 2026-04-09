@@ -1,24 +1,23 @@
-import { Component, inject, ViewChild, AfterViewInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { combineLatest } from 'rxjs';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { AfterViewInit, Component, inject, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { combineLatest } from 'rxjs';
+import { animate, style, transition, trigger } from '@angular/animations';
 import { CdkContextMenuTrigger, CdkMenu, CdkMenuItem, CdkMenuModule } from '@angular/cdk/menu';
-import { MapService } from '../../../services/map.service';
-import { CK3Service } from '../../../services/gamedata/CK3Service';
-import { Ck3ToEu4ConverterServiceService } from '../../../services/megacampaign/ck3-to-eu4-converter-service.service';
-import { PolygonSelectComponent, PolygonSelectionEvent, HoverChangedEvent } from '../../viewers/polygon-select/polygon-select.component';
-import { makeGeoJsonPolygons } from '../../../util/geometry/threeGeometry';
-import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
-import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
-import { RGB } from '../../../util/RGB';
-import { trigger, transition, style, animate } from '@angular/animations';
-import { CK3TitleRegistry } from '../../../model/ck3/game/Ck3TitleRegistry';
+import { CK3TitleRegistry } from '../../../model/ck3/game/CK3TitleRegistry';
 import { Localiser } from '../../../model/ck3/game/Localiser';
+import { CK3Service } from '../../../services/gamedata/CK3Service';
+import { MapService } from '../../../services/map.service';
+import { Ck3ToEu4ConverterServiceService } from '../../../services/megacampaign/ck3-to-eu4-converter-service.service';
+import { makeGeoJsonPolygons } from '../../../util/geometry/threeGeometry';
+import { RGB } from '../../../util/RGB';
+import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
+import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
+import { HoverChangedEvent, PolygonSelectComponent, PolygonSelectionEvent } from '../../viewers/polygon-select/polygon-select.component';
 
 @Component({
     selector: 'app-converter-map-view',
@@ -81,7 +80,7 @@ export class ConverterMapViewComponent implements AfterViewInit {
             this.provinceMapping = mapping;
             this.mapService.fetchCK3GeoJson(true, true).subscribe((geoJson) => {
                 const countyKey2DuchyColor = new Map<string, number>();
-                titleRegistry.getAllCountyTitleKeys().forEach(countyKey => {
+                titleRegistry.getAllCountyTitleKeys().forEach((countyKey: string) => {
                     const duchyKey = titleRegistry.getDeJureLiegeTitle(countyKey)!;
                     const duchyColor = titleRegistry.getVanillaTitleColor(duchyKey);
                     countyKey2DuchyColor.set(countyKey, duchyColor!.toNumber())
@@ -183,7 +182,7 @@ export class ConverterMapViewComponent implements AfterViewInit {
         });
         this.eu4Map.resetSelection();
         this.eu4Map.refreshAllColors();
-        if (this.autoFitCameraOnSelection) {
+        if (this.autoFitCameraOnSelection && ownershipResults.size > 0) {
             this.eu4Map.fitCameraToPolygons(0.3, Array.from(ownershipResults.keys()));
         }
     }

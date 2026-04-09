@@ -11,7 +11,7 @@ import { CustomRulerFile } from '../../model/megacampaign/CustomRulerFile';
 import { PdxFileService } from '../pdx-file.service';
 import { parseTraits, parsePreparsedLandedTitles, parseLocalisations } from '../../util/parse/parse';
 import { Localiser } from '../../model/ck3/game/Localiser';
-import { CK3TitleRegistry } from '../../model/ck3/game/Ck3TitleRegistry';
+import { CK3TitleRegistry } from '../../model/ck3/game/CK3TitleRegistry';
 import { RGB } from '../../util/RGB';
 
 @Injectable({
