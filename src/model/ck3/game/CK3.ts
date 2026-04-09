@@ -1,10 +1,11 @@
 import JSZip from "jszip";
+import { RGB } from "../../../util/RGB";
+import { Building } from "../Building";
 import { Trait } from "../Trait";
 import { Skill } from "../enum/Skill";
-import { Building } from "../Building";
-import { RGB } from "../../../util/RGB";
+import { Localiser } from "./Localiser";
 
-export class CK3 {
+export class CK3 implements Localiser {
 
     public static SKILLS_IN_ORDER = [Skill.DIPLOMACY, Skill.MARTIAL, Skill.STEWARDSHIP, Skill.INTRIGUE, Skill.LEARNING, Skill.PROWESS];
     public static readonly CK3_DATA_URL = "https://codingafterdark.de/ck3/";
@@ -13,6 +14,7 @@ export class CK3 {
     private localisation: Map<string, string> = new Map<string, string>();
     private county2Baronies: Map<string, string[]> = new Map<string, string[]>();
     private barony2provinceIndices: Map<string, number> = new Map<string, number>();
+    private baronyIndex2TitleKey: Map<number, string> = new Map<number, string>();
     private titleKey2Color: Map<string, RGB> = new Map<string, RGB>();
 
     private scriptedBuildingValues: any;
@@ -32,6 +34,9 @@ export class CK3 {
         });
         this.county2Baronies = county2Baronies;
         this.barony2provinceIndices = barony2provinceIndices;
+        this.barony2provinceIndices.forEach((provinceIndex, barony) => {
+            this.baronyIndex2TitleKey.set(provinceIndex, barony);
+        });
         this.titleKey2Color = titleKey2Color;
     }
 
@@ -127,7 +132,6 @@ export class CK3 {
     public getVanillaTitleColor(titleKey: string) {
         if (!this.titleKey2Color.has(titleKey)) {
             return new RGB(0, 0, 0);
-            //throw new Error("No color found for title " + titleKey);
         }
         return this.titleKey2Color.get(titleKey);
     }
@@ -145,6 +149,10 @@ export class CK3 {
             return this.vassalTitle2OverlordTitle.get(titleKey);
         }
         return null;
+    }
+
+    getAllCountyTitleKeys() {
+        return Array.from(this.county2Baronies.keys());
     }
 
     getBarony2ProvinceIndices() {

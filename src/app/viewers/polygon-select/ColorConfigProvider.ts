@@ -2,9 +2,18 @@ export class ColorConfigProvider {
 
     private readonly GEOMETRY_DEFAULT_COLOR = 0x666666;
     private readonly INACTIVE_GEOMETRY_COLOR = 0x202020;
-
-    constructor(private key2color: Map<string, number>, private fullColorByDefault: boolean = false) {
-
+    private key2color: ((key: string) => number);
+    constructor(key2color: Map<string, number> | ((key: string) => number), private fullColorByDefault: boolean = false) {
+        if (key2color instanceof Map) {
+            this.key2color = (key: string) => {
+                if (key2color.has(key)) {
+                    return key2color.get(key)!;
+                }
+                return this.GEOMETRY_DEFAULT_COLOR;
+            };
+        } else {
+            this.key2color = key2color;
+        }
     }
 
     getColor(key: string, interactive: boolean, hover: boolean, locked: boolean) {
@@ -14,11 +23,7 @@ export class ColorConfigProvider {
             }
             const primaryColor = this.getPrimaryColor(key);
             if (locked) {
-                if (hover) {
-                    return primaryColor;
-                } else {
-                    return primaryColor;
-                }
+                return primaryColor;
             } else {
                 if (hover) {
                     return this.adjustBrightness(primaryColor, 0.8);
@@ -32,16 +37,11 @@ export class ColorConfigProvider {
     }
 
     getPrimaryColor(key: string) {
-        if (this.key2color.has(key)) {
-            return this.key2color.get(key)!;
-        }
-        return this.GEOMETRY_DEFAULT_COLOR;
+        return this.key2color(key);
     }
 
     getClearColor() {
         return 0x000000;
-        //return new RGB(192, 192, 192).toNumber();
-        //return 0x141419;
     }
 
     alphaBlend(color1: number, color2: number, alpha: number): number {

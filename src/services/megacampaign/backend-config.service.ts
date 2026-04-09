@@ -10,6 +10,11 @@
             //return `http://localhost:8085/megacampaign`;
         }
 
+        getMapClaimApiUrl(): string {
+            //return "https://codingafterdark.de/mapclaim"
+            return `http://localhost:8085/megacampaign`;
+        }
+
         getDiscordApiUrl(): string {
             return "https://codingafterdark.de/discord-api";
         }

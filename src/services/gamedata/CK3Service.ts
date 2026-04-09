@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Jomini } from 'jomini';
 import JSZip from 'jszip';
 import { forkJoin, from, Observable } from 'rxjs';
@@ -10,18 +10,123 @@ import { Trait } from '../../model/ck3/Trait';
 import { CustomRulerFile } from '../../model/megacampaign/CustomRulerFile';
 import { PdxFileService } from '../pdx-file.service';
 import { parseTraits, parsePreparsedLandedTitles, parseLocalisations } from '../../util/parse/parse';
+import { Localiser } from '../../model/ck3/game/Localiser';
+import { CK3TitleRegistry } from '../../model/ck3/game/Ck3TitleRegistry';
+import { RGB } from '../../util/RGB';
 
 @Injectable({
     providedIn: 'root'
 })
 export class CK3Service {
 
+    private paradoxFileService = inject(PdxFileService);
+
     private readonly jomini$ = from(Jomini.initialize()).pipe(shareReplay(1));
 
     private ck3$: Observable<CK3> | null = null;
 
-    constructor(private paradoxFileService: PdxFileService) {
+    private readonly localisationMaps$ = forkJoin([
+        from(CK3.fetchAndInsertLocalisationMapping("traits_l_english.yml")),
+        from(CK3.fetchAndInsertLocalisationMapping("titles_l_english.yml"))
+    ]).pipe(shareReplay(1));
 
+    private readonly traits$ = this.jomini$.pipe(
+        switchMap(parser =>
+            this.fetchAndParse(
+                CK3.CK3_DATA_URL + "/common/traits/00_traits.txt",
+                parser,
+                d => parseTraits(d, parser)
+            )
+        ),
+        shareReplay(1)
+    );
+
+    private readonly landedTitles$ = this.jomini$.pipe(
+        switchMap(parser =>
+            this.fetchAndParse(
+                "https://codingafterdark.de/pdx/data/landed_titles.json",
+                parser,
+                d => parsePreparsedLandedTitles(d)
+            )
+        ),
+        shareReplay(1)
+    );
+
+    private readonly scriptedValues$ = this.jomini$.pipe(
+        switchMap(parser =>
+            this.fetchAndParse(
+                CK3.CK3_DATA_URL + "/common/scripted_values/00_building_values.txt",
+                parser,
+                d => parser.parseText(d)
+            )
+        ),
+        shareReplay(1)
+    );
+
+    private readonly buildings$ = this.jomini$.pipe(
+        switchMap(parser =>
+            from(fetch(CK3.CK3_DATA_URL + "/common/buildings.zip").then(r => r.blob())).pipe(
+                switchMap(blob => this.parseBuildings(blob, parser))
+            )
+        ),
+        shareReplay(1)
+    );
+
+    getLocaliser$() {
+        return this.localisationMaps$.pipe(
+            map(localisationMaps => {
+                const locMap = parseLocalisations(localisationMaps);
+                return new class implements Localiser {
+
+                    hasLocalisation(key: string): boolean {
+                        return locMap.has(key);
+                    }
+                    localise(key: string): string {
+                        return locMap.get(key) || key;
+                    }
+                };
+            }
+            ),
+            shareReplay(1)
+        );
+    }
+
+    getTitleRegistry$() {
+        return this.getLandedTitles().pipe(
+            map(landedTitles => {
+                const { county2Baronies, barony2provinceIndices, titleKey2Color, vassalTitle2OverlordTitle } = landedTitles;
+                return new class implements CK3TitleRegistry {
+
+                    getCountyBaronies(countyName: string) {
+                        return county2Baronies.get(countyName)!;
+                    }
+
+                    getBaronyProvinceIndex(barony: string) {
+                        return barony2provinceIndices.get(barony)!;
+                    }
+
+                    getBaronyKeyFromProvinceIndex(provinceIndex: number) {
+                        const matches = Array.from(barony2provinceIndices.keys()).filter(key => barony2provinceIndices.get(key) == provinceIndex);
+                        return matches[0];
+                    }
+
+                    getVanillaTitleColor(titleKey: string) {
+                        return titleKey2Color.get(titleKey) || new RGB(0, 0, 0);
+                    }
+
+                    getDeJureLiegeTitle(titleKey: string) {
+                        return vassalTitle2OverlordTitle.get(titleKey) || null;
+                    }
+
+                    getAllCountyTitleKeys() {
+                        return Array.from(county2Baronies.keys());
+                    }
+
+                } as CK3TitleRegistry;
+            }
+            ),
+            shareReplay(1)
+        );
     }
 
     private fetchAndParse<T>(url: string, parser: any, parseFn: (data: string) => T): Observable<T> {
@@ -62,35 +167,17 @@ export class CK3Service {
         );
     }
 
+
+
     initializeCK3(): Observable<CK3> {
         if (!this.ck3$) {
-            this.ck3$ = this.jomini$.pipe(
-                switchMap(parser =>
-                    forkJoin({
-                        localisationMaps: forkJoin([
-                            from(CK3.fetchAndInsertLocalisationMapping("traits_l_english.yml")),
-                            from(CK3.fetchAndInsertLocalisationMapping("titles_l_english.yml"))
-                        ]),
-                        traits: this.fetchAndParse(
-                            CK3.CK3_DATA_URL + "/common/traits/00_traits.txt",
-                            parser,
-                            d => parseTraits(d, parser)
-                        ),
-                        landedTitles: this.fetchAndParse(
-                            "https://codingafterdark.de/pdx/data/landed_titles.json",
-                            parser,
-                            d => parsePreparsedLandedTitles(d)
-                        ),
-                        scriptedValues: this.fetchAndParse(
-                            CK3.CK3_DATA_URL + "/common/scripted_values/00_building_values.txt",
-                            parser,
-                            d => parser.parseText(d)
-                        ),
-                        buildings: from(fetch(CK3.CK3_DATA_URL + "/common/buildings.zip").then(r => r.blob())).pipe(
-                            switchMap(blob => this.parseBuildings(blob, parser))
-                        )
-                    })
-                ),
+            this.ck3$ = forkJoin({
+                localisationMaps: this.localisationMaps$,
+                traits: this.traits$,
+                landedTitles: this.landedTitles$,
+                scriptedValues: this.scriptedValues$,
+                buildings: this.buildings$
+            }).pipe(
                 map(({ localisationMaps, traits, landedTitles }) => {
                     const locs = parseLocalisations(localisationMaps);
                     return new CK3(
@@ -107,6 +194,26 @@ export class CK3Service {
         }
 
         return this.ck3$;
+    }
+
+    getLocalisationMaps() {
+        return this.localisationMaps$;
+    }
+
+    getTraits() {
+        return this.traits$;
+    }
+
+    getLandedTitles() {
+        return this.landedTitles$;
+    }
+
+    getScriptedValues() {
+        return this.scriptedValues$;
+    }
+
+    getBuildings() {
+        return this.buildings$;
     }
 
     openCk3SaveFromFile(fileURL: string): Observable<Ck3Save> {
@@ -248,7 +355,7 @@ export class CK3Service {
                                 religion: { faiths: q.at('/religion/faiths') ?? null },
                                 culture_manager: { cultures: q.at('/culture_manager/cultures') ?? null },
                                 landed_titles: { landed_titles: q.at('/landed_titles/landed_titles') ?? null },
-                                wars : q.at('/wars') ?? null,
+                                wars: q.at('/wars') ?? null,
                                 legends: q.at('/legends') ?? null,
 
                                 character_memory_manager: q.at('/character_memory_manager') ?? null
@@ -275,3 +382,4 @@ export class CK3Service {
         });
     }
 }
+

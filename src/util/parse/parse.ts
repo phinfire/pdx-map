@@ -150,7 +150,7 @@ export function createTitle(data: any, save: ICk3Save, ck3: CK3): AbstractLanded
         const rgb = data.color != null ? new RGB(data.color.rgb[0], data.color.rgb[1], data.color.rgb[2]) : new RGB(255, 0, 0);
         const tierString = data.tier ? RulerTier.fromRealmTier(data.tier) : RulerTier.NONE;
         const name = data.title_name_data.name;
-        return new CustomLandedTitle(key, holder, de_facto_liege, rgb, tierString, deJureVassalIndices, name, capitalHoldingIndex, save, ck3);
+        return new CustomLandedTitle(key, holder, de_facto_liege, rgb, tierString, deJureVassalIndices, name || key, capitalHoldingIndex, save, ck3);
     } else {
         return new LandedTitle(key, holder, de_facto_liege, deJureVassalIndices, capitalHoldingIndex, save, ck3);
     }
@@ -215,7 +215,6 @@ export function parseTraits(data: string, parser: any): Trait[] {
             traits.push(new Trait(key, parsed[key], i++));
         }
     }
-    console.log("Parsed traits:", traits);
     return traits;
 }
 

@@ -39,7 +39,7 @@ export class Ck3SaveViewComponent implements OnDestroy {
     protected rowElements: Character[] = [];
     protected behaviorConfig = new BehaviorConfigProvider(0.75);
     protected availableMapViewModes: LabeledAndIconed<ViewMode>[] = [];
-    protected geoJsonFetcher = () => this.mapService.fetchCK3GeoJson(true, false);
+    protected geoJsonFetcher = () => this.mapService.fetchCK3GeoJson(true, true);
     protected columnMap: Map<string, TableColumn<Character>[]> = new Map();
     private mapService = inject(MapService);
     private ck3ColumnProvider = inject(CK3TableColumnProvider);

@@ -1,0 +1,57 @@
+<div class="map-container">
+    <div class="top-bar">
+        <div class="top-half">
+            <div>
+                <span class="title-span">CK3 Provinces</span>
+            </div>
+            <div>
+                <mat-checkbox [(ngModel)]="autoFitCameraOnSelection" matTooltip="Auto-fit camera on selection change">
+                    Auto-fit camera
+                </mat-checkbox>
+                <button mat-icon-button (click)="clearAllSelections()" matTooltip="Reset selections">
+                    <mat-icon>refresh</mat-icon>
+                </button>
+            </div>
+        </div>
+        <mat-icon class="info">info</mat-icon>
+        <div class="top-half">
+            <div>
+                @for (country of ck3Countries(); track country.id) {
+                    <div class="country-square"
+                        [style.background-color]="'rgb(' + country.color.r + ',' + country.color.g + ',' + country.color.b + ')'"
+                        [class.active]="country.id === currentlyActiveCountryKey()" (click)="selectCountry(country.id)"
+                        [matTooltip]="country.name + ' - CK3: ' + country.ck3Provinces.size + ' EU4: ' + getEU4ProvinceCountForCountry(country)"
+                        matTooltipPosition="above"
+                        [cdkContextMenuTriggerFor]="countryMenu"
+                        (cdkContextMenuOpened)="selectedCountryForDelete = country.id">
+                    </div>
+                }
+                <button mat-icon-button (click)="createNewCountry()" matTooltip="Create new country">
+                    <mat-icon>add</mat-icon>
+                </button>
+            </div>
+            <div>
+                <span class="title-span">EU4 Provinces</span>
+            </div>
+        </div>
+    </div>
+    <div class="maps-wrapper">
+        <div class="map-column">
+            <app-polygon-select #ck3Map [tooltipProvider]="ck3TooltipProvider" (selectionChanged)="onCK3SelectionChanged($event)" (onHoverChanged)="onCK3HoverChanged($event)">
+            </app-polygon-select>
+        </div>
+        <div class="map-column">
+            <app-polygon-select #eu4Map [tooltipProvider]="eu4TooltipProvider" (selectionChanged)="onEU4SelectionChanged($event)">
+            </app-polygon-select>
+        </div>
+    </div>
+</div>
+
+<ng-template #countryMenu>
+    <div class="country-context-menu" cdkMenu @menuFadeScale>
+        <button class="country-context-menu-item" cdkMenuItem (click)="removeCountry($event, selectedCountryForDelete!)">
+            <mat-icon>delete</mat-icon>
+            <span>Delete</span>
+        </button>
+    </div>
+</ng-template>

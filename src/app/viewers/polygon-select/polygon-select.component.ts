@@ -15,6 +15,11 @@ export interface PolygonSelectionEvent {
     locked: boolean;
 }
 
+export interface HoverChangedEvent {
+    key: string | null;
+    isHovered: boolean;
+}
+
 @Component({
     selector: 'app-polygon-select',
     imports: [MatIconModule, MatProgressSpinnerModule, MatExpansionModule, MatTooltipModule],
@@ -27,14 +32,25 @@ export class PolygonSelectComponent {
     @ViewChildren('panel') expansionPanels!: QueryList<MatExpansionPanel>;
 
     @Input() clearColor = 0x000000;
-    @Input() colorConfigProviders: ColorConfigProvider[] = [];
+    private _colorConfigProviders: ColorConfigProvider[] = [];
     colorConfigProvider: ColorConfigProvider | null = null;
+
+    @Input()
+    set colorConfigProviders(providers: ColorConfigProvider[]) {
+        this._colorConfigProviders = providers;
+        if (providers.length > 0) {
+            this.colorConfigProvider = providers[0];
+            this.refreshAllColors();
+        }
+    }
+
     @Input() meshBuddiesProvider: (key: string) => string[] = (key: string) => [key];
     @Input() tooltipProvider: (key: string) => string = (key: string) => key;
     @Input() customButtons: CustomButton[] = [];
     @Output() buttonClicked = new EventEmitter<CustomButton>();
     @Output() selectionChanged = new EventEmitter<PolygonSelectionEvent>();
-    
+    @Output() onHoverChanged = new EventEmitter<HoverChangedEvent>();
+
     protected groupedCustomButtons: Map<string, CustomButton[]> = new Map();
 
     private readonly LIGHT_INTENSITY = 3;
@@ -72,10 +88,21 @@ export class PolygonSelectComponent {
         this.tooltipManager.toggleTooltipEnabled();
     }
 
-    public fitCameraToPolygons(margin: number) {
+    public fitCameraToPolygons(margin: number, polygonIds?: string[]) {
         if (!this.polygons.size || !this.cameraMovementManager) return;
         const box = new THREE.Box3();
-        this.polygons.forEach(poly => box.expandByObject(poly));
+
+        if (polygonIds && polygonIds.length > 0) {
+            for (const id of polygonIds) {
+                const poly = this.polygons.get(id);
+                if (poly) {
+                    box.expandByObject(poly);
+                }
+            }
+        } else {
+            this.polygons.forEach(poly => box.expandByObject(poly));
+        }
+
         this.cameraMovementManager.fitCameraToBox(box, margin);
     }
 
@@ -122,6 +149,7 @@ export class PolygonSelectComponent {
 
     ngOnChanges(changes: SimpleChanges) {
         if (changes['colorConfigProviders']) {
+            console.log("Received new color config providers:", this.colorConfigProviders);
             this.colorConfigProvider = this.colorConfigProviders[0];
             for (const poly of this.polygons.values()) {
                 this.refreshPolyColor(poly);
@@ -471,14 +499,23 @@ export class PolygonSelectComponent {
         this.refreshPolyColor(mesh);
     }
 
+    applyHoverEffectsByKeys(keys: string[], isHovered: boolean) {
+        keys.forEach(key => {
+            const mesh = this.polygons.get(key);
+            if (mesh) {
+                this.applyHoverEffects(mesh, isHovered);
+            }
+        });
+    }
+
     setHovered(currentlyHovered: (THREE.Mesh & { targetZ?: number, locked?: boolean, interactive?: boolean, key: string }) | null) {
-        const localLastHoveredMesh = this.lastHoveredMesh;
-        const localLastHoveredBuddies = new Set(this.lastHoveredBuddies);
+            const localLastHoveredMesh = this.lastHoveredMesh;
+            const localLastHoveredBuddies = new Set(this.lastHoveredBuddies);
 
-        this.lastHoveredMesh = currentlyHovered;
-        this.lastHoveredBuddies.clear();
+            this.lastHoveredMesh = currentlyHovered;
+            this.lastHoveredBuddies.clear();
 
-        if (localLastHoveredMesh != null) {
+            if(localLastHoveredMesh != null) {
             this.applyHoverEffects(localLastHoveredMesh, false);
         }
         localLastHoveredBuddies.forEach(buddyKey => {
@@ -508,6 +545,12 @@ export class PolygonSelectComponent {
         } else {
             this.hideTooltip();
         }
+
+        // Emit hover change event
+        this.onHoverChanged.emit({
+            key: currentlyHovered?.key || null,
+            isHovered: currentlyHovered != null
+        });
     }
 
     private showTooltip(key: string) {

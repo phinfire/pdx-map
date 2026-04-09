@@ -13,6 +13,7 @@ export class CameraMovementManager {
     private currentScrollY = 0;
     private pressedKeys = new Set<string>();
     private keyboardAnimationId: number | null = null;
+    private isMouseOver = false;
     public zoomToCursor = true;
     public cameraHeight = 400;
     
@@ -46,6 +47,7 @@ export class CameraMovementManager {
             this.containerElement.addEventListener('mousedown', this.onMouseDown);
             this.containerElement.addEventListener('mouseup', this.onMouseUp);
             this.containerElement.addEventListener('wheel', this.onWheel, { passive: false });
+            this.containerElement.addEventListener('mouseenter', this.onMouseEnter);
             this.containerElement.addEventListener('mouseleave', this.onMouseLeave);
             
             // Global keyboard events
@@ -60,6 +62,7 @@ export class CameraMovementManager {
         this.containerElement.removeEventListener('mousedown', this.onMouseDown);
         this.containerElement.removeEventListener('mouseup', this.onMouseUp);
         this.containerElement.removeEventListener('wheel', this.onWheel);
+        this.containerElement.removeEventListener('mouseenter', this.onMouseEnter);
         this.containerElement.removeEventListener('mouseleave', this.onMouseLeave);
         
         // Global keyboard events
@@ -107,7 +110,18 @@ export class CameraMovementManager {
     };
     
     private onMouseLeave = () => {
+        this.isMouseOver = false;
         this.stopEdgeScrolling();
+        // Clear any pressed keys to prevent stale state when mouse leaves
+        this.pressedKeys.clear();
+        if (this.keyboardAnimationId) {
+            cancelAnimationFrame(this.keyboardAnimationId);
+            this.keyboardAnimationId = null;
+        }
+    };
+
+    private onMouseEnter = () => {
+        this.isMouseOver = true;
     };
 
     private onWheel = (event: WheelEvent) => {
@@ -138,8 +152,8 @@ export class CameraMovementManager {
     
     private onKeyDown = (event: KeyboardEvent) => {
         if (!this.keyboardControlsEnabled) return;
-        // Only respond to keyboard when container is relevant (optional focus check)
-        if (!this.containerElement.contains(document.activeElement) && document.activeElement !== document.body) {
+        // Only respond to keyboard when mouse is over the container
+        if (!this.isMouseOver) {
             return;
         }
         

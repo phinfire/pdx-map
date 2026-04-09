@@ -103,7 +103,8 @@ export class ParadoxComponent implements OnDestroy, AfterViewInit {
             items: [
                 { label: 'Vic3 Resource Map', path: 'map', icon: 'map' },
                 { label: 'Parser Kiosk', path: 'jomini', icon: 'data_object' },
-                { label: 'File Administration', path: 'db', icon: 'database' }
+                { label: 'File Administration', path: 'db', icon: 'database' },
+                { label: "Map Conversion", path: 'mc/convertmap', icon: 'sync_alt' }
             ]
         }
     ];

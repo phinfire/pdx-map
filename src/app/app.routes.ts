@@ -11,6 +11,7 @@ import { ResourcemapComponent } from './resourcemap/resourcemap.component';
 import { SaveViewSplashComponent } from './saveanalysis/save-view-splash/save-view-splash.component';
 import { SavefileadminComponent } from './savefileadmin/savefileadmin.component';
 import { McstartselectComponent } from './mc/mcstartselect/mcstartselect.component';
+import { ConverterMapViewComponent } from './mc/converter-map-view/converter-map-view.component';
 
 export const routes: Routes = [
     {
@@ -25,6 +26,7 @@ export const routes: Routes = [
             { path: 'mc/admin', component: MCAdminComponent },
             { path: 'mc/admin/:campaignId', component: MCAdminComponent },
             { path: 'mc/modder', component: MegaModderComponent },
+            { path: 'mc/convertmap', component: ConverterMapViewComponent },
             { path: 'mc/signup', component: MCSignupComponent },
             { path: 'mc/signup/:campaignId', component: MCSignupComponent },
             { path: 'mc/start-selection/:campaignId', component: McstartselectComponent },
