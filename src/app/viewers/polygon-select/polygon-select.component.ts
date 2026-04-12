@@ -44,6 +44,10 @@ export class PolygonSelectComponent {
         }
     }
 
+    get colorConfigProviders(): ColorConfigProvider[] {
+        return this._colorConfigProviders;
+    }
+
     @Input() meshBuddiesProvider: (key: string) => string[] = (key: string) => [key];
     @Input() tooltipProvider: (key: string) => string = (key: string) => key;
     @Input() customButtons: CustomButton[] = [];
@@ -479,10 +483,12 @@ export class PolygonSelectComponent {
         });
     }
 
-    public resetSelection() {
+    public resetSelection(silent: boolean = true) {
         this.polygons.forEach(poly => {
             this.applyLockedEffects(poly, false);
-            this.ngZone.run(() => this.selectionChanged.emit({ key: poly.key, locked: false }));
+            if (!silent) {
+                this.ngZone.run(() => this.selectionChanged.emit({ key: poly.key, locked: false }));
+            }
         });
     }
 

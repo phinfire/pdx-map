@@ -1,75 +1,125 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, inject, signal, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, computed, effect, inject, NgZone, signal, ViewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { combineLatest } from 'rxjs';
-import { animate, style, transition, trigger } from '@angular/animations';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { combineLatest, Subject, switchMap, filter, take, of } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 import { CdkContextMenuTrigger, CdkMenu, CdkMenuItem, CdkMenuModule } from '@angular/cdk/menu';
 import { CK3TitleRegistry } from '../../../model/ck3/game/CK3TitleRegistry';
 import { Localiser } from '../../../model/ck3/game/Localiser';
 import { CK3Service } from '../../../services/gamedata/CK3Service';
 import { MapService } from '../../../services/map.service';
+import { MapClaimService, MapClaimSessionHeader } from '../../../services/map-claim.service';
 import { Ck3ToEu4ConverterServiceService } from '../../../services/megacampaign/ck3-to-eu4-converter-service.service';
 import { makeGeoJsonPolygons } from '../../../util/geometry/threeGeometry';
 import { RGB } from '../../../util/RGB';
 import { BehaviorConfigProvider } from '../../viewers/polygon-select/BehaviorConfigProvider';
 import { ColorConfigProvider } from '../../viewers/polygon-select/ColorConfigProvider';
 import { HoverChangedEvent, PolygonSelectComponent, PolygonSelectionEvent } from '../../viewers/polygon-select/polygon-select.component';
+import { MapClaimSession } from '../../../model/megacampaign/MapClaimSession';
+import { Game } from '../../../model/Game';
+import { StringInputComponent } from '../../string-input/string-input.component';
 
 @Component({
     selector: 'app-converter-map-view',
-    imports: [PolygonSelectComponent, CommonModule, MatButtonModule, MatIconModule, MatCheckboxModule, MatTooltipModule, FormsModule, CdkContextMenuTrigger, CdkMenu, CdkMenuItem, CdkMenuModule],
+    imports: [PolygonSelectComponent, CommonModule, MatButtonModule, MatIconModule, MatCheckboxModule, MatSlideToggleModule, MatTooltipModule, FormsModule, CdkContextMenuTrigger, CdkMenu, CdkMenuItem, CdkMenuModule, MatSelectModule, MatFormFieldModule, MatDividerModule, MatDialogModule],
     templateUrl: './converter-map-view.component.html',
     styleUrl: './converter-map-view.component.scss',
-    animations: [
-        trigger('menuFadeScale', [
-            transition(':enter', [
-                style({ opacity: 0, transform: 'scale(0.95)' }),
-                animate('180ms cubic-bezier(0.4,0.0,0.2,1)',
-                    style({ opacity: 1, transform: 'scale(1)' })
-                )
-            ]),
-            transition(':leave', [
-                animate('120ms cubic-bezier(0.4,0.0,0.2,1)',
-                    style({ opacity: 0, transform: 'scale(0.95)' })
-                )
-            ])
-        ])
-    ]
 })
 export class ConverterMapViewComponent implements AfterViewInit {
 
     mapService = inject(MapService);
     ck3Service = inject(CK3Service);
     converterService = inject(Ck3ToEu4ConverterServiceService);
+    mapClaimService = inject(MapClaimService);
+    activatedRoute = inject(ActivatedRoute);
+    ngZone = inject(NgZone);
+    cdr = inject(ChangeDetectorRef);
+    dialog = inject(MatDialog);
 
     @ViewChild('ck3Map') ck3Map!: PolygonSelectComponent;
     @ViewChild('eu4Map') eu4Map!: PolygonSelectComponent;
+
+    private refreshSessions$ = new Subject<void>();
+    availableSessions = toSignal(
+        this.refreshSessions$.pipe(
+            switchMap(() => this.mapClaimService.getSessions$())
+        ),
+        { initialValue: [] }
+    );
+    selectedSession = signal<MapClaimSession>(
+        new MapClaimSession(null, null, "local2", Game.CK3, new Map(), new Map(), false)
+    );
+
+    // Signal to track whether current user can edit the selected session
+    protected canEditCurrentSession = signal(true);
+
+    // Setup effect to check permissions when session changes
+    private setupPermissionEffect = effect(() => {
+        const session = this.selectedSession();
+        if (!session.isOnline()) {
+            this.canEditCurrentSession.set(true);
+        } else {
+            this.mapClaimService.canEdit(session).subscribe(canEdit => {
+                this.canEditCurrentSession.set(canEdit);
+            });
+        }
+    });
+
+    protected hasChangesToSave = signal(false);
 
     private readonly eu4DefaultColor = new RGB(128, 128, 128);
 
     titleRegistry: CK3TitleRegistry | null = null;
     localiser: Localiser | null = null;
     provinceMapping: { ck3BaronyIndices: string[], eu4ProvinceIds: string[] }[] = [];
-    autoFitCameraOnSelection = true;
-    ck3Countries = signal<{ id: string, ck3Provinces: Set<string>, color: RGB, name: string }[]>([]);
-    currentlyActiveCountryKey = signal<string | null>(null);
-    selectedCountryForDelete: string | null = null;
     private eu4ProvinceVotes: Map<string, Map<string, number>> = new Map();
     private lastHoveredEu4Keys: string[] = [];
-    private lastHoveredCk3Keys: string[] = [];
-    private ck3ProvinceDuchyColors: Map<string, number> = new Map();
-    private eu4Province2Color: Map<string, number> = new Map();
+    private ck3ProvinceDuchyColors: Map<string, RGB> = new Map();
+    private eu4Province2Color: Map<string, RGB> = new Map();
     private ck3ColorConfigLambda = (key: string) => {
-        const owner = this.getOwningCountryOfCK3Province(key);
-        return owner ? owner.color.toNumber() : this.ck3ProvinceDuchyColors.get(key)!;
+        const owner = this.selectedSession().getOwner(key);
+        return owner ? owner.color.toNumber() : this.ck3ProvinceDuchyColors.get(key)?.toNumber() || this.eu4DefaultColor.toNumber();
     }
-    private eu4Province2ColorLambda = (key: string) => this.eu4Province2Color.get(key) || this.eu4DefaultColor.toNumber();
+    private eu4Province2ColorLambda = (key: string) => (this.eu4Province2Color.get(key) || this.eu4DefaultColor).toNumber();
+
+    protected currentlyActiveCountryKey = signal<string | null>(null);
+    protected selectedCountryForDelete: string | null = null;
+    protected autoFitCameraOnSelection = true;
 
     ngAfterViewInit() {
+        // Combine route params with sessions load to avoid race condition
+        combineLatest([
+            this.activatedRoute.paramMap,
+            this.refreshSessions$.pipe(
+                switchMap(() => this.mapClaimService.getSessions$())
+            )
+        ]).pipe(
+            filter(([params, sessions]) => sessions.length > 0 || !params.get('sessionId')),
+            take(1)
+        ).subscribe(([params, sessions]) => {
+            const sessionId = params.get('sessionId');
+            if (sessionId) {
+                const id = parseInt(sessionId, 10);
+                const session = sessions.find(s => s.id === id);
+                if (session) {
+                    this.loadSessionByHeader(session);
+                }
+            }
+        });
+
+        // Initial load of sessions
+        this.refreshSessions$.next();
+
         combineLatest([
             this.ck3Service.getTitleRegistry$(),
             this.ck3Service.getLocaliser$(),
@@ -79,15 +129,16 @@ export class ConverterMapViewComponent implements AfterViewInit {
             this.localiser = localiser;
             this.provinceMapping = mapping;
             this.mapService.fetchCK3GeoJson(true, true).subscribe((geoJson) => {
-                const countyKey2DuchyColor = new Map<string, number>();
+                const countyKey2DuchyColor = new Map<string, RGB>();
                 titleRegistry.getAllCountyTitleKeys().forEach((countyKey: string) => {
                     const duchyKey = titleRegistry.getDeJureLiegeTitle(countyKey)!;
-                    const duchyColor = titleRegistry.getVanillaTitleColor(duchyKey);
-                    countyKey2DuchyColor.set(countyKey, duchyColor!.toNumber())
+                    const duchyColor = titleRegistry.getVanillaTitleColor(duchyKey)!;
+                    countyKey2DuchyColor.set(countyKey, duchyColor)
                 });
                 this.ck3ProvinceDuchyColors = countyKey2DuchyColor;
-                const meshes = makeGeoJsonPolygons(geoJson, new ColorConfigProvider(this.ck3ColorConfigLambda, false), () => null, () => false, 0.75);
-                this.ck3Map.launch(meshes, [new ColorConfigProvider(this.ck3ColorConfigLambda, false)], new BehaviorConfigProvider(0.75));
+                const colorConfig = new ColorConfigProvider(this.ck3ColorConfigLambda, false);
+                const meshes = makeGeoJsonPolygons(geoJson, colorConfig, () => null, () => false, 0.75);
+                this.ck3Map.launch(meshes, [colorConfig], new BehaviorConfigProvider(0.75));
             });
 
             this.mapService.fetchEU4GeoJson(true, true).subscribe((geoJson) => {
@@ -99,26 +150,32 @@ export class ConverterMapViewComponent implements AfterViewInit {
     }
 
     onCK3SelectionChanged(event: PolygonSelectionEvent) {
-        if (this.currentlyActiveCountryKey() == null) {
-            this.currentlyActiveCountryKey.set(new Date().toISOString());
-            const clickedColor = this.titleRegistry!.getVanillaTitleColor(event.key);
-            const newCountry = { id: this.currentlyActiveCountryKey()!, ck3Provinces: new Set([event.key]), color: clickedColor!, name: `Country ${this.ck3Countries().length + 1}` };
-            this.ck3Countries.set([...this.ck3Countries(), newCountry]);
-        }
-        const countries = this.ck3Countries();
-        const countryIndex = countries.findIndex(c => c.id === this.currentlyActiveCountryKey());
-        if (countryIndex !== -1) {
-            const updatedCountries = [...countries];
-            updatedCountries[countryIndex] = {
-                ...updatedCountries[countryIndex],
-                ck3Provinces: new Set(event.locked
-                    ? [...updatedCountries[countryIndex].ck3Provinces, event.key]
-                    : Array.from(updatedCountries[countryIndex].ck3Provinces).filter(k => k !== event.key))
-            };
-            this.ck3Countries.set(updatedCountries);
-        }
-        this.rebuildEU4ProvinceVotes();
-        this.repropagateStateToEU4();
+        this.ngZone.runOutsideAngular(() => {
+            if (this.currentlyActiveCountryKey() == null) {
+                this.createNewCountryWithProvinceAndSetActive(event.key);
+            }
+            const country = this.selectedSession().countries.get(this.currentlyActiveCountryKey()!);
+            if (country) {
+                if (event.locked) {
+                    this.selectedSession().setOwnership(event.key, this.currentlyActiveCountryKey()!);
+                } else {
+                    this.selectedSession().removeOwnership(event.key);
+                }
+            }
+            this.rebuildEU4ProvinceVotes();
+            this.repropagateStateToEU4();
+        });
+        this.hasChangesToSave.set(true);
+        this.cdr.markForCheck();
+    }
+
+    private createNewCountryWithProvinceAndSetActive(provinceKey: string) {
+        const clickedColor = this.titleRegistry!.getVanillaTitleColor(provinceKey)!;
+        this.currentlyActiveCountryKey.set(this.selectedSession().createNewCountryWithProvince(`Country ${this.selectedSession().getCountries().size + 1}`, clickedColor, provinceKey));
+    }
+
+    onEU4HoverChanged(event: HoverChangedEvent) {
+
     }
 
     onEU4SelectionChanged(event: PolygonSelectionEvent) {
@@ -137,33 +194,24 @@ export class ConverterMapViewComponent implements AfterViewInit {
         }
     }
 
-    onEU4HoverChanged(event: HoverChangedEvent) {
-        if (event.isHovered) {
-            if (event.key) {
-                this.ck3Map.applyHoverEffectsByKeys(this.lastHoveredCk3Keys, false);
-                this.lastHoveredCk3Keys = this.resolveEU4ProvinceToCounties(event.key);
-                this.ck3Map.applyHoverEffectsByKeys(this.lastHoveredCk3Keys, true);
-            }
-        }
-    }
-
     private rebuildEU4ProvinceVotes() {
         this.eu4ProvinceVotes.clear();
-        for (const country of this.ck3Countries()) {
-            for (const countyKey of country.ck3Provinces) {
+        for (const [countryId, country] of this.selectedSession().getCountries()) {
+            for (const countyKey of this.selectedSession().getProvincesOfCountry(countryId)) {
                 const eu4Provinces = this.resolveCountyToEU4Provinces(countyKey);
                 for (const eu4Province of eu4Provinces) {
                     if (!this.eu4ProvinceVotes.has(eu4Province)) {
                         this.eu4ProvinceVotes.set(eu4Province, new Map());
                     }
                     const votes = this.eu4ProvinceVotes.get(eu4Province)!;
-                    votes.set(country.id, (votes.get(country.id) || 0) + 1);
+                    votes.set(countryId, (votes.get(countryId) || 0) + 1);
                 }
             }
         }
     }
 
     private repropagateStateToEU4() {
+        console.log("Repropagating");
         const eu4ProvinceOwnershipVotes = this.gatherOwnershipVotes();
         const ownershipResults: Map<string, string> = new Map();
         eu4ProvinceOwnershipVotes.forEach((voters, province) => {
@@ -173,8 +221,10 @@ export class ConverterMapViewComponent implements AfterViewInit {
         this.eu4Province2Color.clear();
         const lockedProvinces: string[] = [];
         ownershipResults.forEach((owner, province) => {
-            const country = this.ck3Countries().find(c => c.id === owner)!;
-            this.eu4Province2Color.set(province, country.color.toNumber());
+            const country = this.selectedSession().getCountry(owner);
+            if (country) {
+                this.eu4Province2Color.set(province, country.color);
+            }
             const uniqueContestants = new Set(eu4ProvinceOwnershipVotes.get(province)!).size;
             if (uniqueContestants === 1) {
                 lockedProvinces.push(province);
@@ -189,14 +239,14 @@ export class ConverterMapViewComponent implements AfterViewInit {
 
     private gatherOwnershipVotes() {
         const eu4ProvinceOwnershipVotes: Map<string, string[]> = new Map();
-        for (const country of this.ck3Countries()) {
-            for (const countyKey of country.ck3Provinces) {
+        for (const [countryId, country] of this.selectedSession().getCountries()) {
+            for (const countyKey of this.selectedSession().getProvincesOfCountry(countryId)) {
                 const eu4Provinces = this.resolveCountyToEU4Provinces(countyKey);
                 for (const eu4Province of eu4Provinces) {
                     if (!eu4ProvinceOwnershipVotes.has(eu4Province)) {
                         eu4ProvinceOwnershipVotes.set(eu4Province, []);
                     }
-                    eu4ProvinceOwnershipVotes.get(eu4Province)!.push(country.id);
+                    eu4ProvinceOwnershipVotes.get(eu4Province)!.push(countryId);
                 }
             }
         }
@@ -225,26 +275,10 @@ export class ConverterMapViewComponent implements AfterViewInit {
         return mappings;
     }
 
-    // TODO: vibe coded
-    private resolveEU4ProvinceToCounties(eu4ProvinceId: string): string[] {
-        const counties: string[] = [];
-        const allCounties = this.titleRegistry!.getAllCountyTitleKeys();
-
-        for (const countyKey of allCounties) {
-            const eu4Provinces = this.resolveCountyToEU4Provinces(countyKey);
-            if (eu4Provinces.includes(eu4ProvinceId)) {
-                counties.push(countyKey);
-            }
-        }
-
-        return counties;
-    }
-
     clearAllSelections() {
-        const currentlyLockedCK3Provinces = this.ck3Countries().flatMap(c => Array.from(c.ck3Provinces));
-        this.ck3Map.setLockedStates(currentlyLockedCK3Provinces, false, false);
-        this.eu4Map.setLockedStates([], true, false);
-        this.ck3Map.refreshAllColors();
+        for (const id of this.selectedSession().countries.keys()) {
+            this.removeCountry(null, id);
+        }
     }
 
     selectCountry(countryId: string) {
@@ -255,28 +289,33 @@ export class ConverterMapViewComponent implements AfterViewInit {
         this.currentlyActiveCountryKey.set(null);
     }
 
-    removeCountry(event: Event, countryId: string) {
-        event.stopPropagation();
-        const updatedCountries = this.ck3Countries().filter(c => c.id !== countryId);
-        this.ck3Countries.set(updatedCountries);
-        if (this.currentlyActiveCountryKey() === countryId) {
-            this.currentlyActiveCountryKey.set(updatedCountries.length > 0 ? updatedCountries[0].id : null);
-        }
-        this.ck3Map.setLockedStates(this.ck3Countries().flatMap(c => Array.from(c.ck3Provinces)), true, false);
-        this.rebuildEU4ProvinceVotes();
-        this.repropagateStateToEU4();
+    removeCountry(event: Event | null, countryId: string) {
+        this.ngZone.runOutsideAngular(() => {
+            if (event) {
+                event.stopPropagation();
+            }
+            const countryProvinces = this.selectedSession().getProvincesOfCountry(countryId);
+            this.selectedSession().removeCountry(countryId);
+            if (this.currentlyActiveCountryKey() === countryId) {
+                this.currentlyActiveCountryKey.set(this.selectedSession().getACountryId());
+            }
+            this.ck3Map.setLockedStates(Array.from(countryProvinces), false, false);
+            this.rebuildEU4ProvinceVotes();
+            this.repropagateStateToEU4();
+        });
+        this.cdr.markForCheck();
     }
 
-    getEU4ProvinceCountForCountry(country: { id: string, ck3Provinces: Set<string>, color: RGB, name: string }): number {
+    getEU4ProvinceCountForCountry(countryId: string): number {
         const eu4Provinces = new Set<string>();
-        for (const countyKey of country.ck3Provinces) {
+        for (const countyKey of this.selectedSession().getProvincesOfCountry(countryId)) {
             this.resolveCountyToEU4Provinces(countyKey).forEach(p => eu4Provinces.add(p));
         }
         return eu4Provinces.size;
     }
 
     ck3TooltipProvider = (key: string): string => {
-        const owner = this.getOwningCountryOfCK3Province(key);
+        const owner = this.selectedSession().getOwner(key);
         return "<b>" + this.localiser!.localise(key) + "</b><br>"
             + (owner ? `Owned by: ${owner.name}` : 'Unclaimed');
     };
@@ -286,20 +325,130 @@ export class ConverterMapViewComponent implements AfterViewInit {
         const tooltipTop = `<b>${key}</b><br>`;
         if (contestingCountries.size > 1) {
             return `${tooltipTop}Contested by:<br>${Array.from(contestingCountries.entries()).map(([countryId, votes]) => {
-                const country = this.ck3Countries().find(c => c.id === countryId);
+                const country = this.selectedSession().getCountry(countryId)!;
                 return `${country?.name || 'Unknown'} (${votes} votes)`;
             }).join('<br>')}`;
         } else if (contestingCountries.size === 1) {
             const countryId = Array.from(contestingCountries.keys())[0];
-            const country = this.ck3Countries().find(c => c.id === countryId)!;
+            const country = this.selectedSession().getCountry(countryId)!;
             return `${tooltipTop}Owned by: ${country.name}`;
         }
         return tooltipTop;
     };
 
-    private getOwningCountryOfCK3Province(provinceKey: string) {
-        return this.ck3Countries().find(c => c.ck3Provinces.has(provinceKey)) || null;
+    toggleSessionPublic(isPublic: boolean) {
+        const currentSession = this.selectedSession();
+        if (currentSession.isOnline()) {
+            this.mapClaimService.setIsPublic$(currentSession.id!, isPublic).subscribe(() => {
+                currentSession.isPublic = isPublic;
+                this.refreshSessions$.next();
+            });
+        }
     }
 
+    renameSession() {
+        const currentSession = this.selectedSession();
+        if (!currentSession.isOnline()) {
+            return;
+        }
 
+        const dialogRef = this.dialog.open(StringInputComponent, {
+            width: '300px',
+            data: { currentName: currentSession.name }
+        });
+
+        dialogRef.afterClosed().subscribe((newName: string | undefined) => {
+            if (newName && newName.trim() !== '') {
+                this.mapClaimService.setName$(currentSession.id!, newName).subscribe(() => {
+                    currentSession.name = newName;
+                    this.refreshSessions$.next();
+                });
+            }
+        });
+    }
+
+    makeOnline() {
+        const currentSession = this.selectedSession();
+        
+        const dialogRef = this.dialog.open(StringInputComponent, {
+            width: '300px',
+            data: { currentName: currentSession.name }
+        });
+
+        dialogRef.afterClosed().subscribe((newName: string | undefined) => {
+            if (newName && newName.trim() !== '') {
+                currentSession.name = newName;
+                console.log("Creating session online with data", currentSession);
+                this.mapClaimService.createSession$(currentSession).subscribe((result) => {
+                    console.log("Received", result);
+                    currentSession.id = result.id;
+                    this.mapClaimService.setIsPublic$(result.id, true).subscribe(() => {
+                        console.log(`Session ${currentSession.name} is now online`);
+                        this.refreshSessions$.next();
+                    });
+                });
+            }
+        });
+    }
+
+    loadSessionByHeader(header: MapClaimSessionHeader) {
+        this.mapClaimService.getSession$(header.id).subscribe((fullSession) => {
+            this.loadSession(fullSession);
+        });
+    }
+
+    onSessionSelected(sessionId: number | null) {
+        if (sessionId === null) return; // offline session, don't load
+        const session = this.availableSessions().find(s => s.id === sessionId);
+        if (session) {
+            this.loadSessionByHeader(session);
+        }
+    }
+
+    deleteSession() {
+        const currentSession = this.selectedSession();
+        if (currentSession.isOnline()) {
+            this.mapClaimService.deleteSession$(currentSession.id!).subscribe(() => {
+                this.createNewLocalSession();
+                //this.refreshSessions$.next();
+            });
+        }
+    }
+
+    createNewLocalSession() {
+        const newLocalSession = new MapClaimSession(null, null, "local", Game.CK3, new Map(), new Map(), false);
+        this.loadSession(newLocalSession);
+    }
+
+    saveCurrentSession() {
+        const session = this.selectedSession();
+        if (!session.isOnline()) {
+            return;
+        }
+
+        combineLatest([
+            this.mapClaimService.setCountries$(session.id!, session.countries),
+            this.mapClaimService.replaceOwnership$(session.id!, session.ownership)
+        ]).subscribe(() => {
+            console.log(`Session ${session.name} saved successfully`);
+            this.hasChangesToSave.set(false);
+        });
+    }
+
+    private loadSession(session: MapClaimSession) {
+        this.selectedSession.set(session);
+        this.ck3Map.resetSelection(true);
+        this.ngZone.runOutsideAngular(() => {
+            const ownedProvinces = Array.from(session.ownership.keys());
+            this.ck3Map.setLockedStates(ownedProvinces, true, false);
+            this.ck3Map.refreshAllColors();
+            this.rebuildEU4ProvinceVotes();
+            this.repropagateStateToEU4();
+            if (!session.isEmpty()) {
+                this.ck3Map.fitCameraToPolygons(0.3, ownedProvinces);
+            }
+            this.currentlyActiveCountryKey.set(session.getACountryId());
+        });
+        this.cdr.markForCheck();
+    }
 }

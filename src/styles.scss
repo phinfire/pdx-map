@@ -105,3 +105,12 @@ body {
 mat-icon {
     color: var(--text-color) !important;
 }
+
+button[disabled] mat-icon {
+    color: var(--faded-text-color) !important;
+    opacity: 0.5;
+}
+
+button[disabled] {
+    cursor: not-allowed !important;
+}

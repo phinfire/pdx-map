@@ -1,8 +1,44 @@
 <div class="map-container">
     <div class="top-bar">
         <div class="top-half">
-            <div>
-                <span class="title-span">CK3 Provinces</span>
+            <div class="sessions-manager">
+                <mat-form-field appearance="outline">
+                    <mat-label>Session</mat-label>
+                    <mat-select [value]="selectedSession().id" (selectionChange)="onSessionSelected($event.value)">
+                        @for (session of availableSessions(); track session.id) {
+                        <mat-option [value]="session.id">
+                            <mat-icon>{{ session.isPublic ? 'public' : 'visibility_off' }}</mat-icon>
+                            {{ session.name }}
+                        </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                <button mat-icon-button (click)="deleteSession()" [disabled]="!selectedSession().isOnline() || !canEditCurrentSession()"
+                    matTooltip="Delete this session">
+                    <mat-icon>delete</mat-icon>
+                </button>
+                <button mat-icon-button (click)="renameSession()" [disabled]="!selectedSession().isOnline() || !canEditCurrentSession()"
+                    matTooltip="Rename this session">
+                    <mat-icon>edit</mat-icon>
+                </button>
+                @if (selectedSession().isOnline()) {
+                <button mat-icon-button (click)="saveCurrentSession()" [disabled]="!hasChangesToSave() || !canEditCurrentSession()"
+                    matTooltip="Save changes">
+                    <mat-icon>save</mat-icon>
+                </button>
+                <mat-slide-toggle [(ngModel)]="selectedSession().isPublic" (change)="toggleSessionPublic(selectedSession().isPublic)" [disabled]="!canEditCurrentSession()" matTooltip="Make this session public or private">
+                    Public
+                </mat-slide-toggle>
+                <button mat-icon-button (click)="createNewLocalSession()" matTooltip="Create new local session">
+                    <mat-icon>add_circle</mat-icon>
+                </button>
+                } @else {
+                <button mat-icon-button (click)="makeOnline()" [disabled]="selectedSession().isOnline() || selectedSession().isEmpty()"
+                    matTooltip="Upload this session">
+                    <mat-icon>cloud_upload</mat-icon>
+                </button>
+                }
+
             </div>
             <div>
                 <mat-checkbox [(ngModel)]="autoFitCameraOnSelection" matTooltip="Auto-fit camera on selection change">
@@ -16,32 +52,31 @@
         <mat-icon class="info">info</mat-icon>
         <div class="top-half">
             <div>
-                @for (country of ck3Countries(); track country.id) {
-                    <div class="country-square"
-                        [style.background-color]="'rgb(' + country.color.r + ',' + country.color.g + ',' + country.color.b + ')'"
-                        [class.active]="country.id === currentlyActiveCountryKey()" (click)="selectCountry(country.id)"
-                        [matTooltip]="country.name + ' - CK3: ' + country.ck3Provinces.size + ' EU4: ' + getEU4ProvinceCountForCountry(country)"
-                        matTooltipPosition="above"
-                        [cdkContextMenuTriggerFor]="countryMenu"
-                        (cdkContextMenuOpened)="selectedCountryForDelete = country.id">
-                    </div>
+                @for (countryId of selectedSession().countries.keys(); track countryId) {
+                @let country = selectedSession().countries.get(countryId)!;
+                <div class="country-square"
+                    [style.background-color]="'rgb(' + country.color.r + ',' + country.color.g + ',' + country.color.b + ')'"
+                    [class.active]="countryId === currentlyActiveCountryKey()" (click)="selectCountry(countryId)"
+                    [matTooltip]="country.name + ' - CK3: ' + selectedSession().getProvincesOfCountry(countryId).size + ' EU4: ' + getEU4ProvinceCountForCountry(countryId)"
+                    matTooltipPosition="above" [cdkContextMenuTriggerFor]="countryMenu"
+                    (cdkContextMenuOpened)="selectedCountryForDelete = countryId">
+                </div>
                 }
                 <button mat-icon-button (click)="createNewCountry()" matTooltip="Create new country">
                     <mat-icon>add</mat-icon>
                 </button>
             </div>
-            <div>
-                <span class="title-span">EU4 Provinces</span>
-            </div>
         </div>
     </div>
     <div class="maps-wrapper">
         <div class="map-column">
-            <app-polygon-select #ck3Map [tooltipProvider]="ck3TooltipProvider" (selectionChanged)="onCK3SelectionChanged($event)" (onHoverChanged)="onCK3HoverChanged($event)">
+            <app-polygon-select #ck3Map [tooltipProvider]="ck3TooltipProvider"
+                (selectionChanged)="onCK3SelectionChanged($event)" (onHoverChanged)="onCK3HoverChanged($event)">
             </app-polygon-select>
         </div>
         <div class="map-column">
-            <app-polygon-select #eu4Map [tooltipProvider]="eu4TooltipProvider" (selectionChanged)="onEU4SelectionChanged($event)">
+            <app-polygon-select #eu4Map [tooltipProvider]="eu4TooltipProvider"
+                (selectionChanged)="onEU4SelectionChanged($event)">
             </app-polygon-select>
         </div>
     </div>
@@ -49,7 +84,8 @@
 
 <ng-template #countryMenu>
     <div class="country-context-menu" cdkMenu @menuFadeScale>
-        <button class="country-context-menu-item" cdkMenuItem (click)="removeCountry($event, selectedCountryForDelete!)">
+        <button class="country-context-menu-item" cdkMenuItem
+            (click)="removeCountry($event, selectedCountryForDelete!)">
             <mat-icon>delete</mat-icon>
             <span>Delete</span>
         </button>

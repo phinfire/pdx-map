@@ -46,7 +46,7 @@
                 </button>
             }
         </div>
-        @if (!campaign.isInRegionSignupStage()) {
+        @if (traitPlotables.length > 0) {
         <div class="plot-container">
             <app-plot-view [plotablesInput]="traitPlotables" [titleInput]="'Player Ruler Traits'"></app-plot-view>
         </div>
